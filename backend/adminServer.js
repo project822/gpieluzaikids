@@ -52,6 +52,9 @@ const upload = multer({ storage });
 
 function ensureAuth(req, res, next) {
   if (req.session && req.session.user) return next();
+  if (req.session) {
+    req.session.redirectTo = req.originalUrl;
+  }
   return res.redirect("/login");
 }
 
@@ -120,7 +123,10 @@ app.post(
 
     req.session.user = { username };
     db.setAdminOnline(username);
-    return res.redirect("/events");
+    
+    const redirectTo = req.session.redirectTo || "/events";
+    delete req.session.redirectTo;
+    return res.redirect(redirectTo);
   },
 );
 

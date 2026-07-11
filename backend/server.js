@@ -91,6 +91,9 @@ app.use((req, res, next) => {
 // ============== AUTH MIDDLEWARE ==============
 function ensureAuth(req, res, next) {
   if (req.session && req.session.user) return next();
+  if (req.session) {
+    req.session.redirectTo = req.originalUrl;
+  }
   return res.redirect("/admin/login");
 }
 
@@ -139,7 +142,10 @@ async function handleAdminLogin(req, res) {
   }
   req.session.user = { username };
   db.setAdminOnline(username);
-  return res.redirect("/admin/events");
+  
+  const redirectTo = req.session.redirectTo || "/admin/events";
+  delete req.session.redirectTo;
+  return res.redirect(redirectTo);
 }
 
 app.post(
