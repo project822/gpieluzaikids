@@ -1,187 +1,782 @@
-<%- include('../../../frontend/views/partials/header', { title: 'Admin - Monitoring', hideNavbar: true }) %>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Analytics — gpieluzaikids.vercel.app</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 
-<div class="admin-shell">
+  <!-- Vercel Analytics -->
+  <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+  <script defer src="https://unpkg.com/@vercel/speed-insights/dist/index.js"></script>
 
-  <div class="admin-toolbar">
-    <h1 class="admin-page-title">Dashboard Monitoring</h1>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    <div class="admin-actions">
-      <button class="btn primary" id="open-create-admin" type="button">Create Admin</button>
-      <a class="btn ghost" href="/logout">Log out</a>
+    :root {
+      --bg:        #0a0a0a;
+      --surface:   #111111;
+      --surface2:  #1a1a1a;
+      --border:    rgba(255,255,255,0.08);
+      --border2:   rgba(255,255,255,0.04);
+      --text:      #ededed;
+      --muted:     #888;
+      --accent:    #3b82f6;
+      --accent-glow: rgba(59,130,246,0.15);
+      --green:     #22c55e;
+      --red:       #ef4444;
+      --red-bg:    rgba(239,68,68,0.18);
+      --chart-line:#3b82f6;
+      --chart-fill:rgba(59,130,246,0.12);
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 20px;
+      height: 52px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .topbar-logo {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+    .topbar-logo svg { width: 20px; height: 20px; }
+
+    .topbar-sep { color: var(--border); font-size: 18px; }
+
+    .topbar-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .topbar-center {
+      flex: 1;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .topbar-btn {
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+      font-weight: 500;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .topbar-btn:hover { background: #222; border-color: rgba(255,255,255,0.15); }
+    .topbar-btn.danger { color: #f87171; border-color: rgba(239,68,68,0.3); }
+    .topbar-btn.danger:hover { background: rgba(239,68,68,0.1); }
+
+    /* ── LAYOUT ── */
+    .shell {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 20px 60px;
+    }
+
+    /* ── SITE HEADER ROW ── */
+    .site-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .site-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .site-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .site-name svg { width: 14px; height: 14px; }
+
+    .online-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .online-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px rgba(34,197,94,0.6);
+      animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.7; transform: scale(0.85); }
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .select-btn {
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 500;
+      transition: background 0.15s, border-color 0.15s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .select-btn:hover, .select-btn:focus { background: #222; border-color: rgba(255,255,255,0.15); outline: none; }
+
+    /* ── METRIC CARDS ── */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 4px;
+      background: var(--surface);
+    }
+
+    .metric-card {
+      padding: 20px 24px 24px;
+      border-right: 1px solid var(--border);
+      position: relative;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .metric-card:last-child { border-right: none; }
+    .metric-card:hover { background: var(--surface2); }
+    .metric-card.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--text);
+    }
+
+    .metric-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 10px;
+      letter-spacing: 0.01em;
+    }
+
+    .metric-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .metric-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--red-bg);
+      color: #f87171;
+    }
+    .metric-badge.up { background: rgba(34,197,94,0.15); color: var(--green); }
+
+    /* ── CHART ── */
+    .chart-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 12px 12px;
+      padding: 24px 24px 20px;
+      margin-bottom: 28px;
+    }
+
+    .chart-canvas-wrap {
+      position: relative;
+      height: 240px;
+    }
+
+    /* ── BOTTOM GRID ── */
+    .bottom-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* ── SECTION CARD ── */
+    .section-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .section-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .section-header .sub { font-size: 11px; color: var(--muted); font-weight: 400; }
+
+    /* ── TOP PAGES TABLE ── */
+    .top-pages { width: 100%; }
+    .top-pages-row {
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--border2);
+      gap: 12px;
+    }
+    .top-pages-row:last-child { border-bottom: none; }
+    .top-pages-row:hover { background: var(--surface2); }
+
+    .top-page-path {
+      flex: 1;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .top-page-bar-wrap {
+      flex: 2;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .top-page-bar {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.6s cubic-bezier(.2,.9,.2,1);
+    }
+
+    .top-page-count {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      min-width: 30px;
+      text-align: right;
+    }
+
+    /* ── ADMIN TABLE ── */
+    .admin-table { width: 100%; border-collapse: collapse; }
+    .admin-table th {
+      padding: 10px 20px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+    }
+    .admin-table td {
+      padding: 12px 20px;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border2);
+    }
+    .admin-table tr:last-child td { border-bottom: none; }
+    .admin-table tr:hover td { background: var(--surface2); }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .status-pill.online  { background: rgba(34,197,94,0.12); color: #4ade80; }
+    .status-pill.offline { background: rgba(100,116,139,0.15); color: #64748b; }
+    .status-pill .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+    /* ── SERVER METRICS ── */
+    .server-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+    }
+    .sm-item {
+      padding: 14px 20px;
+      border-right: 1px solid var(--border2);
+      border-bottom: 1px solid var(--border2);
+    }
+    .sm-item:nth-child(2n) { border-right: none; }
+    .sm-item:nth-last-child(-n+2) { border-bottom: none; }
+    .sm-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; font-weight: 500; }
+    .sm-value { font-size: 20px; font-weight: 700; color: var(--text); }
+
+    /* ── REFRESH INDICATOR ── */
+    .refresh-row {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .refresh-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse-dot 2s infinite;
+    }
+    .refresh-label { font-size: 11px; color: var(--muted); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .metrics-row { grid-template-columns: 1fr 1fr; }
+      .metric-card:nth-child(2) { border-right: none; }
+      .metric-card:nth-child(3) { border-right: 1px solid var(--border); }
+      .bottom-grid { grid-template-columns: 1fr; }
+      .server-metrics { grid-template-columns: 1fr; }
+      .sm-item { border-right: none; }
+    }
+    @media (max-width: 480px) {
+      .metrics-row { grid-template-columns: 1fr; }
+      .metric-card { border-right: none; border-bottom: 1px solid var(--border); }
+      .metric-card:last-child { border-bottom: none; }
+      .metric-card.active::after { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <a class="topbar-logo" href="/dev/dashboard">
+      <svg viewBox="0 0 76 65" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path d="M37.5274 0L75.0548 65H0L37.5274 0Z"/>
+      </svg>
+      <span>gpieluzaikids...</span>
+    </a>
+    <span class="topbar-sep">/</span>
+    <span class="topbar-title">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 16l4-4 4 4 4-4"/></svg>
+      Analytics
+    </span>
+    <div class="topbar-center">Analytics</div>
+    <div class="topbar-actions">
+      <a href="/admin/events" class="topbar-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0h6"/></svg>
+        Admin
+      </a>
+      <a href="/admin/logout" class="topbar-btn danger">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        Sign Out
+      </a>
     </div>
-  </div>
+  </header>
 
-  <div class="admin-grid" style="display:grid; grid-template-columns: 1.2fr 0.8fr; gap: 16px; align-items:start;">
-    <div class="admin-card" style="padding:16px;">
-      <h2 style="margin:0 0 10px;">Performance & Traffic (Website User)</h2>
+  <main class="shell">
 
-
-      <div class="metric-grid" style="display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;">
-        <div class="metric-card" style="border: 1px solid var(--border); border-radius: 12px; padding: 12px;">
-          <div style="opacity:0.8; font-weight:600;">Total Requests</div>
-          <div style="font-size: 1.6rem; font-weight: 800; margin-top: 6px;">
-            <%= metrics && typeof metrics.totalRequests === 'number' ? metrics.totalRequests : 0 %>
-          </div>
+    <!-- SITE HEADER -->
+    <div class="site-header">
+      <div class="site-info">
+        <div class="site-name">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+          gpieluzaikids.vercel.app
         </div>
-
-        <div class="metric-card" style="border: 1px solid var(--border); border-radius: 12px; padding: 12px;">
-          <div style="opacity:0.8; font-weight:600;">Avg Latency (ms)</div>
-          <div style="font-size: 1.6rem; font-weight: 800; margin-top: 6px;">
-            <%= avgLatencyMs || 0 %>
-          </div>
+        <div class="online-badge" id="online-badge">
+          <span class="online-dot"></span>
+          <span id="online-count"><%= pvStats ? pvStats.online : 0 %></span> online
         </div>
+      </div>
+      <div class="controls">
+        <select class="select-btn" id="range-select" onchange="changeRange(this.value)">
+          <option value="24h" <%- timeRange === '24h' ? 'selected' : '' %>>Last 24 Hours</option>
+          <option value="7d"  <%- timeRange === '7d'  ? 'selected' : '' %>>Last 7 Days</option>
+          <option value="30d" <%- timeRange === '30d' ? 'selected' : '' %>>Last 30 Days</option>
+        </select>
+        <button class="select-btn" onclick="refreshData()" title="Refresh data">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        </button>
+      </div>
+    </div>
 
-        <div class="metric-card" style="border: 1px solid var(--border); border-radius: 12px; padding: 12px; grid-column: 1 / -1;">
-          <div style="opacity:0.8; font-weight:600;">Last Request At</div>
-          <div style="margin-top: 6px; font-weight: 700;">
-            <% if (metrics && metrics.lastRequestAt) { %>
-              <%= new Date(metrics.lastRequestAt).toLocaleString('id-ID') %>
-            <% } else { %>
-              <span style="opacity:0.7;">-</span>
-            <% } %>
-          </div>
+    <!-- AUTO REFRESH INDICATOR -->
+    <div class="refresh-row">
+      <span class="refresh-dot"></span>
+      <span class="refresh-label">Auto-refresh every 30s &bull; <span id="last-refreshed">Live</span></span>
+    </div>
+
+    <!-- METRIC CARDS -->
+    <div class="metrics-row" id="metrics-row">
+      <div class="metric-card active" id="card-visitors">
+        <div class="metric-label">Visitors</div>
+        <div class="metric-value" id="val-visitors"><%= pvStats ? pvStats.visitors : 0 %></div>
+      </div>
+      <div class="metric-card" id="card-pageviews">
+        <div class="metric-label">Page Views</div>
+        <div class="metric-value" id="val-pageviews"><%= pvStats ? pvStats.pageviews : 0 %></div>
+      </div>
+      <div class="metric-card" id="card-bounce">
+        <div class="metric-label">Bounce Rate</div>
+        <div class="metric-value">
+          <span id="val-bounce"><%= pvStats ? pvStats.bounceRate : 0 %>%</span>
+          <% if (pvStats && pvStats.bounceRate >= 50) { %>
+            <span class="metric-badge" id="bounce-badge">+<%= pvStats.bounceRate %>%</span>
+          <% } else if (pvStats) { %>
+            <span class="metric-badge up" id="bounce-badge">-<%= pvStats.bounceRate %>%</span>
+          <% } %>
+        </div>
+      </div>
+      <div class="metric-card" id="card-latency">
+        <div class="metric-label">Avg Latency</div>
+        <div class="metric-value" id="val-latency"><%= avgLatencyMs %>ms</div>
+      </div>
+    </div>
+
+    <!-- TRAFFIC CHART -->
+    <div class="chart-wrap">
+      <div class="chart-canvas-wrap">
+        <canvas id="traffic-chart"></canvas>
+      </div>
+    </div>
+
+    <!-- BOTTOM GRID -->
+    <div class="bottom-grid">
+
+      <!-- TOP PAGES -->
+      <div class="section-card">
+        <div class="section-header">
+          Top Pages
+          <span class="sub">by page views</span>
+        </div>
+        <div id="top-pages-list">
+          <% if (pvStats && pvStats.topPaths && pvStats.topPaths.length) {
+               const maxCount = pvStats.topPaths[0].count; %>
+            <% pvStats.topPaths.forEach(p => { %>
+            <div class="top-pages-row">
+              <div class="top-page-path" title="<%= p.path %>"><%= p.path %></div>
+              <div class="top-page-bar-wrap">
+                <div class="top-page-bar" style="width: <%= Math.round((p.count / maxCount) * 100) %>%"></div>
+              </div>
+              <div class="top-page-count"><%= p.count %></div>
+            </div>
+            <% }) %>
+          <% } else { %>
+            <div style="padding: 40px 20px; text-align:center; color: var(--muted); font-size:13px;">
+              No page views recorded yet.<br>
+              <small style="opacity:0.6;">Visit the site to start collecting data.</small>
+            </div>
+          <% } %>
         </div>
       </div>
 
-      <div style="margin-top: 14px; opacity: 0.85; font-size: 0.95rem;">
-        Catatan: metrik diambil dari server (bukan dari Google Analytics).
-      </div>
-    </div>
+      <!-- RIGHT COLUMN -->
+      <div style="display:flex; flex-direction:column; gap:16px;">
 
-    <div class="admin-card" style="padding:16px;">
-      <h2 style="margin:0 0 10px;">Monitoring Admin Account</h2>
+        <!-- SERVER METRICS -->
+        <div class="section-card">
+          <div class="section-header">
+            Server Metrics
+            <span class="sub">Express/Node.js</span>
+          </div>
+          <div class="server-metrics">
+            <div class="sm-item">
+              <div class="sm-label">Total Requests</div>
+              <div class="sm-value" id="sm-requests"><%= metrics && metrics.totalRequests ? metrics.totalRequests : 0 %></div>
+            </div>
+            <div class="sm-item">
+              <div class="sm-label">Avg Latency</div>
+              <div class="sm-value" id="sm-latency"><%= avgLatencyMs %>ms</div>
+            </div>
+            <div class="sm-item" style="grid-column: 1 / -1; border-right: none;">
+              <div class="sm-label">Last Request</div>
+              <div style="font-size:13px; font-weight:600; color: var(--text); margin-top:4px;" id="sm-last">
+                <% if (metrics && metrics.lastRequestAt) { %>
+                  <%= new Date(metrics.lastRequestAt).toLocaleString('id-ID') %>
+                <% } else { %>
+                  —
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
 
-      <div style="overflow:auto;">
-        <table style="width:100%; border-collapse: collapse;">
-          <thead>
-            <tr>
-              <th style="text-align:left; padding:8px 6px; border-bottom: 1px solid var(--border);">Username</th>
-              <th style="text-align:left; padding:8px 6px; border-bottom: 1px solid var(--border);">Status</th>
-              <th style="text-align:left; padding:8px 6px; border-bottom: 1px solid var(--border);">Last Online</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% const statuses = adminStatuses || {}; %>
-            <% if (admins && admins.length) { %>
-              <% admins.forEach((a) => { %>
-                <% const st = statuses[a.username] || {}; %>
-                <% const online = st.online === true; %>
+        <!-- ADMIN STATUS -->
+        <div class="section-card">
+          <div class="section-header">Admin Accounts</div>
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Status</th>
+                <th>Last Online</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% const statuses = adminStatuses || {}; %>
+              <% if (admins && admins.length) { %>
+                <% admins.forEach(a => {
+                     const st = statuses[a.username] || {};
+                     const online = st.online === true; %>
                 <tr>
-                  <td style="padding:10px 6px; border-bottom: 1px solid rgba(0,0,0,0.04); font-weight:700;">
-                    <%= a.username %>
-                  </td>
-                  <td style="padding:10px 6px; border-bottom: 1px solid rgba(0,0,0,0.04);">
-                    <span style="display:inline-block; padding: 4px 10px; border-radius: 999px; font-weight: 800; font-size: 0.85rem; background:<%= online ? 'rgba(34,197,94,0.15)' : 'rgba(148,163,184,0.2)' %>; color:<%= online ? 'rgb(22,163,74)' : 'rgb(71,85,105)' %>;">
-                      <%= online ? 'ONLINE' : 'OFFLINE' %>
+                  <td style="font-weight:600;"><%= a.username %></td>
+                  <td>
+                    <span class="status-pill <%= online ? 'online' : 'offline' %>">
+                      <span class="dot"></span>
+                      <%= online ? 'Online' : 'Offline' %>
                     </span>
                   </td>
-
-                  <td style="padding:10px 6px; border-bottom: 1px solid rgba(0,0,0,0.04);">
-                    <% if (st.lastOnline) { %>
-                      <% const d = new Date(st.lastOnline); %>
-                      <%= String(d.getDate()).padStart(2, "0") %>/<%= String(d.getMonth() + 1).padStart(2, "0") %>/<%= d.getFullYear() %>
-                    <% } else { %>
-                      <span style="opacity:0.7;">-</span>
-                    <% } %>
+                  <td style="color: var(--muted);">
+                    <% if (st.lastOnline) {
+                         const d = new Date(st.lastOnline); %>
+                      <%= String(d.getDate()).padStart(2,'0') %>/<%= String(d.getMonth()+1).padStart(2,'0') %>/<%= d.getFullYear() %>
+                    <% } else { %>—<% } %>
                   </td>
-
                 </tr>
-              <% }) %>
-            <% } else { %>
-              <tr>
-                <td colspan="3" style="padding:12px 6px; opacity:0.8;">Belum ada admin.</td>
-              </tr>
-            <% } %>
-          </tbody>
-        </table>
-      </div>
+                <% }) %>
+              <% } else { %>
+                <tr><td colspan="3" style="padding:16px 20px; color:var(--muted);">No admins found.</td></tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
 
-      <div style="margin-top: 10px; font-size: 0.9rem; opacity: 0.85;">
-        Last online diambil saat admin login.
       </div>
     </div>
-  </div>
 
-  <div id="create-admin-modal" class="modal" aria-hidden="true" style="display:none;">
-    <div class="modal-dialog" style="max-width: 520px;">
-      <button class="modal-close" aria-label="Tutup" type="button" id="close-create-admin">&times;</button>
-      <div class="modal-body">
-        <h2 style="margin:0 0 12px;">Create Admin</h2>
+  </main>
 
-        <form method="post" action="/admins/new" id="create-admin-form">
-          <div class="form-group" style="margin-bottom: 14px;">
-            <label for="admin-username">Username</label>
-            <div>
-              <input
+  <script>
+  (function() {
+    // ── CHART INIT ──
+    const chartData = <%- JSON.stringify(pvStats ? pvStats.chartData : {}) %>;
+    const labels  = Object.keys(chartData);
+    const values  = Object.values(chartData);
 
-                id="admin-username"
-                type="text"
-                name="username"
-                placeholder="Username"
-                required
-                autocomplete="username"
-              />
-            </div>
-          </div>
+    const ctx = document.getElementById('traffic-chart').getContext('2d');
 
-            <div class="form-group" style="margin-bottom: 14px;">
-            <label for="admin-password">Password</label>
-            <div>
-              <input
+    // Gradient fill
+    const gradient = ctx.createLinearGradient(0, 0, 0, 240);
+    gradient.addColorStop(0, 'rgba(59,130,246,0.25)');
+    gradient.addColorStop(1, 'rgba(59,130,246,0.00)');
 
-                id="admin-password"
-                type="password"
-                name="password"
-                placeholder="Password"
-                required
-                autocomplete="new-password"
-              />
-            </div>
-          </div>
-
-          <button class="submit-btn" type="submit" style="width:100%;">Create</button>
-
-          <div style="margin-top: 12px; font-size: 13px; opacity: 0.9;">
-            <span>Form akan membuat akun admin baru.</span>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-<script>
-  (function () {
-    const openBtn = document.getElementById('open-create-admin');
-    const modal = document.getElementById('create-admin-modal');
-    const closeBtn = document.getElementById('close-create-admin');
-
-    if (!openBtn || !modal || !closeBtn) return;
-
-    function openModal() {
-      modal.style.display = 'block';
-      modal.setAttribute('aria-hidden', 'false');
-    }
-
-    function closeModal() {
-      modal.style.display = 'none';
-      modal.setAttribute('aria-hidden', 'true');
-    }
-
-    openBtn.addEventListener('click', openModal);
-    closeBtn.addEventListener('click', closeModal);
-
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) closeModal();
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Visitors',
+          data: values,
+          borderColor: '#3b82f6',
+          borderWidth: 2,
+          backgroundColor: gradient,
+          fill: true,
+          tension: 0.35,
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          pointHoverBackgroundColor: '#3b82f6',
+          pointHoverBorderColor: '#fff',
+          pointHoverBorderWidth: 2,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1a1a1a',
+            borderColor: 'rgba(255,255,255,0.1)',
+            borderWidth: 1,
+            titleColor: '#888',
+            bodyColor: '#ededed',
+            padding: 10,
+            cornerRadius: 8,
+            callbacks: {
+              title: (items) => items[0] ? items[0].label : '',
+              label: (item) => ` Visitors  ${item.parsed.y}`
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+            ticks: {
+              color: '#555',
+              font: { size: 11 },
+              maxTicksLimit: 8,
+              maxRotation: 0,
+            }
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+            ticks: {
+              color: '#555',
+              font: { size: 11 },
+              stepSize: 1,
+              precision: 0,
+            }
+          }
+        }
+      }
     });
 
-    // escape close
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeModal();
+    // ── RANGE CHANGE ──
+    window.changeRange = function(val) {
+      window.location.href = '/dev/dashboard?range=' + val;
+    };
+
+    // ── REFRESH DATA VIA AJAX ──
+    let refreshTimer;
+    let currentRange = '<%= timeRange %>';
+
+    window.refreshData = async function() {
+      try {
+        const res = await fetch('/api/dev/stats?range=' + currentRange);
+        if (!res.ok) return;
+        const json = await res.json();
+        const pv = json.pvStats;
+        const m  = json.metrics;
+
+        // Update metric cards
+        document.getElementById('val-visitors').textContent  = pv.visitors;
+        document.getElementById('val-pageviews').textContent = pv.pageviews;
+        document.getElementById('val-bounce').textContent    = pv.bounceRate + '%';
+        document.getElementById('val-latency').textContent   = m.avgLatencyMs + 'ms';
+        document.getElementById('online-count').textContent  = pv.online;
+
+        // Update server metrics
+        document.getElementById('sm-requests').textContent   = m.totalRequests || 0;
+        document.getElementById('sm-latency').textContent    = m.avgLatencyMs + 'ms';
+        if (m.lastRequestAt) {
+          document.getElementById('sm-last').textContent = new Date(m.lastRequestAt).toLocaleString('id-ID');
+        }
+
+        // Update chart
+        const newLabels = Object.keys(pv.chartData);
+        const newValues = Object.values(pv.chartData);
+        chart.data.labels = newLabels;
+        chart.data.datasets[0].data = newValues;
+        chart.update('active');
+
+        // Update top pages
+        if (pv.topPaths && pv.topPaths.length) {
+          const maxCount = pv.topPaths[0].count;
+          let html = '';
+          pv.topPaths.forEach(p => {
+            const pct = Math.round((p.count / maxCount) * 100);
+            html += `<div class="top-pages-row">
+              <div class="top-page-path" title="${p.path}">${p.path}</div>
+              <div class="top-page-bar-wrap"><div class="top-page-bar" style="width:${pct}%"></div></div>
+              <div class="top-page-count">${p.count}</div>
+            </div>`;
+          });
+          document.getElementById('top-pages-list').innerHTML = html;
+        }
+
+        // Refresh label
+        const now = new Date();
+        document.getElementById('last-refreshed').textContent =
+          'Updated ' + String(now.getHours()).padStart(2,'0') + ':' +
+          String(now.getMinutes()).padStart(2,'0') + ':' +
+          String(now.getSeconds()).padStart(2,'0');
+
+      } catch (e) {
+        console.warn('[dashboard] refresh error', e);
+      }
+    };
+
+    // Auto-refresh every 30 seconds
+    refreshTimer = setInterval(window.refreshData, 30000);
+
+    // Metric card active state toggle
+    document.querySelectorAll('.metric-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.metric-card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+      });
     });
   })();
-</script>
+  </script>
 
-<%- include('../../../frontend/views/partials/footer') %>
-
+</body>
+</html>

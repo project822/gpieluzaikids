@@ -81,6 +81,17 @@ app.use((req, res, next) => {
   res.on("finish", () => {
     try {
       db.incRequestMetrics({ latencyMs: Date.now() - start });
+
+      // Track pageviews for public GET requests (skip static assets, dev routes)
+      const isGet = req.method === "GET";
+      const isAsset = /\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|webp)$/i.test(req.path);
+      const isApi = req.path.startsWith("/api/") || req.path.startsWith("/dev/") || req.path.startsWith("/admin/");
+      const isSuccess = res.statusCode >= 200 && res.statusCode < 400;
+
+      if (isGet && !isAsset && !isApi && isSuccess) {
+        const ip = (req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").split(",")[0].trim();
+        db.logPageView({ path: req.path, ip, userAgent: req.headers["user-agent"] || "" });
+      }
     } catch (e) {
       // ignore
     }
@@ -213,6 +224,7 @@ app.post("/dev/login", (req, res) => {
 
 // Dashboard monitoring (canonical URL)
 app.get("/dev/dashboard", ensureDevAuth, (req, res) => {
+  const timeRange = req.query.range || "7d";
   const metrics = db.getMetrics();
   const adminStatuses = db.getAdminStatuses();
   const admins = db.getAdmins() || [];
@@ -222,11 +234,14 @@ app.get("/dev/dashboard", ensureDevAuth, (req, res) => {
           (metrics.totalLatencyMsSum || 0) / (metrics.totalRequests || 1),
         )
       : 0;
+  const pvStats = db.getPageViewStats(timeRange);
   return res.render("dashboard", {
     metrics,
     avgLatencyMs,
     admins,
     adminStatuses,
+    pvStats,
+    timeRange,
   });
 });
 
@@ -245,6 +260,18 @@ app.get("/dashboard-monitoring", ensureDevAuth, (req, res) => {
 
 app.get("/admin/events/dashboard-monitoring", ensureDevAuth, (req, res) => {
   return res.redirect("/dev/dashboard");
+});
+
+// Real-time stats API for dashboard auto-refresh
+app.get("/api/dev/stats", ensureDevAuth, (req, res) => {
+  const timeRange = req.query.range || "7d";
+  const pvStats = db.getPageViewStats(timeRange);
+  const metrics = db.getMetrics();
+  const avgLatencyMs =
+    metrics && metrics.totalRequests
+      ? Math.round((metrics.totalLatencyMsSum || 0) / (metrics.totalRequests || 1))
+      : 0;
+  return res.json({ pvStats, metrics: { ...metrics, avgLatencyMs } });
 });
 
 // Events management

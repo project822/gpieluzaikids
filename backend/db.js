@@ -255,6 +255,117 @@ function getAdminStatuses() {
   return data.adminStatus || {};
 }
 
+function logPageView({ path, ip, userAgent }) {
+  const data = read();
+  data.pageviews = data.pageviews || [];
+  
+  data.pageviews.push({
+    path,
+    ip: ip || '127.0.0.1',
+    userAgent: userAgent || '',
+    timestamp: new Date().toISOString()
+  });
+  
+  // Keep only the last 5000 pageviews to avoid database growth
+  if (data.pageviews.length > 5000) {
+    data.pageviews = data.pageviews.slice(data.pageviews.length - 5000);
+  }
+  
+  write(data);
+}
+
+function getPageViewStats(timeRange = "7d") {
+  const data = read();
+  const pageviews = data.pageviews || [];
+  
+  const now = new Date();
+  let cutOff = new Date();
+  if (timeRange === "24h") {
+    cutOff.setHours(now.getHours() - 24);
+  } else if (timeRange === "30d") {
+    cutOff.setDate(now.getDate() - 30);
+  } else { // default "7d"
+    cutOff.setDate(now.getDate() - 7);
+  }
+  
+  const filtered = pageviews.filter(p => new Date(p.timestamp) >= cutOff);
+  
+  // 1. Visitors (unique IPs)
+  const uniqueIps = new Set(filtered.map(p => p.ip));
+  const visitorsCount = uniqueIps.size;
+  
+  // 2. Page views
+  const pageViewsCount = filtered.length;
+  
+  // 3. Bounce Rate (IPs with only 1 page view in this timeframe / total unique IPs)
+  const visitsByIp = {};
+  filtered.forEach(p => {
+    visitsByIp[p.ip] = (visitsByIp[p.ip] || 0) + 1;
+  });
+  const totalIps = Object.keys(visitsByIp).length;
+  const singlePageIps = Object.values(visitsByIp).filter(count => count === 1).length;
+  const bounceRate = totalIps > 0 ? Math.round((singlePageIps / totalIps) * 100) : 0;
+  
+  // 4. Online Users (active in the last 5 minutes)
+  const fiveMinAgo = new Date();
+  fiveMinAgo.setMinutes(now.getMinutes() - 5);
+  const activeOnline = new Set(pageviews.filter(p => new Date(p.timestamp) >= fiveMinAgo).map(p => p.ip)).size;
+  
+  // 5. Chart Data: group by hours for 24h, or by days for 7d/30d
+  const chartData = {};
+  
+  // Initialize default keys so chart has labels
+  if (timeRange === "24h") {
+    for (let i = 23; i >= 0; i--) {
+      const d = new Date();
+      d.setHours(now.getHours() - i);
+      const label = `${d.getHours().toString().padStart(2, '0')}:00`;
+      chartData[label] = 0;
+    }
+  } else {
+    const daysToGenerate = timeRange === "30d" ? 30 : 7;
+    for (let i = daysToGenerate - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(now.getDate() - i);
+      const label = `${d.getDate()} ${d.toLocaleString('id-ID', { month: 'short' })}`;
+      chartData[label] = 0;
+    }
+  }
+  
+  // Fill in actual pageview counts
+  filtered.forEach(p => {
+    const d = new Date(p.timestamp);
+    let key;
+    if (timeRange === "24h") {
+      key = `${d.getHours().toString().padStart(2, '0')}:00`;
+    } else {
+      key = `${d.getDate()} ${d.toLocaleString('id-ID', { month: 'short' })}`;
+    }
+    if (chartData[key] !== undefined) {
+      chartData[key]++;
+    }
+  });
+  
+  // 6. Top Paths
+  const pathsCount = {};
+  filtered.forEach(p => {
+    pathsCount[p.path] = (pathsCount[p.path] || 0) + 1;
+  });
+  const topPaths = Object.entries(pathsCount)
+    .map(([path, count]) => ({ path, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
+    
+  return {
+    visitors: visitorsCount,
+    pageviews: pageViewsCount,
+    bounceRate,
+    online: activeOnline || 1, // fallback to 1 online (the current dev user)
+    chartData,
+    topPaths
+  };
+}
+
 module.exports = {
   read,
   write,
@@ -266,13 +377,17 @@ module.exports = {
   getAdmins,
   addAdmin,
   deleteAdmin,
-
+  
   // Monitoring
   incRequestMetrics,
   getMetrics,
   setAdminOnline,
   setAdminOffline,
   getAdminStatuses,
-
+  
+  // Pageview Analytics
+  logPageView,
+  getPageViewStats,
+  
   dbPath,
 };
