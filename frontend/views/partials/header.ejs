@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><%= title || 'Gereja' %></title>
+    <link rel="stylesheet" href="/css/style.css">
+  </head>
+  <body class="page-is-ready">
+    <% const shouldHideNavbar = typeof hideNavbar === 'undefined' ? false : hideNavbar; %>
+
+    <% if (!shouldHideNavbar) { %>
+      <nav class="nav" aria-label="Navigasi utama">
+        <div class="nav-inner">
+
+          <a class="brand" href="/" aria-label="Homepage">
+            <img src="/images/logo-placeholder.png" alt="Gereja" class="logo-img">
+          </a>
+
+          <button class="nav-toggle" aria-label="Buka navigasi" aria-expanded="false" type="button">
+            <span class="hamburger"></span>
+          </button>
+
+          <button class="theme-toggle" aria-label="Ganti tema" title="Ganti tema" type="button">🌙</button>
+
+          <div class="nav-date" aria-label="Tanggal dan waktu">
+            <span class="nav-date-day" id="nav-date-day">-</span>
+            <span class="nav-date-value" id="nav-date-value">-</span>
+            <span class="nav-date-time" id="nav-date-time">-</span>
+            <span class="nav-date-suffix">&nbsp;</span>
+          </div>
+
+          <ul class="nav-links">
+            <li>
+              <a href="#home">
+                <img class="nav-link-icon" src="/images/icon-home.png" alt="Home"> Home
+              </a>
+            </li>
+            <li>
+              <a href="#events">
+                <img class="nav-link-icon" src="/images/icon-events.png" alt="Event"> Event
+              </a>
+            </li>
+            <li>
+              <a href="#documentation">
+                <img class="nav-link-icon" src="/images/icon-docs.png" alt="Dokumentasi"> Documentation Event
+              </a>
+            </li>
+            <li>
+              <a href="#address">
+                <img class="nav-link-icon" src="/images/icon-address.png" alt="Alamat"> Address
+              </a>
+            </li>
+            <li>
+              <a href="#footer">
+                <img class="nav-link-icon" src="/images/icon-contact.png" alt="Kontak"> Contact
+              </a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+    <% } %>
+    <main class="container">

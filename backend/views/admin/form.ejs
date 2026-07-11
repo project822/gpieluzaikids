@@ -1,0 +1,70 @@
+<%- include('../../../frontend/views/partials/header', { title: 'Admin - Event Form', hideNavbar: true }) %>
+
+<div class="section admin-form-card">
+  <div class="section-header" style="text-align: left; margin-left: 0;">
+    <h1><%= event ? 'Edit' : 'New' %> Event</h1>
+    <p>Lengkapi detail event</p>
+  </div>
+
+  <form
+    class="admin-form"
+    method="post"
+    action="<%= event ? ('/events/' + event.id + '/edit') : '/events/new' %>"
+    enctype="multipart/form-data"
+  >
+  <label>
+    Title
+    <input
+      name="title"
+      value="<%= event ? event.title : '' %>"
+      required
+    >
+  </label>
+
+  <label>
+    Date
+    <input
+      type="date"
+      name="day"
+      value="<%= event ? (event.day || '') : '' %>"
+    >
+  </label>
+
+  <label>
+    Time
+    <input
+      type="time"
+      name="time"
+      value="<%= event ? (event.time || '') : '' %>"
+    >
+  </label>
+
+  <label>
+    Location
+    <input
+      name="location"
+      value="<%= event ? event.location : '' %>"
+    >
+  </label>
+
+  <label>
+    Google Form URL
+    <input
+      name="googleForm"
+      value="<%= event ? event.googleForm : '' %>"
+    >
+  </label>
+
+  <label>
+    Poster (optional)
+    <input type="file" name="poster" accept="image/*">
+  </label>
+
+  <div class="form-actions">
+    <button class="btn primary" type="submit">Save</button>
+    <a class="btn ghost" href="/events">Cancel</a>
+  </div>
+  </form>
+</div>
+
+<%- include('../../../frontend/views/partials/footer') %>

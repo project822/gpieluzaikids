@@ -1,0 +1,187 @@
+<%- include('../../../frontend/views/partials/header', { title: 'Admin - Monitoring', hideNavbar: true }) %>
+
+<div class="admin-shell">
+
+  <div class="admin-toolbar">
+    <h1 class="admin-page-title">Dashboard Monitoring</h1>
+
+    <div class="admin-actions">
+      <button class="btn primary" id="open-create-admin" type="button">Create Admin</button>
+      <a class="btn ghost" href="/logout">Log out</a>
+    </div>
+  </div>
+
+  <div class="admin-grid" style="display:grid; grid-template-columns: 1.2fr 0.8fr; gap: 16px; align-items:start;">
+    <div class="admin-card" style="padding:16px;">
+      <h2 style="margin:0 0 10px;">Performance & Traffic (Website User)</h2>
+
+
+      <div class="metric-grid" style="display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;">
+        <div class="metric-card" style="border: 1px solid var(--border); border-radius: 12px; padding: 12px;">
+          <div style="opacity:0.8; font-weight:600;">Total Requests</div>
+          <div style="font-size: 1.6rem; font-weight: 800; margin-top: 6px;">
+            <%= metrics && typeof metrics.totalRequests === 'number' ? metrics.totalRequests : 0 %>
+          </div>
+        </div>
+
+        <div class="metric-card" style="border: 1px solid var(--border); border-radius: 12px; padding: 12px;">
+          <div style="opacity:0.8; font-weight:600;">Avg Latency (ms)</div>
+          <div style="font-size: 1.6rem; font-weight: 800; margin-top: 6px;">
+            <%= avgLatencyMs || 0 %>
+          </div>
+        </div>
+
+        <div class="metric-card" style="border: 1px solid var(--border); border-radius: 12px; padding: 12px; grid-column: 1 / -1;">
+          <div style="opacity:0.8; font-weight:600;">Last Request At</div>
+          <div style="margin-top: 6px; font-weight: 700;">
+            <% if (metrics && metrics.lastRequestAt) { %>
+              <%= new Date(metrics.lastRequestAt).toLocaleString('id-ID') %>
+            <% } else { %>
+              <span style="opacity:0.7;">-</span>
+            <% } %>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 14px; opacity: 0.85; font-size: 0.95rem;">
+        Catatan: metrik diambil dari server (bukan dari Google Analytics).
+      </div>
+    </div>
+
+    <div class="admin-card" style="padding:16px;">
+      <h2 style="margin:0 0 10px;">Monitoring Admin Account</h2>
+
+      <div style="overflow:auto;">
+        <table style="width:100%; border-collapse: collapse;">
+          <thead>
+            <tr>
+              <th style="text-align:left; padding:8px 6px; border-bottom: 1px solid var(--border);">Username</th>
+              <th style="text-align:left; padding:8px 6px; border-bottom: 1px solid var(--border);">Status</th>
+              <th style="text-align:left; padding:8px 6px; border-bottom: 1px solid var(--border);">Last Online</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% const statuses = adminStatuses || {}; %>
+            <% if (admins && admins.length) { %>
+              <% admins.forEach((a) => { %>
+                <% const st = statuses[a.username] || {}; %>
+                <% const online = st.online === true; %>
+                <tr>
+                  <td style="padding:10px 6px; border-bottom: 1px solid rgba(0,0,0,0.04); font-weight:700;">
+                    <%= a.username %>
+                  </td>
+                  <td style="padding:10px 6px; border-bottom: 1px solid rgba(0,0,0,0.04);">
+                    <span style="display:inline-block; padding: 4px 10px; border-radius: 999px; font-weight: 800; font-size: 0.85rem; background:<%= online ? 'rgba(34,197,94,0.15)' : 'rgba(148,163,184,0.2)' %>; color:<%= online ? 'rgb(22,163,74)' : 'rgb(71,85,105)' %>;">
+                      <%= online ? 'ONLINE' : 'OFFLINE' %>
+                    </span>
+                  </td>
+
+                  <td style="padding:10px 6px; border-bottom: 1px solid rgba(0,0,0,0.04);">
+                    <% if (st.lastOnline) { %>
+                      <% const d = new Date(st.lastOnline); %>
+                      <%= String(d.getDate()).padStart(2, "0") %>/<%= String(d.getMonth() + 1).padStart(2, "0") %>/<%= d.getFullYear() %>
+                    <% } else { %>
+                      <span style="opacity:0.7;">-</span>
+                    <% } %>
+                  </td>
+
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="3" style="padding:12px 6px; opacity:0.8;">Belum ada admin.</td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top: 10px; font-size: 0.9rem; opacity: 0.85;">
+        Last online diambil saat admin login.
+      </div>
+    </div>
+  </div>
+
+  <div id="create-admin-modal" class="modal" aria-hidden="true" style="display:none;">
+    <div class="modal-dialog" style="max-width: 520px;">
+      <button class="modal-close" aria-label="Tutup" type="button" id="close-create-admin">&times;</button>
+      <div class="modal-body">
+        <h2 style="margin:0 0 12px;">Create Admin</h2>
+
+        <form method="post" action="/admins/new" id="create-admin-form">
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label for="admin-username">Username</label>
+            <div>
+              <input
+
+                id="admin-username"
+                type="text"
+                name="username"
+                placeholder="Username"
+                required
+                autocomplete="username"
+              />
+            </div>
+          </div>
+
+            <div class="form-group" style="margin-bottom: 14px;">
+            <label for="admin-password">Password</label>
+            <div>
+              <input
+
+                id="admin-password"
+                type="password"
+                name="password"
+                placeholder="Password"
+                required
+                autocomplete="new-password"
+              />
+            </div>
+          </div>
+
+          <button class="submit-btn" type="submit" style="width:100%;">Create</button>
+
+          <div style="margin-top: 12px; font-size: 13px; opacity: 0.9;">
+            <span>Form akan membuat akun admin baru.</span>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  (function () {
+    const openBtn = document.getElementById('open-create-admin');
+    const modal = document.getElementById('create-admin-modal');
+    const closeBtn = document.getElementById('close-create-admin');
+
+    if (!openBtn || !modal || !closeBtn) return;
+
+    function openModal() {
+      modal.style.display = 'block';
+      modal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeModal() {
+      modal.style.display = 'none';
+      modal.setAttribute('aria-hidden', 'true');
+    }
+
+    openBtn.addEventListener('click', openModal);
+    closeBtn.addEventListener('click', closeModal);
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    // escape close
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+  })();
+</script>
+
+<%- include('../../../frontend/views/partials/footer') %>
+

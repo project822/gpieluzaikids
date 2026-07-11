@@ -1,0 +1,213 @@
+<%- include('partials/header', { title: 'Home' }) %>
+
+<section class="hero modern-hero reveal" id="home">
+<div class="hero-overlay">
+    <div
+      class="layer hero-parallax"
+      style="background: radial-gradient(circle at 20% 30%, rgba(14, 165, 164, 0.12), transparent 12%); opacity: 0.9;"
+    ></div>
+    <div
+      class="layer hero-parallax"
+      style="background: radial-gradient(circle at 80% 70%, rgba(37, 99, 235, 0.12), transparent 12%); opacity: 0.85;"
+    ></div>
+  </div>
+
+
+  <div class="hero-content">
+    <div class="hero-card auth-card">
+      <div class="logo-wrap hero-logo-wrap">
+        <img
+          src="/images/logo-placeholder.png"
+          alt="Logo"
+          class="hero-logo-img"
+        >
+        <h1 class="logo-title">GPI Eluzai Kids</h1>
+      </div>
+
+      <p class="lead hero-lead">Aku Diberkati, Kamu Diberkati, Kita Semua Diberkati.</p>
+
+      <div class="hero-ctas hero-ctas-home">
+        <a class="btn primary" href="#events">Lihat Event</a>
+        <a class="btn ghost" href="#footer">Ikuti Kami</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section id="events" class="section events-section reveal">
+  <div class="section-header">
+    <h2>Upcoming Events</h2>
+  </div>
+
+  <div class="carousel-wrapper events-carousel" id="events-carousel" data-carousel-mode="single">
+    <div class="carousel-track">
+
+    <% if (events && events.length) { %>
+
+      <% events.forEach((event) => { %>
+        <div class="carousel-item slide" data-id="<%= event.id %>">
+          <div class="slide-card">
+            <% if (event.poster) { %>
+              <div class="poster" style="background-image: url('<%= event.poster %>');"></div>
+            <% } else { %>
+              <div class="poster placeholder"></div>
+            <% } %>
+
+            <div class="meta">
+              <h3><%= event.title %></h3>
+              <p class="time">
+                <%= (() => {
+                  const s = String(event.day || '').trim();
+                  let d = null;
+
+                  // YYYY-MM-DD
+                  const m1 = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+                  if (m1) {
+                    d = new Date(Number(m1[1]), Number(m1[2]) - 1, Number(m1[3]));
+                  } else {
+                    // DD/MM/YYYY
+                    const m2 = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+                    if (m2) d = new Date(Number(m2[3]), Number(m2[2]) - 1, Number(m2[1]));
+                  }
+
+                  if (!d || Number.isNaN(d.getTime())) return s;
+                  const dd = String(d.getDate()).padStart(2, '0');
+                  const mm = String(d.getMonth() + 1).padStart(2, '0');
+                  const yyyy = d.getFullYear();
+                  return `${dd}/${mm}/${yyyy}`;
+                })() %> | <%= event.time %>
+              </p>
+
+
+
+              <p class="location"><%= event.location %></p>
+
+              <div class="actions">
+                <% if (event.googleForm) { %>
+                  <a class="btn" href="<%= event.googleForm %>" target="_blank" rel="noopener">Daftar</a>
+                <% } else { %>
+                  <span class="btn ghost" style="cursor: default; opacity: 0.7;" aria-disabled="true">Daftar</span>
+                <% } %>
+                <button class="btn ghost view-details" data-id="<%= event.id %>" type="button">Detail</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    <% } else { %>
+      <div class="carousel-item" style="display:flex; align-items:center; justify-content:center;">
+        <p class="lead" style="width: 100%; text-align: center;">Belum ada event.</p>
+      </div>
+
+    <% } %>
+    </div>
+
+    <button class="carousel-btn prev" type="button" aria-label="Sebelumnya">‹</button>
+    <button class="carousel-btn next" type="button" aria-label="Berikutnya">›</button>
+  </div>
+</section>
+
+
+
+<section id="documentation" class="section docs-section reveal">
+  <div class="section-header">
+
+    <h2>Dokumentasi Event</h2>
+    <p>Dokumentasi acara dapat diakses melalui Google Drive.</p>
+  </div>
+
+  <div class="carousel-wrapper docs-carousel" id="docs-carousel" data-carousel-mode="single">
+    <div class="carousel-track" id="docs-carousel-track">
+
+    <% if (events && events.length) { %>
+
+      <% events.forEach((event) => { %>
+        <div class="carousel-item doc-slide">
+          <div class="slide-card doc-slide-card">
+
+            <div class="meta doc-slide-meta">
+              <h3 class="doc-slide-title"><%= event.title %></h3>
+
+              <% if (event.driveLink) { %>
+                <a class="btn primary btn-sm" href="<%= event.driveLink %>" target="_blank" rel="noopener">
+                  Buka Google Drive
+                </a>
+              <% } else { %>
+                <span class="btn ghost btn-sm" style="cursor: default;">Link Google Drive belum tersedia</span>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    <% } else { %>
+      <div class="carousel-item" style="display:flex; align-items:center; justify-content:center;">
+        <p class="lead" style="width: 100%; text-align: center;">Belum ada data event.</p>
+      </div>
+
+    <% } %>
+    </div>
+
+    <button class="carousel-btn prev" type="button" aria-label="Sebelumnya">‹</button>
+    <button class="carousel-btn next" type="button" aria-label="Berikutnya">›</button>
+  </div>
+</section>
+
+<section id="address" class="section address-section reveal">
+  <div class="section-header">
+    <h2>Alamat</h2>
+    <p>Mari beribadah bersama kami.</p>
+  </div>
+
+  <div class="address-grid">
+    <div class="map-frame">
+      <iframe
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3957.652535728212!2d112.714429!3d-7.280318!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd7fd0015087f33%3A0xf0f9599548b15626!2sGPI%20ELUZAI!5e0!3m2!1sid!2sid!4v1783601161439!5m2!1sid!2sid"
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+        allowfullscreen
+      ></iframe>
+    </div>
+
+    <div class="address-card">
+      <div class="section-header" style="text-align: left; margin-bottom: 12px;">
+        <h2 style="font-size: 1.4rem; margin: 0;">GPI Eluzai Kids</h2>
+      </div>
+
+      <p style="margin: 0 0 14px; color: var(--muted); line-height: 1.7;">
+        Jl. Dukuh Kupang Timur XVII No. 28<br>
+        Surabaya, Jawa Timur 60255
+      </p>
+
+      <a
+        class="btn primary"
+        href="https://www.google.com/maps/place/GPI+ELUZAI/@-7.280318,112.714429,17z/data=!3m1!4b1!4m6!3m5!1s0x2dd7fd0015087f33:0xf0f9599548b15626!8m2!3d-7.280318!4d112.714429!16s%2Fg%2F11y79_ln7k?entry=ttu&g_ep=EgoyMDI2MDcwNi4wIKXMDSoASAFQAw%3D%3D"
+        target="_blank"
+        rel="noopener"
+        style="display: inline-block;"
+      >
+        Buka di Google Maps
+      </a>
+    </div>
+  </div>
+</section>
+
+<div id="event-modal" class="modal" aria-hidden="true">
+  <div class="modal-dialog">
+    <button class="modal-close" aria-label="Tutup" type="button">&times;</button>
+    <div class="modal-body">
+      <img id="modal-poster" src="" alt="Poster event">
+      <div>
+        <h3 id="modal-title"></h3>
+        <p id="modal-time"></p>
+        <p id="modal-location"></p>
+        <p id="modal-desc"></p>
+        <div id="modal-actions"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/event-alert.js"></script>
+
+<%- include('partials/footer') %>

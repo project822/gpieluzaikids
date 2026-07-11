@@ -1,0 +1,126 @@
+<%- include('../../../frontend/views/partials/header', { title: 'Add Documentation', hideNavbar: true }) %>
+
+<div class="section doc-admin-card">
+  <div class="section-header" style="text-align: left; margin-bottom: 14px;">
+    <h2 style="margin: 0;">Tambah / Update Dokumentasi</h2>
+    <p class="lead" style="margin: 8px 0 0;">Pilih event, lalu masukkan link Google Drive.</p>
+  </div>
+
+  <div class="doc-admin-grid">
+    <div class="doc-admin-panel">
+      <label>
+        Event
+      </label>
+      <select id="doc-event-select">
+        <option value="">-- Pilih Event --</option>
+        <% if (events && events.length) { %>
+          <% events.forEach((event) => { %>
+            <option value="<%= event.id %>"><%= event.title %></option>
+          <% }) %>
+        <% } %>
+      </select>
+
+      <div style="height: 14px;"></div>
+
+      <label>
+        Link Google Drive
+      </label>
+      <input
+        id="doc-drive-link"
+        type="url"
+        placeholder="https://drive.google.com/..."
+      >
+
+      <div style="height: 14px;"></div>
+
+      <button id="doc-add-btn" class="btn primary" type="button" style="width: 100%;">Simpan</button>
+      <p id="doc-add-status" style="margin: 10px 0 0; color: var(--muted); font-size: 0.95rem;"></p>
+    </div>
+
+    <div class="doc-admin-panel">
+      <label>
+        Daftar Event & Dokumentasi Saat Ini
+      </label>
+
+      <div class="doc-list">
+        <% if (events && events.length) { %>
+          <% events.forEach((event) => { %>
+            <div class="doc-list-card">
+              <div class="doc-list-title">
+                <%= event.title %>
+              </div>
+
+              <div class="doc-list-meta">
+                <div><b>Day:</b> <%= event.day %></div>
+                <div><b>Time:</b> <%= event.time %></div>
+                <div style="margin-top: 8px;">
+                  <b>Drive:</b>
+                  <% if (event.driveLink) { %>
+                    <a href="<%= event.driveLink %>" target="_blank" rel="noopener" style="color: var(--accent); text-decoration: none;">
+                      Buka link
+                    </a>
+                  <% } else { %>
+                    <span style="opacity: 0.7;">(belum ada)</span>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        <% } else { %>
+          <p style="color: var(--muted); margin: 0;">Belum ada event.</p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-actions" style="margin-top: 18px;">
+    <a class="btn ghost" href="/events/new">Add New Event</a>
+    <a class="btn" href="/events">Kembali</a>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const btn = document.getElementById('doc-add-btn');
+    const select = document.getElementById('doc-event-select');
+    const driveInput = document.getElementById('doc-drive-link');
+    const status = document.getElementById('doc-add-status');
+
+    if (!btn || !select || !driveInput || !status) return;
+
+    btn.addEventListener('click', async () => {
+      const eventId = select.value;
+      const driveLink = (driveInput.value || '').trim();
+
+      if (!eventId) {
+        status.textContent = 'Pilih event dulu.';
+        return;
+      }
+
+      if (!driveLink) {
+        status.textContent = 'Masukkan link Google Drive.';
+        return;
+      }
+
+      try {
+        status.textContent = 'Menyimpan...';
+
+        const res = await fetch('/admin/api/documentation/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ eventId, driveLink }),
+        });
+
+        if (!res.ok) throw new Error('Request failed');
+
+        status.textContent = 'Dokumentasi berhasil disimpan.';
+        driveInput.value = '';
+      } catch (err) {
+        console.error(err);
+        status.textContent = 'Gagal menyimpan dokumentasi.';
+      }
+    });
+  })();
+</script>
+
+<%- include('../../../frontend/views/partials/footer') %>

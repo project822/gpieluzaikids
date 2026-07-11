@@ -1,0 +1,77 @@
+<%- include('../../../frontend/views/partials/header', { title: 'Admin - Events', hideNavbar: true }) %>
+
+<div class="admin-shell">
+  <div class="admin-toolbar">
+    <h1 class="admin-page-title">Events</h1>
+
+    <div class="admin-actions">
+      <a class="btn" href="/events/new">Add New Event</a>
+      <a class="btn primary" href="/documentation">Add New Documentation</a>
+      <a class="btn ghost" href="/logout">Log out</a>
+    </div>
+  </div>
+
+  <div class="admin-events-wrap">
+    <% if (!events || !events.length) { %>
+      <p class="lead" style="grid-column: 1 / -1;">Belum ada event.</p>
+    <% } else { %>
+      <% events.forEach((event) => { %>
+        <div class="admin-event-card">
+          <div class="admin-event-media">
+            <% if (event.poster) { %>
+              <img src="<%= event.poster %>" alt="<%= event.title %>">
+            <% } else { %>
+              <div class="admin-event-empty">No Poster</div>
+            <% } %>
+          </div>
+
+          <div class="admin-event-body">
+            <h3><%= event.title %></h3>
+
+            <div class="admin-event-details">
+              <div><strong>Tanggal/Hari:</strong> <%= event.day %></div>
+              <div><strong>Jam:</strong> <%= event.time %></div>
+              <div><strong>Lokasi:</strong> <%= event.location %></div>
+            </div>
+
+            <div class="actions">
+              <a href="/events/<%= event.id %>/edit" class="btn ghost">Edit</a>
+              <button class="btn danger admin-delete-btn" data-id="<%= event.id %>" type="button">Hapus</button>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../../../frontend/views/partials/footer') %>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.admin-delete-btn').forEach(function(btn) {
+    btn.addEventListener('click', async function() {
+      if (!confirm('Hapus event ini? Tindakan ini tidak dapat dibatalkan.')) return;
+
+      try {
+        const res = await fetch('/admin/api/events/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: btn.dataset.id })
+        });
+
+        const data = await res.json();
+
+        if (data.ok) {
+          location.reload();
+        } else {
+          alert('Gagal menghapus event: ' + (data.error || 'unknown error'));
+        }
+      } catch (err) {
+        alert('Gagal menghapus event. Silakan coba lagi.');
+        console.error('[admin-delete]', err);
+      }
+    });
+  });
+});
+</script>
