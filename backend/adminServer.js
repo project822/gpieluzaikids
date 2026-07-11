@@ -59,7 +59,7 @@ app.get("/", (req, res) => res.redirect("/login"));
 
 app.get("/login", (req, res) => res.render("login", { error: null }));
 
-app.get("/dashboard-monitoring", ensureAuth, (req, res) => {
+app.get("/admin/dashboard-monitoring", ensureAuth, (req, res) => {
   const metrics = db.getMetrics();
   const adminStatuses = db.getAdminStatuses();
 
@@ -83,15 +83,15 @@ app.get("/dashboard-monitoring", ensureAuth, (req, res) => {
 
 // Redirect aliases for dashboard monitoring
 app.get("/admin/dashboard", ensureAuth, (req, res) => {
-  return res.redirect("/dashboard-monitoring");
+  return res.redirect("/admin/dashboard-monitoring");
 });
 
-app.get("/admin/dashboard-monitoring", ensureAuth, (req, res) => {
-  return res.redirect("/dashboard-monitoring");
+app.get("/dashboard-monitoring", ensureAuth, (req, res) => {
+  return res.redirect("/admin/dashboard-monitoring");
 });
 
 app.get("/admin/events/dashboard-monitoring", ensureAuth, (req, res) => {
-  return res.redirect("/dashboard-monitoring");
+  return res.redirect("/admin/dashboard-monitoring");
 });
 
 app.post(

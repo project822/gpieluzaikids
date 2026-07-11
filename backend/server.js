@@ -180,8 +180,8 @@ app.get("/admin/logout", (req, res) => {
   });
 });
 
-// Dashboard monitoring
-app.get("/admin/dashboard", ensureAuth, (req, res) => {
+// Dashboard monitoring (canonical URL)
+app.get("/admin/dashboard-monitoring", ensureAuth, (req, res) => {
   const metrics = db.getMetrics();
   const adminStatuses = db.getAdminStatuses();
   const admins = db.getAdmins() || [];
@@ -200,16 +200,16 @@ app.get("/admin/dashboard", ensureAuth, (req, res) => {
 });
 
 // Redirect aliases for dashboard monitoring
-app.get("/dashboard-monitoring", ensureAuth, (req, res) => {
-  return res.redirect("/admin/dashboard");
+app.get("/admin/dashboard", ensureAuth, (req, res) => {
+  return res.redirect("/admin/dashboard-monitoring");
 });
 
-app.get("/admin/dashboard-monitoring", ensureAuth, (req, res) => {
-  return res.redirect("/admin/dashboard");
+app.get("/dashboard-monitoring", ensureAuth, (req, res) => {
+  return res.redirect("/admin/dashboard-monitoring");
 });
 
 app.get("/admin/events/dashboard-monitoring", ensureAuth, (req, res) => {
-  return res.redirect("/admin/dashboard");
+  return res.redirect("/admin/dashboard-monitoring");
 });
 
 // Events management
