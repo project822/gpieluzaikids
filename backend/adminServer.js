@@ -81,8 +81,12 @@ app.get("/dashboard-monitoring", ensureAuth, (req, res) => {
   });
 });
 
-// create admin "sementara dihapus": arahkan ke dashboard monitoring
-app.get("/admins/new", ensureAuth, (req, res) => {
+// Redirect aliases for dashboard monitoring
+app.get("/admin/dashboard", ensureAuth, (req, res) => {
+  return res.redirect("/dashboard-monitoring");
+});
+
+app.get("/admin/dashboard-monitoring", ensureAuth, (req, res) => {
   return res.redirect("/dashboard-monitoring");
 });
 
