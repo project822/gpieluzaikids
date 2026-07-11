@@ -123,8 +123,24 @@ app.get("/api/events/:id", (req, res) => {
 
 // ============== ADMIN ROUTES (prefix /admin) ==============
 
-// Login
+// Login (canonical: /admin/login)
 app.get("/admin/login", (req, res) => res.render("login", { error: null }));
+
+async function handleAdminLogin(req, res) {
+  const { username, password } = req.body;
+  const admins = db.getAdmins();
+  const admin = (admins || []).find((a) => a.username === username);
+  if (!admin) {
+    return res.render("login", { error: "Invalid credentials" });
+  }
+  const ok = await bcrypt.compare(password, admin.passwordHash);
+  if (!ok) {
+    return res.render("login", { error: "Invalid credentials" });
+  }
+  req.session.user = { username };
+  db.setAdminOnline(username);
+  return res.redirect("/admin/events");
+}
 
 app.post(
   "/admin/login",
@@ -133,21 +149,20 @@ app.post(
     max: 5,
     blockMs: 10 * 60 * 1000,
   }),
-  async (req, res) => {
-    const { username, password } = req.body;
-    const admins = db.getAdmins();
-    const admin = (admins || []).find((a) => a.username === username);
-    if (!admin) {
-      return res.render("login", { error: "Invalid credentials" });
-    }
-    const ok = await bcrypt.compare(password, admin.passwordHash);
-    if (!ok) {
-      return res.render("login", { error: "Invalid credentials" });
-    }
-    req.session.user = { username };
-    db.setAdminOnline(username);
-    return res.redirect("/admin/events");
-  },
+  (req, res) => handleAdminLogin(req, res),
+);
+
+// Alias routes for backward compatibility (legacy client posting to /login)
+app.get("/login", (req, res) => res.redirect("/admin/login"));
+
+app.post(
+  "/login",
+  rateLimitLogin({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    blockMs: 10 * 60 * 1000,
+  }),
+  (req, res) => handleAdminLogin(req, res),
 );
 
 app.get("/admin/logout", (req, res) => {
