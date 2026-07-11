@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Developer Login</title>
+    <link rel="stylesheet" href="/css/style.css">
+
+    <!-- Vercel Analytics -->
+    <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
+    <script defer src="/_vercel/insights/script.js"></script>
+
+    <!-- Vercel Speed Insights (works for SSR apps like Express/EJS) -->
+    <script defer src="https://unpkg.com/@vercel/speed-insights/dist/index.js"></script>
+  </head>
+  <body class="page-is-ready">
+    <main class="container">
+      <div class="auth-page" style="margin-top: 30px;">
+        <div class="auth-card hover-expand" style="margin: 0 auto;">
+
+          <div class="logo-wrap">
+            <img
+              src="/images/logo-placeholder.png"
+              alt="Logo"
+              style="width: 56px; height: 56px; border-radius: 12px; display: inline-block; margin-bottom: 8px;"
+            >
+            <h1>Developer Login</h1>
+          </div>
+
+          <% if (error) { %>
+            <p class="error" style="color: var(--accent-2); font-weight: 700;"><%= error %></p>
+          <% } %>
+
+          <form method="post" action="/dev/login">
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label for="dev-username">Username</label>
+              <div class="input-with-icon">
+                <img class="input-icon" src="/images/icon-user.png" alt="User">
+                <input
+                  id="dev-username"
+                  type="text"
+                  name="username"
+                  placeholder="Dev Username"
+                  required
+                  autocomplete="username"
+                >
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label for="dev-password">Password</label>
+              <div class="input-with-icon">
+                <img class="input-icon" src="/images/icon-password.png" alt="Password">
+                <input
+                  id="dev-password"
+                  type="password"
+                  name="password"
+                  placeholder="Dev Password"
+                  required
+                  autocomplete="current-password"
+                >
+              </div>
+            </div>
+
+            <button class="submit-btn" type="submit">Login as Dev</button>
+          </form>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

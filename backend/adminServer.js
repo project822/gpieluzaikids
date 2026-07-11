@@ -58,11 +58,36 @@ function ensureAuth(req, res, next) {
   return res.redirect("/login");
 }
 
+function ensureDevAuth(req, res, next) {
+  if (req.session && req.session.devUser) return next();
+  if (req.session) {
+    req.session.redirectTo = req.originalUrl;
+  }
+  return res.redirect("/dev/login");
+}
+
 app.get("/", (req, res) => res.redirect("/login"));
 
 app.get("/login", (req, res) => res.render("login", { error: null }));
 
-app.get("/dev/dashboard", ensureAuth, (req, res) => {
+// ============== DEVELOPER AUTH ROUTES ==============
+app.get("/dev/login", (req, res) => {
+  return res.render("dev-login", { error: null });
+});
+
+app.post("/dev/login", (req, res) => {
+  const { username, password } = req.body || {};
+  if (username === "dev" && password === "dev123") {
+    req.session.devUser = { username: "dev" };
+    const redirectTo = req.session.redirectTo || "/dev/dashboard";
+    delete req.session.redirectTo;
+    return res.redirect(redirectTo);
+  } else {
+    return res.render("dev-login", { error: "Username atau password developer salah." });
+  }
+});
+
+app.get("/dev/dashboard", ensureDevAuth, (req, res) => {
   const metrics = db.getMetrics();
   const adminStatuses = db.getAdminStatuses();
 
@@ -85,19 +110,19 @@ app.get("/dev/dashboard", ensureAuth, (req, res) => {
 });
 
 // Redirect aliases for dashboard monitoring
-app.get("/admin/dashboard-monitoring", ensureAuth, (req, res) => {
+app.get("/admin/dashboard-monitoring", ensureDevAuth, (req, res) => {
   return res.redirect("/dev/dashboard");
 });
 
-app.get("/admin/dashboard", ensureAuth, (req, res) => {
+app.get("/admin/dashboard", ensureDevAuth, (req, res) => {
   return res.redirect("/dev/dashboard");
 });
 
-app.get("/dashboard-monitoring", ensureAuth, (req, res) => {
+app.get("/dashboard-monitoring", ensureDevAuth, (req, res) => {
   return res.redirect("/dev/dashboard");
 });
 
-app.get("/admin/events/dashboard-monitoring", ensureAuth, (req, res) => {
+app.get("/admin/events/dashboard-monitoring", ensureDevAuth, (req, res) => {
   return res.redirect("/dev/dashboard");
 });
 
