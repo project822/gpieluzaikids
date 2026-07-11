@@ -208,6 +208,10 @@ app.get("/admin/dashboard-monitoring", ensureAuth, (req, res) => {
   return res.redirect("/admin/dashboard");
 });
 
+app.get("/admin/events/dashboard-monitoring", ensureAuth, (req, res) => {
+  return res.redirect("/admin/dashboard");
+});
+
 // Events management
 app.get("/admin/events", ensureAuth, (req, res) => {
   const events = db.getEvents().slice().reverse();

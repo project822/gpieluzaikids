@@ -90,6 +90,10 @@ app.get("/admin/dashboard-monitoring", ensureAuth, (req, res) => {
   return res.redirect("/dashboard-monitoring");
 });
 
+app.get("/admin/events/dashboard-monitoring", ensureAuth, (req, res) => {
+  return res.redirect("/dashboard-monitoring");
+});
+
 app.post(
   "/login",
   rateLimitLogin({
