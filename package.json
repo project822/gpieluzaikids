@@ -10,6 +10,7 @@
     "test:landing": "node scripts/checkLanding.js"
   },
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
     "bcrypt": "^5.1.0",
     "ejs": "^3.1.9",
     "express": "^4.18.2",
