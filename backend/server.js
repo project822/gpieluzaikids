@@ -3,8 +3,8 @@ const path = require("path");
 const fs = require("fs");
 const session = require("express-session");
 const bcrypt = require("bcrypt");
+const crypto = require("crypto");
 const multer = require("multer");
-const { v4: uuidv4 } = require("uuid");
 
 const db = require("./db");
 const { rateLimitLogin } = require("./rateLimit");
@@ -202,7 +202,7 @@ app.post(
     const { title, day, time, location, googleForm } = req.body;
     const poster = req.file ? `/uploads/${req.file.filename}` : "";
     const event = {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       title,
       day,
       time,
