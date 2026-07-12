@@ -233,7 +233,12 @@ app.post(
     req.session.user = { username };
     db.setAdminOnline(username);
     
-    const redirectTo = req.session.redirectTo || "/events";
+    // Only redirect to admin-accessible paths, NOT dev paths
+    const savedRedirect = req.session.redirectTo || "";
+    let redirectTo = "/events";
+    if (savedRedirect && !savedRedirect.includes("/dashboard") && !savedRedirect.includes("/dev/") && (savedRedirect.startsWith("/events") || savedRedirect.startsWith("/documentation") || savedRedirect.startsWith("/admins") || savedRedirect === "/")) {
+      redirectTo = savedRedirect;
+    }
     delete req.session.redirectTo;
     return res.redirect(redirectTo);
   },

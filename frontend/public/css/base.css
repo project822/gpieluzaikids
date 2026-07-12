@@ -35,6 +35,10 @@ body::before {
   z-index: -1;
 }
 
+html.theme-light body::before {
+  display: none;
+}
+
 body,
 button,
 input,

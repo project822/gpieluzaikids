@@ -181,7 +181,12 @@ async function handleAdminLogin(req, res) {
   req.session.user = { username };
   db.setAdminOnline(username);
   
-  const redirectTo = req.session.redirectTo || "/admin/events";
+  // Only redirect to admin-accessible paths, NOT dev paths (e.g. /admin/dashboard → /dev/dashboard)
+  const savedRedirect = req.session.redirectTo || "";
+  let redirectTo = "/admin/events";
+  if (savedRedirect && !savedRedirect.includes("/dashboard") && !savedRedirect.includes("/dev/") && (savedRedirect.startsWith("/admin/") || savedRedirect.startsWith("/events") || savedRedirect.startsWith("/documentation") || savedRedirect === "/")) {
+    redirectTo = savedRedirect;
+  }
   delete req.session.redirectTo;
   return res.redirect(redirectTo);
 }
