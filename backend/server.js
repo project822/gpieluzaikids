@@ -293,6 +293,55 @@ app.get("/api/dev/stats", ensureDevAuth, (req, res) => {
   return res.json({ pvStats, metrics: { ...metrics, avgLatencyMs } });
 });
 
+// ============== DEV API: Add Admin ==============
+app.post("/dev/api/admins/add", ensureDevAuth, async (req, res) => {
+  const { username, password } = req.body || {};
+  if (!username || !password) {
+    return res.status(400).json({ error: "Username dan password wajib diisi" });
+  }
+  const admins = db.getAdmins();
+  const exists = (admins || []).some((a) => a.username === username);
+  if (exists) {
+    return res.status(400).json({ error: "Username sudah dipakai" });
+  }
+  const passwordHash = await bcrypt.hash(password, 10);
+  db.addAdmin({ username, passwordHash });
+  return res.json({ ok: true, username });
+});
+
+// ============== DEV API: Reset Password ==============
+app.post("/dev/api/admins/reset-password", ensureDevAuth, async (req, res) => {
+  const { username, newPassword } = req.body || {};
+  if (!username || !newPassword) {
+    return res.status(400).json({ error: "Username dan password baru wajib diisi" });
+  }
+  const admins = db.getAdmins();
+  const exists = (admins || []).some((a) => a.username === username);
+  if (!exists) {
+    return res.status(400).json({ error: "Username tidak ditemukan" });
+  }
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+  db.updateAdminPassword(username, passwordHash);
+  return res.json({ ok: true, username });
+});
+
+// ============== DEV API: Delete Admin ==============
+app.post("/dev/api/admins/delete", ensureDevAuth, (req, res) => {
+  const { username } = req.body || {};
+  if (!username) {
+    return res.status(400).json({ error: "Username wajib diisi" });
+  }
+  db.deleteAdmin(username);
+  return res.json({ ok: true });
+});
+
+// ============== DEV API: Get Admin Statuses (for real-time refresh) ==============
+app.get("/dev/api/admins/statuses", ensureDevAuth, (req, res) => {
+  const adminStatuses = db.getAdminStatuses();
+  const admins = db.getAdmins() || [];
+  return res.json({ admins, adminStatuses });
+});
+
 // Events management
 app.get("/admin/events", ensureAuth, (req, res) => {
   const events = db.getEvents().slice().reverse();

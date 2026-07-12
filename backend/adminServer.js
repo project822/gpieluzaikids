@@ -39,6 +39,7 @@ app.set("view engine", "ejs");
 app.set("views", ADMIN_VIEWS_DIR);
 
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 app.use(express.static(PUBLIC_ASSETS_DIR, {
   maxAge: '7d',
   immutable: true,
@@ -106,24 +107,25 @@ app.post("/dev/login", (req, res) => {
 });
 
 app.get("/dev/dashboard", ensureDevAuth, (req, res) => {
+  const timeRange = req.query.range || "7d";
   const metrics = db.getMetrics();
   const adminStatuses = db.getAdminStatuses();
-
   const admins = db.getAdmins() || [];
-
-  // last request avg latency
   const avgLatencyMs =
     metrics && metrics.totalRequests
       ? Math.round(
           (metrics.totalLatencyMsSum || 0) / (metrics.totalRequests || 1),
         )
       : 0;
+  const pvStats = db.getPageViewStats(timeRange);
 
   return res.render("dashboard", {
     metrics,
     avgLatencyMs,
     admins,
     adminStatuses,
+    pvStats,
+    timeRange,
   });
 });
 
@@ -142,6 +144,67 @@ app.get("/dashboard-monitoring", ensureDevAuth, (req, res) => {
 
 app.get("/admin/events/dashboard-monitoring", ensureDevAuth, (req, res) => {
   return res.redirect("/dev/dashboard");
+});
+
+// ============== DEV API: Add Admin ==============
+app.post("/dev/api/admins/add", ensureDevAuth, async (req, res) => {
+  const { username, password } = req.body || {};
+  if (!username || !password) {
+    return res.status(400).json({ error: "Username dan password wajib diisi" });
+  }
+  const admins = db.getAdmins();
+  const exists = (admins || []).some((a) => a.username === username);
+  if (exists) {
+    return res.status(400).json({ error: "Username sudah dipakai" });
+  }
+  const passwordHash = await bcrypt.hash(password, 10);
+  db.addAdmin({ username, passwordHash });
+  return res.json({ ok: true, username });
+});
+
+// ============== DEV API: Reset Password ==============
+app.post("/dev/api/admins/reset-password", ensureDevAuth, async (req, res) => {
+  const { username, newPassword } = req.body || {};
+  if (!username || !newPassword) {
+    return res.status(400).json({ error: "Username dan password baru wajib diisi" });
+  }
+  const admins = db.getAdmins();
+  const exists = (admins || []).some((a) => a.username === username);
+  if (!exists) {
+    return res.status(400).json({ error: "Username tidak ditemukan" });
+  }
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+  db.updateAdminPassword(username, passwordHash);
+  return res.json({ ok: true, username });
+});
+
+// ============== DEV API: Delete Admin ==============
+app.post("/dev/api/admins/delete", ensureDevAuth, (req, res) => {
+  const { username } = req.body || {};
+  if (!username) {
+    return res.status(400).json({ error: "Username wajib diisi" });
+  }
+  db.deleteAdmin(username);
+  return res.json({ ok: true });
+});
+
+// ============== DEV API: Get Admin Statuses (for real-time refresh) ==============
+app.get("/dev/api/admins/statuses", ensureDevAuth, (req, res) => {
+  const adminStatuses = db.getAdminStatuses();
+  const admins = db.getAdmins() || [];
+  return res.json({ admins, adminStatuses });
+});
+
+// ============== DEV API: Stats (for dashboard auto-refresh) ==============
+app.get("/dev/api/stats", ensureDevAuth, (req, res) => {
+  const timeRange = req.query.range || "7d";
+  const pvStats = db.getPageViewStats(timeRange);
+  const metrics = db.getMetrics();
+  const avgLatencyMs =
+    metrics && metrics.totalRequests
+      ? Math.round((metrics.totalLatencyMsSum || 0) / (metrics.totalRequests || 1))
+      : 0;
+  return res.json({ pvStats, metrics: { ...metrics, avgLatencyMs } });
 });
 
 app.post(
@@ -164,7 +227,6 @@ app.post(
     const ok = await bcrypt.compare(password, admin.passwordHash);
 
     if (!ok) {
-      // Jangan tampilkan detail lain supaya konsisten dengan rate-limit.
       return res.render("login", { error: "Invalid credentials" });
     }
 
@@ -276,7 +338,6 @@ app.post(
 );
 
 app.use("/admin/api", ensureAuth);
-app.use(express.json());
 
 app.post("/admin/api/events/delete", (req, res) => {
   const { id } = req.body || {};

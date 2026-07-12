@@ -11,8 +11,6 @@ function ensureDbDir() {
 }
 
 function getDbPathFallback() {
-  // Vercel biasanya read-only di /var/task, jadi pakai /tmp untuk fallback.
-  // Persistensi mungkin terbatas, tapi ini mencegah crash saat file tidak bisa ditulis.
   return path.join(process.env.TMPDIR || "/tmp", "db.json");
 }
 
@@ -84,6 +82,15 @@ function read() {
 
     const data = JSON.parse(fs.readFileSync(effectiveDbPath, "utf8"));
 
+    // Migration: versi lama pakai `admin` (single admin)
+    if (data.admin && !data.admins) {
+      data.admins = [
+        { username: data.admin.username, passwordHash: data.admin.passwordHash },
+      ];
+      delete data.admin;
+      fs.writeFileSync(effectiveDbPath, JSON.stringify(data, null, 2));
+    }
+
     if (!data.admins) data.admins = [];
     if (!data.events) data.events = [];
 
@@ -96,42 +103,11 @@ function read() {
     }
     if (!data.adminStatus) data.adminStatus = {};
 
-    // Pastikan write() memakai lokasi fallback juga.
-    // Caranya: update dbPath secara lokal untuk fungsi write/read berikutnya.
-    // (write() masih pakai dbPath konstan, jadi kita handle dengan monkey patch sederhana)
-    // -> implementasi minimal: gunakan write langsung dari effectiveDbPath di bawah.
-    // Namun untuk menjaga perubahan kecil, kita kembalikan data sekarang dan biarkan admin membuat ulang.
-
     return data;
   }
-
-  // Migration: versi lama pakai `admin` (single admin)
-  if (data.admin && !data.admins) {
-    data.admins = [
-      { username: data.admin.username, passwordHash: data.admin.passwordHash },
-    ];
-    delete data.admin;
-    write(data);
-  }
-
-  if (!data.admins) data.admins = [];
-  if (!data.events) data.events = [];
-
-  // Metrics + Admin status (tambahan fitur monitoring)
-  if (!data.metrics) {
-    data.metrics = {
-      totalRequests: 0,
-      totalLatencyMsSum: 0,
-      lastRequestAt: null,
-    };
-  }
-  if (!data.adminStatus) data.adminStatus = {};
-
-  return data;
 }
 
 function write(data) {
-  // Coba tulis ke dbPath utama dulu. Kalau environment read-only (contoh Vercel), fallback ke /tmp.
   try {
     ensureDbDir();
     fs.writeFileSync(dbPath, JSON.stringify(data, null, 2));
@@ -143,7 +119,6 @@ function write(data) {
 
 function getEvents() {
   const data = read();
-
   return data.events || [];
 }
 
@@ -153,7 +128,6 @@ function getEvent(id) {
 
 function addEvent(event) {
   const data = read();
-
   data.events = data.events || [];
   data.events.push(event);
   write(data);
@@ -161,7 +135,6 @@ function addEvent(event) {
 
 function updateEvent(id, patch) {
   const data = read();
-
   data.events = data.events || [];
   data.events = data.events.map((event) =>
     event.id === id ? { ...event, ...patch } : event,
@@ -171,7 +144,6 @@ function updateEvent(id, patch) {
 
 function deleteEvent(id) {
   const data = read();
-
   data.events = (data.events || []).filter((event) => event.id !== id);
   write(data);
 }
@@ -183,7 +155,6 @@ function getAdmins() {
 
 function addAdmin(admin) {
   const data = read();
-
   data.admins = data.admins || [];
   data.admins.push(admin);
   write(data);
@@ -191,8 +162,15 @@ function addAdmin(admin) {
 
 function deleteAdmin(username) {
   const data = read();
-
   data.admins = (data.admins || []).filter((a) => a.username !== username);
+  write(data);
+}
+
+function updateAdminPassword(username, newPasswordHash) {
+  const data = read();
+  data.admins = (data.admins || []).map((a) =>
+    a.username === username ? { ...a, passwordHash: newPasswordHash } : a,
+  );
   write(data);
 }
 
@@ -245,7 +223,6 @@ function setAdminOffline(username) {
 
   data.adminStatus[username].online = false;
   data.adminStatus[username].updatedAt = new Date().toISOString();
-  // lastOnline tetap mempertahankan nilai terakhir saat online
 
   write(data);
 }
@@ -297,7 +274,7 @@ function getPageViewStats(timeRange = "7d") {
   // 2. Page views
   const pageViewsCount = filtered.length;
   
-  // 3. Bounce Rate (IPs with only 1 page view in this timeframe / total unique IPs)
+  // 3. Bounce Rate
   const visitsByIp = {};
   filtered.forEach(p => {
     visitsByIp[p.ip] = (visitsByIp[p.ip] || 0) + 1;
@@ -311,10 +288,9 @@ function getPageViewStats(timeRange = "7d") {
   fiveMinAgo.setMinutes(now.getMinutes() - 5);
   const activeOnline = new Set(pageviews.filter(p => new Date(p.timestamp) >= fiveMinAgo).map(p => p.ip)).size;
   
-  // 5. Chart Data: group by hours for 24h, or by days for 7d/30d
+  // 5. Chart Data
   const chartData = {};
   
-  // Initialize default keys so chart has labels
   if (timeRange === "24h") {
     for (let i = 23; i >= 0; i--) {
       const d = new Date();
@@ -332,7 +308,6 @@ function getPageViewStats(timeRange = "7d") {
     }
   }
   
-  // Fill in actual pageview counts
   filtered.forEach(p => {
     const d = new Date(p.timestamp);
     let key;
@@ -360,7 +335,7 @@ function getPageViewStats(timeRange = "7d") {
     visitors: visitorsCount,
     pageviews: pageViewsCount,
     bounceRate,
-    online: activeOnline || 1, // fallback to 1 online (the current dev user)
+    online: activeOnline || 1,
     chartData,
     topPaths
   };
@@ -377,6 +352,7 @@ module.exports = {
   getAdmins,
   addAdmin,
   deleteAdmin,
+  updateAdminPassword,
   
   // Monitoring
   incRequestMetrics,
