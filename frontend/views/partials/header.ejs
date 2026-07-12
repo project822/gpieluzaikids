@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><%= title || 'Gereja' %></title>
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 
     <!-- Vercel Analytics -->
     <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
     <script defer src="/_vercel/insights/script.js"></script>
 
-    <!-- Vercel Speed Insights (works for SSR apps like Express/EJS) -->
+    <!-- Vercel Speed Insights -->
     <script defer src="https://unpkg.com/@vercel/speed-insights/dist/index.js"></script>
-
   </head>
   <body class="page-is-ready">
     <% const shouldHideNavbar = typeof hideNavbar === 'undefined' ? false : hideNavbar; %>
@@ -22,7 +22,7 @@
         <div class="nav-inner">
 
           <a class="brand" href="/" aria-label="Homepage">
-            <img src="/images/logo-placeholder.png" alt="Gereja" class="logo-img">
+            <img src="/images/logo-placeholder.png" alt="Gereja" class="logo-img" width="46" height="46">
           </a>
 
           <button class="nav-toggle" aria-label="Buka navigasi" aria-expanded="false" type="button">
@@ -40,29 +40,19 @@
 
           <ul class="nav-links">
             <li>
-              <a href="#home">
-                <img class="nav-link-icon" src="/images/icon-home.png" alt="Home"> Home
-              </a>
+              <a href="#home"><i class="fas fa-home nav-link-icon"></i> Home</a>
             </li>
             <li>
-              <a href="#events">
-                <img class="nav-link-icon" src="/images/icon-events.png" alt="Event"> Event
-              </a>
+              <a href="#events"><i class="fas fa-calendar-alt nav-link-icon"></i> Event</a>
             </li>
             <li>
-              <a href="#documentation">
-                <img class="nav-link-icon" src="/images/icon-docs.png" alt="Dokumentasi"> Documentation Event
-              </a>
+              <a href="#documentation"><i class="fas fa-folder-open nav-link-icon"></i> Documentation Event</a>
             </li>
             <li>
-              <a href="#address">
-                <img class="nav-link-icon" src="/images/icon-address.png" alt="Alamat"> Address
-              </a>
+              <a href="#address"><i class="fas fa-map-marker-alt nav-link-icon"></i> Address</a>
             </li>
             <li>
-              <a href="#footer">
-                <img class="nav-link-icon" src="/images/icon-contact.png" alt="Kontak"> Contact
-              </a>
+              <a href="#footer"><i class="fas fa-envelope nav-link-icon"></i> Contact</a>
             </li>
           </ul>
         </div>

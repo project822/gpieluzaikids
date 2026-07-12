@@ -25,11 +25,29 @@ const UPLOADS_DIR = path.join(PUBLIC_ASSETS_DIR, "uploads");
   }
 })();
 
+// ============== SECURITY MIDDLEWARE ==============
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("X-XSS-Protection", "1; mode=block");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  next();
+});
+
 app.set("view engine", "ejs");
 app.set("views", ADMIN_VIEWS_DIR);
 
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(PUBLIC_ASSETS_DIR));
+app.use(express.static(PUBLIC_ASSETS_DIR, {
+  maxAge: '7d',
+  immutable: true,
+  setHeaders: (res, path) => {
+    if (path.endsWith('.css') || path.endsWith('.js')) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+  }
+}));
 
 app.use(
   session({

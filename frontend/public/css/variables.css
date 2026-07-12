@@ -1,0 +1,50 @@
+/* ── CSS Custom Properties (Theme) ── */
+:root {
+  --font-sans: system-ui, -apple-system, Arial, Helvetica, sans-serif;
+
+  /* Brand colors */
+  --electric-blue: #3b82f6;
+  --navy: #0f172a;
+  --white: #ffffff;
+
+  /* Dark theme (default) */
+  --bg-gradient: linear-gradient(135deg, var(--navy) 0%, var(--electric-blue) 65%, #0b3b92 100%);
+  --surface: rgba(255, 255, 255, 0.07);
+  --surface-strong: rgba(255, 255, 255, 0.12);
+  --surface-solid: #0e2a4d;
+  --card-bg: rgba(9, 34, 68, 0.85);
+  --card-bg-soft: rgba(255, 255, 255, 0.06);
+  --text-color: #eef7ff;
+  --section-heading: #ffffff;
+  --muted: #b9cbe0;
+  --accent: var(--electric-blue);
+  --danger: #f87171;
+  --border: rgba(255, 255, 255, 0.12);
+  --ghost-border: rgba(255, 255, 255, 0.16);
+  --shadow: 0 20px 50px rgba(2, 8, 23, 0.3);
+  --shadow-soft: 0 10px 30px rgba(2, 8, 23, 0.2);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --nav-height: 74px;
+
+  /* Performance: disable backdrop-filter */
+  --nav-bg: rgba(5, 20, 42, 0.92);
+}
+
+/* Light theme */
+html.theme-light {
+  --bg-gradient: linear-gradient(135deg, var(--white) 0%, #dbeafe 35%, var(--white) 100%);
+  --surface: rgba(255, 255, 255, 0.8);
+  --surface-strong: rgba(255, 255, 255, 0.95);
+  --surface-solid: #ffffff;
+  --card-bg: rgba(255, 255, 255, 0.92);
+  --card-bg-soft: rgba(239, 246, 255, 0.85);
+  --text-color: #10243f;
+  --section-heading: #0f2a4a;
+  --muted: #526b86;
+  --border: rgba(37, 99, 235, 0.14);
+  --ghost-border: rgba(37, 99, 235, 0.18);
+  --shadow: 0 20px 50px rgba(37, 99, 235, 0.12);
+  --shadow-soft: 0 10px 30px rgba(37, 99, 235, 0.1);
+  --nav-bg: rgba(255, 255, 255, 0.92);
+}

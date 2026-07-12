@@ -9,7 +9,7 @@
   <form
     class="admin-form"
     method="post"
-    action="<%= event ? ('/events/' + event.id + '/edit') : '/events/new' %>"
+    action="<%= event ? ('/admin/events/' + event.id + '/edit') : '/admin/events/new' %>"
     enctype="multipart/form-data"
   >
   <label>
@@ -62,7 +62,7 @@
 
   <div class="form-actions">
     <button class="btn primary" type="submit">Save</button>
-    <a class="btn ghost" href="/events">Cancel</a>
+    <a class="btn ghost" href="/admin/events">Cancel</a>
   </div>
   </form>
 </div>

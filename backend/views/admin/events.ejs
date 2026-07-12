@@ -5,9 +5,9 @@
     <h1 class="admin-page-title">Events</h1>
 
     <div class="admin-actions">
-      <a class="btn" href="/events/new">Add New Event</a>
-      <a class="btn primary" href="/documentation">Add New Documentation</a>
-      <a class="btn ghost" href="/logout">Log out</a>
+      <a class="btn" href="/admin/events/new">Add New Event</a>
+      <a class="btn primary" href="/admin/documentation">Add New Documentation</a>
+      <a class="btn ghost" href="/admin/logout">Log out</a>
     </div>
   </div>
 
@@ -35,7 +35,7 @@
             </div>
 
             <div class="actions">
-              <a href="/events/<%= event.id %>/edit" class="btn ghost">Edit</a>
+              <a href="/admin/events/<%= event.id %>/edit" class="btn ghost">Edit</a>
               <button class="btn danger admin-delete-btn" data-id="<%= event.id %>" type="button">Hapus</button>
             </div>
           </div>

@@ -1,0 +1,325 @@
+/* ── Address / Map Section ── */
+.address-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(260px, 1fr);
+  gap: 18px;
+  align-items: start;
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.map-frame,
+.address-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card-bg-soft);
+  box-shadow: var(--shadow-soft);
+}
+
+.map-frame {
+  overflow: hidden;
+}
+
+.map-frame iframe {
+  width: 100%;
+  height: 330px;
+  display: block;
+  border: 0;
+}
+
+.address-card {
+  padding: 20px;
+}
+
+/* ── Modal ── */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(2, 8, 23, 0);
+  pointer-events: none;
+  transition: background 300ms ease;
+}
+
+.modal[aria-hidden="false"] {
+  background: rgba(2, 8, 23, 0.72);
+  pointer-events: auto;
+}
+
+.modal-dialog {
+  position: relative;
+  width: min(940px, 100%);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-solid);
+  box-shadow: var(--shadow);
+  transform: scale(0.92) translateY(20px);
+  opacity: 0;
+  transition: transform 320ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 280ms ease;
+}
+
+.modal[aria-hidden="false"] .modal-dialog {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+}
+
+.modal-body {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 18px;
+  padding: 18px;
+}
+
+.modal-body img {
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  object-fit: cover;
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-color);
+  background: rgba(2, 8, 23, 0.58);
+  cursor: pointer;
+  font-size: 1.5rem;
+  display: grid;
+  place-items: center;
+  transition: background 200ms ease, transform 200ms ease;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  background: rgba(248, 113, 113, 0.6);
+  transform: scale(1.08);
+}
+
+/* ── Footer ── */
+.footer {
+  margin-top: 26px;
+  border-top: 1px solid var(--border);
+  background: rgba(3, 14, 30, 0.52);
+  color: var(--muted);
+}
+
+html.theme-light .footer {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.footer .container {
+  padding: 24px 0 10px;
+}
+
+.social-quick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.social-quick-label {
+  width: 100%;
+  text-align: center;
+  margin: 0;
+  font-weight: 700;
+  color: var(--section-heading);
+}
+
+.social-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  text-decoration: none;
+  box-shadow: var(--shadow-soft);
+  transition: transform 200ms ease, background 200ms ease, border-color 200ms ease;
+}
+
+.social-icon:hover,
+.social-icon:focus-visible {
+  transform: translateY(-2px);
+  background: var(--surface-strong);
+  border-color: rgba(56, 189, 248, 0.5);
+}
+
+.social-icon img {
+  width: 20px;
+  height: 20px;
+  opacity: 0.95;
+}
+
+.footer a {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
+
+.footer-copy {
+  padding: 16px;
+  text-align: center;
+  color: var(--muted);
+}
+
+/* ── Carousel ── */
+.carousel-wrapper {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  padding: 10px 4px 18px;
+}
+
+.carousel-track {
+  display: flex;
+  gap: 18px;
+  align-items: stretch;
+  will-change: transform;
+  transition: transform 280ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.carousel-item {
+  flex: 0 0 min(340px, 86vw);
+}
+
+.carousel-wrapper[data-carousel-mode="single"] .carousel-item {
+  flex: 0 0 min(520px, 92vw);
+}
+
+.carousel-wrapper[data-carousel-mode="single"] .carousel-track {
+  justify-content: center;
+}
+
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-color);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  z-index: 2;
+  transition: background 200ms ease, border-color 200ms ease, transform 200ms ease;
+}
+
+.carousel-btn.prev { left: 8px; }
+.carousel-btn.next { right: 8px; }
+
+.carousel-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(56, 189, 248, 0.5);
+  transform: translateY(-50%) scale(1.08);
+}
+
+.carousel-btn:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+/* Docs carousel special styling */
+.doc-slide-card .doc-slide-meta {
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.doc-slide-title {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+@media (max-width: 620px) {
+  .doc-slide-meta {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+}
+
+/* ── Auth Pages ── */
+.auth-page {
+  min-height: calc(100vh - 80px);
+  display: grid;
+  place-items: center;
+  padding: 32px 0;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .address-grid,
+  .doc-admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-body {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  :root {
+    --nav-height: 64px;
+  }
+
+  .container {
+    width: min(100% - 20px, 1160px);
+    padding: 18px 0;
+  }
+
+  .hero-card,
+  .section,
+  .auth-card {
+    border-radius: 14px;
+  }
+
+  .hero-ctas,
+  .actions,
+  .admin-actions,
+  .form-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .btn,
+  .submit-btn {
+    width: 100%;
+  }
+
+  .admin-toolbar {
+    padding: 16px;
+  }
+
+  .admin-events-wrap {
+    grid-template-columns: 1fr;
+  }
+}

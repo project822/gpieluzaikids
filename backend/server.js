@@ -38,13 +38,32 @@ if (!fs.existsSync(path.join(adminViewsDir, "login.ejs"))) {
   }
 }
 
+// ============== SECURITY MIDDLEWARE ==============
+app.use((req, res, next) => {
+  // Security headers
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("X-XSS-Protection", "1; mode=block");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  next();
+});
+
 // ============== EXPRESS SETUP ==============
 app.set("view engine", "ejs");
 app.set("views", [viewsDir, adminViewsDir]);
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static(PUBLIC_ASSETS_DIR));
+app.use(express.static(PUBLIC_ASSETS_DIR, {
+  maxAge: '7d',
+  immutable: true,
+  setHeaders: (res, path) => {
+    if (path.endsWith('.css') || path.endsWith('.js')) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+  }
+}));
 
 // Session
 app.use(
