@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Admin Login</title>
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 
     <!-- Vercel Analytics -->
     <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
@@ -35,7 +36,7 @@
             <div class="form-group" style="margin-bottom: 14px;">
               <label for="admin-username">Username</label>
               <div class="input-with-icon">
-                <img class="input-icon" src="/images/icon-user.png" alt="User">
+                <i class="fas fa-user input-icon" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; opacity: 0.9; pointer-events: none; color: var(--muted);"></i>
                 <input
                   id="admin-username"
                   type="text"
@@ -50,7 +51,7 @@
             <div class="form-group" style="margin-bottom: 14px;">
               <label for="admin-password">Password</label>
               <div class="input-with-icon">
-                <img class="input-icon" src="/images/icon-password.png" alt="Password">
+                <i class="fas fa-lock input-icon" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; opacity: 0.9; pointer-events: none; color: var(--muted);"></i>
                 <input
                   id="admin-password"
                   type="password"
