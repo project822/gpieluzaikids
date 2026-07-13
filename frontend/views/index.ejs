@@ -1,21 +1,37 @@
 <%- include('partials/header', { title: 'Home' }) %>
 
-<!-- Hero Section -->
-<section class="hero reveal" id="home">
+<section class="hero modern-hero reveal" id="home">
+<div class="hero-overlay">
+    <div
+      class="layer hero-parallax"
+      style="background: radial-gradient(circle at 20% 30%, rgba(14, 165, 164, 0.12), transparent 12%); opacity: 0.9;"
+    ></div>
+    <div
+      class="layer hero-parallax"
+      style="background: radial-gradient(circle at 80% 70%, rgba(37, 99, 235, 0.12), transparent 12%); opacity: 0.85;"
+    ></div>
+  </div>
+
+
   <div class="hero-content">
-    <img
-      src="/images/logo-placeholder.png"
-      alt="Logo"
-      class="hero-logo-img"
-      width="72"
-      height="72"
-      fetchpriority="high"
-    >
-    <h1 class="logo-title">GPI Eluzai Kids</h1>
-    <p class="lead hero-lead">Aku Diberkati, Kamu Diberkati, Kita Semua Diberkati.</p>
-    <div class="hero-ctas">
-      <a class="btn primary" href="#events">Lihat Event</a>
-      <a class="btn ghost" href="#footer">Ikuti Kami</a>
+    <div class="hero-card auth-card">
+      <div class="logo-wrap hero-logo-wrap">
+        <img
+          src="/images/logo-placeholder.png"
+          alt="Logo"
+          class="hero-logo-img"
+          width="56"
+          height="56"
+          fetchpriority="high">
+        <h1 class="logo-title">GPI Eluzai Kids</h1>
+      </div>
+
+      <p class="lead hero-lead">Aku Diberkati, Kamu Diberkati, Kita Semua Diberkati.</p>
+
+      <div class="hero-ctas hero-ctas-home">
+        <a class="btn primary" href="#events">Lihat Event</a>
+        <a class="btn ghost" href="#footer">Ikuti Kami</a>
+      </div>
     </div>
   </div>
 </section>
@@ -49,17 +65,16 @@
   </a>
 <% } %>
 
-<!-- Events Section -->
-<section id="events" class="section reveal">
+<section id="events" class="section events-section reveal">
   <div class="section-header">
     <h2>Upcoming Events</h2>
-    <p>Lihat jadwal acara kami yang akan datang.</p>
   </div>
 
   <div class="carousel-wrapper events-carousel" id="events-carousel" data-carousel-mode="single">
     <div class="carousel-track">
 
     <% if (events && events.length) { %>
+
       <% events.forEach((event) => { %>
         <div class="carousel-item slide" data-id="<%= event.id %>">
           <div class="slide-card">
@@ -75,25 +90,36 @@
                 <%= (() => {
                   const s = String(event.day || '').trim();
                   let d = null;
+
+                  // YYYY-MM-DD
                   const m1 = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-                  if (m1) d = new Date(Number(m1[1]), Number(m1[2]) - 1, Number(m1[3]));
-                  else {
+                  if (m1) {
+                    d = new Date(Number(m1[1]), Number(m1[2]) - 1, Number(m1[3]));
+                  } else {
+                    // DD/MM/YYYY
                     const m2 = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
                     if (m2) d = new Date(Number(m2[3]), Number(m2[2]) - 1, Number(m2[1]));
                   }
+
                   if (!d || Number.isNaN(d.getTime())) return s;
-                  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+                  const dd = String(d.getDate()).padStart(2, '0');
+                  const mm = String(d.getMonth() + 1).padStart(2, '0');
+                  const yyyy = d.getFullYear();
+                  return `${dd}/${mm}/${yyyy}`;
                 })() %> | <%= event.time %>
               </p>
+
+
+
               <p class="location"><%= event.location %></p>
 
               <div class="actions">
                 <% if (event.googleForm) { %>
-                  <a class="btn primary btn-sm" href="<%= event.googleForm %>" target="_blank" rel="noopener">Daftar</a>
+                  <a class="btn" href="<%= event.googleForm %>" target="_blank" rel="noopener">Daftar</a>
                 <% } else { %>
-                  <span class="btn ghost btn-sm" style="cursor: default; opacity: 0.5;" aria-disabled="true">Daftar</span>
+                  <span class="btn ghost" style="cursor: default; opacity: 0.7;" aria-disabled="true">Daftar</span>
                 <% } %>
-                <button class="btn ghost btn-sm view-details" data-id="<%= event.id %>" type="button">Detail</button>
+                <button class="btn ghost view-details" data-id="<%= event.id %>" type="button">Detail</button>
               </div>
             </div>
           </div>
@@ -103,6 +129,7 @@
       <div class="carousel-item" style="display:flex; align-items:center; justify-content:center;">
         <p class="lead" style="width: 100%; text-align: center;">Belum ada event.</p>
       </div>
+
     <% } %>
     </div>
 
@@ -111,9 +138,11 @@
   </div>
 </section>
 
-<!-- Documentation Section -->
-<section id="documentation" class="section reveal">
+
+
+<section id="documentation" class="section docs-section reveal">
   <div class="section-header">
+
     <h2>Dokumentasi Event</h2>
     <p>Dokumentasi acara dapat diakses melalui Google Drive.</p>
   </div>
@@ -122,13 +151,18 @@
     <div class="carousel-track" id="docs-carousel-track">
 
     <% if (events && events.length) { %>
+
       <% events.forEach((event) => { %>
         <div class="carousel-item doc-slide">
           <div class="slide-card doc-slide-card">
+
             <div class="meta doc-slide-meta">
               <h3 class="doc-slide-title"><%= event.title %></h3>
+
               <% if (event.driveLink) { %>
-                <a class="btn primary btn-sm" href="<%= event.driveLink %>" target="_blank" rel="noopener">Buka Google Drive</a>
+                <a class="btn primary btn-sm" href="<%= event.driveLink %>" target="_blank" rel="noopener">
+                  Buka Google Drive
+                </a>
               <% } else { %>
                 <span class="btn ghost btn-sm" style="cursor: default;">Link Google Drive belum tersedia</span>
               <% } %>
@@ -140,6 +174,7 @@
       <div class="carousel-item" style="display:flex; align-items:center; justify-content:center;">
         <p class="lead" style="width: 100%; text-align: center;">Belum ada data event.</p>
       </div>
+
     <% } %>
     </div>
 
@@ -148,8 +183,7 @@
   </div>
 </section>
 
-<!-- Address Section -->
-<section id="address" class="section reveal">
+<section id="address" class="section address-section reveal">
   <div class="section-header">
     <h2>Alamat</h2>
     <p>Mari beribadah bersama kami.</p>
@@ -166,29 +200,38 @@
     </div>
 
     <div class="address-card">
-      <h2 style="font-size: 1.2rem; margin: 0 0 12px; color: var(--text);">GPI Eluzai Kids</h2>
-      <p style="margin: 0 0 16px; color: var(--text-secondary); line-height: 1.7;">
+      <div class="section-header" style="text-align: left; margin-bottom: 12px;">
+        <h2 style="font-size: 1.4rem; margin: 0;">GPI Eluzai Kids</h2>
+      </div>
+
+      <p style="margin: 0 0 14px; color: var(--muted); line-height: 1.7;">
         Jl. Dukuh Kupang Timur XVII No. 28<br>
         Surabaya, Jawa Timur 60255
       </p>
-      <a class="btn primary btn-sm" href="https://www.google.com/maps/place/GPI+ELUZAI/@-7.280318,112.714429,17z/data=!3m1!4b1!4m6!3m5!1s0x2dd7fd0015087f33:0xf0f9599548b15626!8m2!3d-7.280318!4d112.714429!16s%2Fg%2F11y79_ln7k?entry=ttu&g_ep=EgoyMDI2MDcwNi4wIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noopener">
+
+      <a
+        class="btn primary"
+        href="https://www.google.com/maps/place/GPI+ELUZAI/@-7.280318,112.714429,17z/data=!3m1!4b1!4m6!3m5!1s0x2dd7fd0015087f33:0xf0f9599548b15626!8m2!3d-7.280318!4d112.714429!16s%2Fg%2F11y79_ln7k?entry=ttu&g_ep=EgoyMDI2MDcwNi4wIKXMDSoASAFQAw%3D%3D"
+        target="_blank"
+        rel="noopener"
+        style="display: inline-block;"
+      >
         Buka di Google Maps
       </a>
     </div>
   </div>
 </section>
 
-<!-- Event Modal -->
 <div id="event-modal" class="modal" aria-hidden="true">
   <div class="modal-dialog">
     <button class="modal-close" aria-label="Tutup" type="button">&times;</button>
     <div class="modal-body">
       <img id="modal-poster" src="" alt="Poster event">
       <div>
-        <h3 id="modal-title" style="margin-bottom: 12px; color: var(--text);"></h3>
-        <p id="modal-time" style="color: var(--text-secondary); margin-bottom: 8px;"></p>
-        <p id="modal-location" style="color: var(--text-secondary); margin-bottom: 8px;"></p>
-        <p id="modal-desc" style="color: var(--text-secondary); margin-bottom: 16px;"></p>
+        <h3 id="modal-title"></h3>
+        <p id="modal-time"></p>
+        <p id="modal-location"></p>
+        <p id="modal-desc"></p>
         <div id="modal-actions"></div>
       </div>
     </div>
