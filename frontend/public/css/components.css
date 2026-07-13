@@ -428,6 +428,115 @@ select option {
   color: var(--text-color);
 }
 
+/* ── Event Alert Banner ── */
+.event-alert-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: min(100% - 32px, 1160px);
+  margin: -10px auto 0;
+  padding: 10px 18px;
+  border: 1px solid rgba(59, 130, 246, 0.18);
+  border-radius: var(--radius-sm);
+  background: #0F172A;
+  color: #FFFFFF;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 200ms ease, transform 200ms ease;
+  position: relative;
+  z-index: 2;
+}
+
+.event-alert-banner:hover {
+  border-color: #3B82F6;
+  transform: translateY(-2px);
+}
+
+.event-alert-banner:active {
+  transform: translateY(0);
+}
+
+.event-alert-inner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.event-alert-badge {
+  display: inline-flex;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #3B82F6;
+  color: #FFFFFF;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+html.theme-light .event-alert-banner {
+  background: #FFFFFF;
+  color: #0F172A;
+}
+
+html.theme-light .event-alert-badge {
+  color: #FFFFFF;
+}
+
+.event-alert-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--section-heading);
+}
+
+.event-alert-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.event-alert-meta i {
+  font-size: 0.75rem;
+}
+
+.event-alert-arrow {
+  font-size: 1.3rem;
+  color: var(--accent);
+  flex-shrink: 0;
+  transition: transform 200ms ease;
+}
+
+.event-alert-banner:hover .event-alert-arrow {
+  transform: translateX(4px);
+}
+
+@media (max-width: 620px) {
+  .event-alert-banner {
+    width: min(100% - 20px, 1160px);
+    padding: 10px 14px;
+  }
+
+  .event-alert-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .event-alert-title {
+    font-size: 0.88rem;
+  }
+
+  .event-alert-meta {
+    font-size: 0.75rem;
+  }
+}
+
 /* ── Reveal animation ── */
 .reveal {
   opacity: 0;

@@ -214,6 +214,21 @@ app.post(
   (req, res) => handleAdminLogin(req, res),
 );
 
+app.get("/dev/logout", (req, res) => {
+  const username =
+    req.session && req.session.devUser ? req.session.devUser.username : null;
+  req.session.destroy(() => {
+    if (username) {
+      try {
+        db.setAdminOffline(username);
+      } catch (e) {
+        // ignore
+      }
+    }
+    res.redirect("/dev/login");
+  });
+});
+
 app.get("/admin/logout", (req, res) => {
   const username =
     req.session && req.session.user ? req.session.user.username : null;
