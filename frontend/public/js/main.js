@@ -291,6 +291,35 @@
 
       // Show first slide
       slides.forEach((s, i) => s.classList.toggle("active", i === 0));
+
+      // Auto-play: slide every 10 seconds
+      let autoPlayTimer = setInterval(() => {
+        const next = (current + 1) % slides.length;
+        goTo(next);
+      }, 10000);
+
+      // Pause auto-play on user interaction with dots
+      dots.forEach((d) => {
+        d.addEventListener("click", () => {
+          clearInterval(autoPlayTimer);
+          autoPlayTimer = setInterval(() => {
+            const next = (current + 1) % slides.length;
+            goTo(next);
+          }, 10000);
+        });
+      });
+
+      // Pause when user hovers over the showcase
+      const showcase = document.getElementById("events-showcase");
+      if (showcase) {
+        showcase.addEventListener("mouseenter", () => clearInterval(autoPlayTimer));
+        showcase.addEventListener("mouseleave", () => {
+          autoPlayTimer = setInterval(() => {
+            const next = (current + 1) % slides.length;
+            goTo(next);
+          }, 10000);
+        });
+      }
     } catch (err) {
       console.error("[events-showcase]", err);
     }
@@ -335,7 +364,7 @@
       let currentPage = 0;
 
       function getItemsPerPage() {
-        return window.innerWidth <= 900 ? 4 : 6;
+        return window.innerWidth <= 900 ? 2 : 3;
       }
 
       function getTotalPages() {

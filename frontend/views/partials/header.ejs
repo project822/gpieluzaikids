@@ -39,6 +39,16 @@
             <span class="nav-date-suffix">&nbsp;</span>
           </div>
 
+          <!-- Event Alert in navbar (desktop: between date and links) -->
+          <% if (typeof events !== 'undefined' && events && events.length) { %>
+            <% const latestEvent = events[0]; %>
+            <a class="nav-event-alert" href="#events" id="nav-event-alert">
+              <span class="nav-event-badge">Baru</span>
+              <span class="nav-event-title"><%= latestEvent.title %></span>
+              <span class="nav-event-arrow">&rarr;</span>
+            </a>
+          <% } %>
+
           <ul class="nav-links">
             <li>
               <a href="#home"><i class="fas fa-home nav-link-icon"></i> Home</a>
@@ -55,6 +65,16 @@
             <li>
               <a href="#footer"><i class="fas fa-envelope nav-link-icon"></i> Contact</a>
             </li>
+            <!-- Mobile: event alert in menu -->
+            <% if (typeof events !== 'undefined' && events && events.length) { %>
+              <% const latestEvent = events[0]; %>
+              <li class="nav-mobile-alert-item">
+                <a href="#events" class="nav-mobile-alert-link">
+                  <span class="nav-event-badge">Baru</span>
+                  <span><%= latestEvent.title %></span>
+                </a>
+              </li>
+            <% } %>
           </ul>
         </div>
       </nav>

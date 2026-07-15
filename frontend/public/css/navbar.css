@@ -167,6 +167,90 @@ html.theme-light .logo-img {
   color: var(--text-color);
 }
 
+/* ── Navbar Event Alert (desktop: between date and links) ── */
+.nav-event-alert {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-accent);
+  background: rgba(59, 130, 246, 0.08);
+  color: var(--text-color);
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 200ms ease, transform 200ms ease;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.nav-event-alert:hover {
+  background: rgba(59, 130, 246, 0.18);
+  transform: translateY(-1px);
+}
+
+.nav-event-badge {
+  display: inline-flex;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.nav-event-title {
+  font-weight: 700;
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-event-arrow {
+  color: var(--accent);
+  font-size: 1rem;
+  transition: transform 200ms ease;
+}
+
+.nav-event-alert:hover .nav-event-arrow {
+  transform: translateX(3px);
+}
+
+/* Mobile: event alert in dropdown menu */
+.nav-mobile-alert-item {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .nav-event-alert {
+    display: none;
+  }
+
+  .nav-mobile-alert-item {
+    display: block;
+  }
+
+  .nav-mobile-alert-link {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(59, 130, 246, 0.08);
+    border: 1px solid var(--border-accent);
+    margin: 4px 0 0;
+  }
+
+  .nav-mobile-alert-link .nav-event-badge {
+    flex-shrink: 0;
+  }
+}
+
 /* Responsive: mobile */
 @media (max-width: 900px) {
   .nav-toggle {

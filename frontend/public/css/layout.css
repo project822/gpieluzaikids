@@ -337,6 +337,33 @@ html.theme-light .carousel-btn:hover {
   line-height: 1.2;
 }
 
+/* Larger text on desktop - no empty feel */
+@media (min-width: 769px) {
+  .events-detail-inner {
+    min-height: 380px;
+    justify-content: center;
+  }
+  .events-detail-title {
+    font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+  }
+  .events-meta-item {
+    font-size: 1.05rem;
+    gap: 12px;
+  }
+  .events-meta-item i {
+    font-size: 1.15rem;
+  }
+  .events-detail-desc {
+    font-size: 1rem;
+    line-height: 1.8;
+  }
+  .events-detail-actions .btn {
+    min-height: 46px;
+    padding: 12px 22px;
+    font-size: 0.95rem;
+  }
+}
+
 .events-detail-meta {
   display: flex;
   flex-direction: column;
@@ -461,8 +488,8 @@ html.theme-light .carousel-btn:hover {
 
 .docs-grid-track {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 14px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
   transition: opacity 250ms ease;
 }
 
@@ -547,19 +574,19 @@ html.theme-light .carousel-btn:hover {
   font-variant-numeric: tabular-nums;
 }
 
-/* Responsive: 4 columns on mobile */
+/* Responsive: tablet 2 columns, mobile 1 column */
 @media (max-width: 900px) {
   .docs-grid-track {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
   }
 
   .docs-grid-body {
-    padding: 12px;
+    padding: 14px;
   }
 
   .docs-grid-title {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
   }
 
   .docs-slider-nav {
@@ -570,8 +597,13 @@ html.theme-light .carousel-btn:hover {
 
 @media (max-width: 620px) {
   .docs-grid-track {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
     gap: 10px;
+  }
+
+  .docs-grid-card {
+    max-width: 360px;
+    margin: 0 auto;
   }
 }
 

@@ -1,4 +1,4 @@
-<%- include('partials/header', { title: 'Home' }) %>
+<%- include('partials/header', { title: 'Home', events: typeof events !== 'undefined' ? events : null }) %>
 
 <section class="hero modern-hero reveal" id="home">
 <div class="hero-overlay">
@@ -36,34 +36,6 @@
   </div>
 </section>
 
-<!-- Event Alert Banner -->
-<% if (events && events.length) { %>
-  <% const latestEvent = events[0]; %>
-  <a class="event-alert-banner" href="#events" id="event-alert-banner">
-    <div class="event-alert-inner">
-      <span class="event-alert-badge">Event Terbaru</span>
-      <span class="event-alert-title"><%= latestEvent.title %></span>
-      <span class="event-alert-meta">
-        <i class="fas fa-calendar-alt"></i>
-        <%= (() => {
-          const s = String(latestEvent.day || '').trim();
-          let d = null;
-          const m1 = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-          if (m1) d = new Date(Number(m1[1]), Number(m1[2]) - 1, Number(m1[3]));
-          if (!d || Number.isNaN(d.getTime())) return s;
-          const dd = String(d.getDate()).padStart(2, '0');
-          const mm = String(d.getMonth() + 1).padStart(2, '0');
-          const yyyy = d.getFullYear();
-          return `${dd}/${mm}/${yyyy}`;
-        })() %>
-        <% if (latestEvent.time) { %>
-          &nbsp;|&nbsp; <i class="fas fa-clock"></i> <%= latestEvent.time %>
-        <% } %>
-      </span>
-    </div>
-    <span class="event-alert-arrow">&rarr;</span>
-  </a>
-<% } %>
 
 <section id="events" class="section events-section reveal">
   <div class="section-header">
