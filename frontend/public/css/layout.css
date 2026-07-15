@@ -70,13 +70,15 @@
 
 .modal-body {
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  grid-template-columns: minmax(0, 0.55fr) minmax(0, 1.45fr);
   gap: 18px;
   padding: 18px;
+  align-items: start;
 }
 
 .modal-body img {
   width: 100%;
+  max-width: 280px;
   aspect-ratio: 9 / 16;
   object-fit: cover;
   border-radius: 12px;

@@ -13,7 +13,10 @@
     <script defer src="/_vercel/insights/script.js"></script>
 
     <!-- Vercel Speed Insights -->
-    <script defer src="https://unpkg.com/@vercel/speed-insights/dist/index.js"></script>
+    <script>
+      window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/speed-insights/script.js"></script>
   </head>
   <body class="page-is-ready">
     <% const shouldHideNavbar = typeof hideNavbar === 'undefined' ? false : hideNavbar; %>
@@ -44,10 +47,9 @@
             <button class="nav-notif-btn" id="nav-notif-btn" type="button" aria-label="Notifikasi">
               <i class="fas fa-bell"></i>
             </button>
-            <!-- Popup notifikasi hanya jika ada event -->
-            <% if (typeof events !== 'undefined' && events && events.length) { %>
-              <% const latestEvent = events[0]; %>
-              <div class="nav-notif-popup" id="nav-notif-popup">
+            <div class="nav-notif-popup" id="nav-notif-popup">
+              <% if (typeof events !== 'undefined' && events && events.length) { %>
+                <% const latestEvent = events[0]; %>
                 <div class="nav-notif-item-wrap">
                   <div class="nav-notif-icon"><i class="fas fa-calendar-alt"></i></div>
                   <div class="nav-notif-body">
@@ -71,8 +73,12 @@
                     <span class="nav-notif-link">Lihat Event &rarr;</span>
                   </div>
                 </div>
-              </div>
-            <% } %>
+              <% } else { %>
+                <div class="nav-notif-empty" style="padding: 14px; text-align: center; color: var(--text-muted); font-size: 0.82rem;">
+                  Tidak ada informasi terbaru
+                </div>
+              <% } %>
+            </div>
           </div>
 
           <ul class="nav-links">
