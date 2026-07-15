@@ -96,7 +96,26 @@
       console.error("[nav]", err);
     }
 
-    // 3) Logo click animation
+    // 3) Notification popup toggle
+    try {
+      const notifBtn = document.getElementById("nav-notif-btn");
+      const notifPopup = document.getElementById("nav-notif-popup");
+      if (notifBtn && notifPopup) {
+        notifBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          notifPopup.classList.toggle("open");
+        });
+        document.addEventListener("click", (e) => {
+          if (!notifBtn.contains(e.target) && !notifPopup.contains(e.target)) {
+            notifPopup.classList.remove("open");
+          }
+        });
+      }
+    } catch (err) {
+      console.error("[notif]", err);
+    }
+
+    // 4) Logo click animation (re-numbered, was 3)
     try {
       const logo = document.querySelector(".logo-img");
       if (logo) {
@@ -110,7 +129,7 @@
       console.error("[logo-animate]", err);
     }
 
-    // 4) Theme toggle
+    // 5) Theme toggle
     try {
       const root = document.documentElement;
       const toggle = document.querySelector(".theme-toggle");
@@ -143,7 +162,7 @@
       console.error("[theme]", err);
     }
 
-    // 5) Navbar real-time date/time
+    // 6) Navbar real-time date/time
     try {
       const dayEl = document.getElementById("nav-date-day");
       const valueEl = document.getElementById("nav-date-value");
@@ -164,7 +183,7 @@
       console.error("[nav-date]", err);
     }
 
-    // 6) Event modal (Landing page)
+    // 7) Event modal (Landing page)
     try {
       const modal = document.getElementById("event-modal");
       const modalClose = modal ? modal.querySelector(".modal-close") : null;
@@ -220,7 +239,7 @@
       console.error("[event-modal]", err);
     }
 
-    // 7) Reveal on scroll (Intersection Observer)
+    // 8) Reveal on scroll (Intersection Observer)
     try {
       const items = document.querySelectorAll(".reveal");
       if (items.length) {
@@ -241,7 +260,7 @@
       console.error("[reveal]", err);
     }
 
-    // 8) Events Showcase (Dots Carousel - Poster Left + Detail Right)
+    // 9) Events Showcase (Dots Carousel - Poster Left + Detail Right)
     try {
       const showcaseInner = document.getElementById("events-showcase-inner");
       const dotsContainer = document.getElementById("events-dots");
@@ -292,39 +311,44 @@
       // Show first slide
       slides.forEach((s, i) => s.classList.toggle("active", i === 0));
 
-      // Auto-play: slide every 10 seconds
-      let autoPlayTimer = setInterval(() => {
-        const next = (current + 1) % slides.length;
-        goTo(next);
-      }, 10000);
+      // ── Auto-play: slide every 10 seconds ──
+      let autoPlayTimer = null;
 
-      // Pause auto-play on user interaction with dots
-      dots.forEach((d) => {
-        d.addEventListener("click", () => {
-          clearInterval(autoPlayTimer);
-          autoPlayTimer = setInterval(() => {
-            const next = (current + 1) % slides.length;
-            goTo(next);
-          }, 10000);
-        });
+      function startAutoPlay() {
+        stopAutoPlay();
+        autoPlayTimer = setTimeout(function tick() {
+          var next = (current + 1) % slides.length;
+          if (!isAnimating) goTo(next);
+          autoPlayTimer = setTimeout(tick, 10000);
+        }, 10000);
+      }
+
+      function stopAutoPlay() {
+        if (autoPlayTimer) {
+          clearTimeout(autoPlayTimer);
+          autoPlayTimer = null;
+        }
+      }
+
+      // Start auto-play when page loads
+      startAutoPlay();
+
+      // Restart on dot click
+      dots.forEach(function(d) {
+        d.addEventListener("click", startAutoPlay);
       });
 
-      // Pause when user hovers over the showcase
-      const showcase = document.getElementById("events-showcase");
+      // Pause on hover, resume on leave
+      var showcase = document.getElementById("events-showcase");
       if (showcase) {
-        showcase.addEventListener("mouseenter", () => clearInterval(autoPlayTimer));
-        showcase.addEventListener("mouseleave", () => {
-          autoPlayTimer = setInterval(() => {
-            const next = (current + 1) % slides.length;
-            goTo(next);
-          }, 10000);
-        });
+        showcase.addEventListener("mouseenter", stopAutoPlay);
+        showcase.addEventListener("mouseleave", startAutoPlay);
       }
     } catch (err) {
       console.error("[events-showcase]", err);
     }
 
-    // 9) Old carousel (cleanup - only if still used elsewhere)
+    // 10) Old carousel (cleanup - only if still used elsewhere)
     try {
       const oldCarousels = document.querySelectorAll(".carousel-wrapper:not(#events-carousel)");
       if (oldCarousels.length) {
@@ -351,7 +375,7 @@
       console.error("[old-carousel]", err);
     }
 
-    // 10) Documentation Grid Slider (6 items/page desktop, 4 items/page mobile)
+    // 11) Documentation Grid Slider (3 items/page desktop, 2 items/page mobile)
     try {
       const slider = document.getElementById("docs-slider");
       const track = document.getElementById("docs-grid-track");
@@ -403,7 +427,7 @@
       console.error("[docs-slider]", err);
     }
 
-    // 11) Auth card entrance animations
+    // 12) Auth card entrance animations
     try {
       const cards = document.querySelectorAll(".auth-card");
       if (cards.length) {

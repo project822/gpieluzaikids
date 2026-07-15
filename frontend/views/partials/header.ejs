@@ -39,15 +39,42 @@
             <span class="nav-date-suffix">&nbsp;</span>
           </div>
 
-          <!-- Event Alert in navbar (desktop: between date and links) -->
-          <% if (typeof events !== 'undefined' && events && events.length) { %>
-            <% const latestEvent = events[0]; %>
-            <a class="nav-event-alert" href="#events" id="nav-event-alert">
-              <span class="nav-event-badge">Baru</span>
-              <span class="nav-event-title"><%= latestEvent.title %></span>
-              <span class="nav-event-arrow">&rarr;</span>
-            </a>
-          <% } %>
+          <!-- Notification Bell -->
+          <% const hasEvents = typeof events !== 'undefined' && events && events.length; %>
+          <div class="nav-notif" id="nav-notif">
+            <button class="nav-notif-btn" id="nav-notif-btn" type="button" aria-label="Notifikasi">
+              <i class="fas fa-bell"></i>
+              <% if (hasEvents) { %><span class="nav-notif-dot"></span><% } %>
+            </button>
+            <!-- Notification Popup -->
+            <% if (hasEvents) { %>
+              <% const latestEvent = events[0]; %>
+              <div class="nav-notif-popup" id="nav-notif-popup">
+                <div class="nav-notif-header">Notifikasi</div>
+                <a class="nav-notif-item" href="#events">
+                  <div class="nav-notif-icon"><i class="fas fa-calendar-alt"></i></div>
+                  <div class="nav-notif-body">
+                    <span class="nav-notif-label">Event Terbaru</span>
+                    <span class="nav-notif-title"><%= latestEvent.title %></span>
+                    <span class="nav-notif-time">
+                      <%= (() => {
+                        const s = String(latestEvent.day || '').trim();
+                        let d = null;
+                        const m1 = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+                        if (m1) d = new Date(Number(m1[1]), Number(m1[2]) - 1, Number(m1[3]));
+                        if (!d || Number.isNaN(d.getTime())) return s;
+                        const dd = String(d.getDate()).padStart(2, '0');
+                        const mm = String(d.getMonth() + 1).padStart(2, '0');
+                        const yyyy = d.getFullYear();
+                        return `${dd}/${mm}/${yyyy}`;
+                      })() %>
+                      <% if (latestEvent.time) { %> | <%= latestEvent.time %><% } %>
+                    </span>
+                  </div>
+                </a>
+              </div>
+            <% } %>
+          </div>
 
           <ul class="nav-links">
             <li>
@@ -65,16 +92,6 @@
             <li>
               <a href="#footer"><i class="fas fa-envelope nav-link-icon"></i> Contact</a>
             </li>
-            <!-- Mobile: event alert in menu -->
-            <% if (typeof events !== 'undefined' && events && events.length) { %>
-              <% const latestEvent = events[0]; %>
-              <li class="nav-mobile-alert-item">
-                <a href="#events" class="nav-mobile-alert-link">
-                  <span class="nav-event-badge">Baru</span>
-                  <span><%= latestEvent.title %></span>
-                </a>
-              </li>
-            <% } %>
           </ul>
         </div>
       </nav>

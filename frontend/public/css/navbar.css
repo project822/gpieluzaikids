@@ -167,88 +167,132 @@ html.theme-light .logo-img {
   color: var(--text-color);
 }
 
-/* ── Navbar Event Alert (desktop: between date and links) ── */
-.nav-event-alert {
+/* ── Notification Bell + Popup ── */
+.nav-notif {
+  position: relative;
   display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-left: 6px;
-  padding: 5px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--border-accent);
-  background: rgba(59, 130, 246, 0.08);
-  color: var(--text-color);
-  text-decoration: none;
-  white-space: nowrap;
   flex-shrink: 0;
-  transition: background 200ms ease, transform 200ms ease;
-  font-size: 0.78rem;
-  cursor: pointer;
 }
 
-.nav-event-alert:hover {
-  background: rgba(59, 130, 246, 0.18);
+.nav-notif-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-color);
+  cursor: pointer;
+  position: relative;
+  transition: background 200ms ease, transform 200ms ease;
+  font-size: 1rem;
+}
+
+.nav-notif-btn:hover {
+  background: var(--surface-hover);
   transform: translateY(-1px);
 }
 
-.nav-event-badge {
-  display: inline-flex;
-  padding: 2px 7px;
-  border-radius: 999px;
+.nav-notif-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
   background: var(--accent);
-  color: #fff;
-  font-size: 0.6rem;
+  border: 2px solid var(--nav-bg);
+}
+
+/* Popup */
+.nav-notif-popup {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 320px;
+  max-width: 90vw;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow-lg);
+  z-index: 50;
+  overflow: hidden;
+}
+
+.nav-notif-popup.open {
+  display: block;
+  animation: notif-pop 200ms ease both;
+}
+
+@keyframes notif-pop {
+  from { opacity: 0; transform: translateY(-6px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.nav-notif-header {
+  padding: 12px 14px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text-color);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.nav-notif-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+  text-decoration: none;
+  transition: background 200ms ease;
+  align-items: flex-start;
+}
+
+.nav-notif-item:hover {
+  background: var(--surface-hover);
+}
+
+.nav-notif-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.nav-notif-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.nav-notif-label {
+  font-size: 0.7rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
+  color: var(--accent);
 }
 
-.nav-event-title {
+.nav-notif-title {
   font-weight: 700;
-  max-width: 130px;
+  font-size: 0.88rem;
+  color: var(--text-color);
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-.nav-event-arrow {
-  color: var(--accent);
-  font-size: 1rem;
-  transition: transform 200ms ease;
-}
-
-.nav-event-alert:hover .nav-event-arrow {
-  transform: translateX(3px);
-}
-
-/* Mobile: event alert in dropdown menu */
-.nav-mobile-alert-item {
-  display: none;
-}
-
-@media (max-width: 900px) {
-  .nav-event-alert {
-    display: none;
-  }
-
-  .nav-mobile-alert-item {
-    display: block;
-  }
-
-  .nav-mobile-alert-link {
-    display: flex !important;
-    align-items: center;
-    gap: 8px;
-    padding: 12px;
-    border-radius: 12px;
-    background: rgba(59, 130, 246, 0.08);
-    border: 1px solid var(--border-accent);
-    margin: 4px 0 0;
-  }
-
-  .nav-mobile-alert-link .nav-event-badge {
-    flex-shrink: 0;
-  }
+.nav-notif-time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
 }
 
 /* Responsive: mobile */
