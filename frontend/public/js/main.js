@@ -241,62 +241,140 @@
       console.error("[reveal]", err);
     }
 
-    // 8) Image carousel (Upcoming/Dokumentasi) - simplified
+    // 8) Events Showcase (Dots Carousel - Poster Left + Detail Right)
     try {
-      function initScrollCarousel(wrapperEl) {
-        if (!wrapperEl) return;
-        const prevBtn = wrapperEl.querySelector(".carousel-btn.prev");
-        const nextBtn = wrapperEl.querySelector(".carousel-btn.next");
-        const firstCard = wrapperEl.querySelector(".carousel-item");
+      const showcaseInner = document.getElementById("events-showcase-inner");
+      const dotsContainer = document.getElementById("events-dots");
+      if (!showcaseInner || !dotsContainer) return;
 
-        const scrollByCard = (dir) => {
-          if (!firstCard) return;
-          const cardWidth = firstCard.getBoundingClientRect().width;
-          const gap = 18;
-          wrapperEl.scrollBy({ left: (cardWidth + gap) * dir, behavior: "smooth" });
-        };
+      const slides = Array.from(showcaseInner.querySelectorAll(".events-slide"));
+      if (!slides.length) return;
 
-        if (prevBtn) prevBtn.addEventListener("click", () => scrollByCard(-1));
-        if (nextBtn) nextBtn.addEventListener("click", () => scrollByCard(1));
+      let current = 0;
+      let isAnimating = false;
+
+      // Create dots
+      slides.forEach((_, i) => {
+        const dot = document.createElement("button");
+        dot.className = "events-dot" + (i === 0 ? " active" : "");
+        dot.setAttribute("aria-label", `Ke event ${i + 1}`);
+        dot.type = "button";
+        dot.addEventListener("click", () => goTo(i));
+        dotsContainer.appendChild(dot);
+      });
+
+      const dots = Array.from(dotsContainer.querySelectorAll(".events-dot"));
+
+      function goTo(index) {
+        if (isAnimating || index === current || index < 0 || index >= slides.length) return;
+        isAnimating = true;
+
+        // Update slides
+        slides.forEach((s, i) => {
+          s.classList.toggle("active", i === index);
+          // Reset animation for new slide
+          if (i === index) {
+            s.style.animation = "none";
+            void s.offsetWidth;
+            const dir = index > current ? "right" : "left";
+            s.style.animation = `events-fade-in 400ms ease both`;
+          }
+        });
+
+        // Update dots
+        dots.forEach((d, i) => d.classList.toggle("active", i === index));
+
+        current = index;
+
+        setTimeout(() => { isAnimating = false; }, 420);
       }
 
-      document.querySelectorAll(".carousel-wrapper").forEach((wrapperEl) => {
-        if (wrapperEl.getAttribute("data-carousel-mode") === "single") {
-          const items = Array.from(wrapperEl.querySelectorAll(".carousel-item"));
-          if (!items.length) return;
-
-          let index = 0;
-          const track = wrapperEl.querySelector(".carousel-track");
-          const itemGap = 18;
-
-          const layoutSingle = () => {
-            const item = items[index];
-            if (!item) return;
-            const wrapW = wrapperEl.getBoundingClientRect().width;
-            const itemW = item.getBoundingClientRect().width;
-            const centerOffset = wrapW / 2 - itemW / 2;
-            const itemLeft = item.offsetLeft;
-            if (track) track.style.transform = `translateX(${centerOffset - itemLeft}px)`;
-          };
-
-          const btnPrev = wrapperEl.querySelector(".carousel-btn.prev");
-          const btnNext = wrapperEl.querySelector(".carousel-btn.next");
-
-          if (btnPrev) btnPrev.addEventListener("click", () => { index = (index - 1 + items.length) % items.length; layoutSingle(); });
-          if (btnNext) btnNext.addEventListener("click", () => { index = (index + 1) % items.length; layoutSingle(); });
-
-          layoutSingle();
-          window.addEventListener("resize", layoutSingle);
-          return;
-        }
-
-        initScrollCarousel(wrapperEl);
-      });
+      // Show first slide
+      slides.forEach((s, i) => s.classList.toggle("active", i === 0));
     } catch (err) {
-      console.error("[carousel]", err);
+      console.error("[events-showcase]", err);
     }
 
-    // 9) Auth card entrance animations
+    // 9) Old carousel (cleanup - only if still used elsewhere)
+    try {
+      const oldCarousels = document.querySelectorAll(".carousel-wrapper:not(#events-carousel)");
+      if (oldCarousels.length) {
+        function initScrollCarousel(wrapperEl) {
+          if (!wrapperEl) return;
+          const prevBtn = wrapperEl.querySelector(".carousel-btn.prev");
+          const nextBtn = wrapperEl.querySelector(".carousel-btn.next");
+          const firstCard = wrapperEl.querySelector(".carousel-item");
+
+          const scrollByCard = (dir) => {
+            if (!firstCard) return;
+            const cardWidth = firstCard.getBoundingClientRect().width;
+            const gap = 18;
+            wrapperEl.scrollBy({ left: (cardWidth + gap) * dir, behavior: "smooth" });
+          };
+
+          if (prevBtn) prevBtn.addEventListener("click", () => scrollByCard(-1));
+          if (nextBtn) nextBtn.addEventListener("click", () => scrollByCard(1));
+        }
+
+        oldCarousels.forEach(initScrollCarousel);
+      }
+    } catch (err) {
+      console.error("[old-carousel]", err);
+    }
+
+    // 10) Documentation Grid Slider (6 items/page desktop, 4 items/page mobile)
+    try {
+      const slider = document.getElementById("docs-slider");
+      const track = document.getElementById("docs-grid-track");
+      const pagesEl = document.getElementById("docs-slider-pages");
+      if (!slider || !track || !pagesEl) return;
+
+      const items = Array.from(track.querySelectorAll(".docs-grid-item"));
+      if (!items.length) return;
+
+      let currentPage = 0;
+
+      function getItemsPerPage() {
+        return window.innerWidth <= 900 ? 4 : 6;
+      }
+
+      function getTotalPages() {
+        const perPage = getItemsPerPage();
+        return Math.max(1, Math.ceil(items.length / perPage));
+      }
+
+      function showPage(page) {
+        const perPage = getItemsPerPage();
+        const total = getTotalPages();
+        currentPage = Math.max(0, Math.min(page, total - 1));
+
+        items.forEach((item, i) => {
+          const start = currentPage * perPage;
+          const end = start + perPage;
+          item.style.display = (i >= start && i < end) ? "" : "none";
+        });
+
+        pagesEl.textContent = `${currentPage + 1} / ${total}`;
+      }
+
+      const prevBtn = slider.querySelector(".docs-slider-btn.prev");
+      const nextBtn = slider.querySelector(".docs-slider-btn.next");
+
+      if (prevBtn) prevBtn.addEventListener("click", () => showPage(currentPage - 1));
+      if (nextBtn) nextBtn.addEventListener("click", () => showPage(currentPage + 1));
+
+      showPage(0);
+
+      let resizeTimer;
+      window.addEventListener("resize", () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => showPage(currentPage), 200);
+      });
+    } catch (err) {
+      console.error("[docs-slider]", err);
+    }
+
+    // 11) Auth card entrance animations
     try {
       const cards = document.querySelectorAll(".auth-card");
       if (cards.length) {

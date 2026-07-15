@@ -70,71 +70,97 @@
     <h2>Upcoming Events</h2>
   </div>
 
-  <div class="carousel-wrapper events-carousel" id="events-carousel" data-carousel-mode="single">
-    <div class="carousel-track">
+  <div class="events-showcase" id="events-showcase">
 
     <% if (events && events.length) { %>
 
-      <% events.forEach((event) => { %>
-        <div class="carousel-item slide" data-id="<%= event.id %>">
-          <div class="slide-card">
-            <% if (event.poster) { %>
-              <div class="poster" style="background-image: url('<%= event.poster %>');"></div>
-            <% } else { %>
-              <div class="poster placeholder"></div>
-            <% } %>
+      <div class="events-showcase-inner" id="events-showcase-inner">
 
-            <div class="meta">
-              <h3><%= event.title %></h3>
-              <p class="time">
-                <%= (() => {
-                  const s = String(event.day || '').trim();
-                  let d = null;
+      <% events.forEach((event, idx) => { %>
+        <div class="events-slide" data-id="<%= event.id %>" data-index="<%= idx %>">
+          <div class="events-slide-layout">
 
-                  // YYYY-MM-DD
-                  const m1 = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-                  if (m1) {
-                    d = new Date(Number(m1[1]), Number(m1[2]) - 1, Number(m1[3]));
-                  } else {
-                    // DD/MM/YYYY
-                    const m2 = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-                    if (m2) d = new Date(Number(m2[3]), Number(m2[2]) - 1, Number(m2[1]));
-                  }
+            <!-- Poster 9:16 -->
+            <div class="events-poster-col">
+              <% if (event.poster) { %>
+                <div class="events-poster" style="background-image: url('<%= event.poster %>');"></div>
+              <% } else { %>
+                <div class="events-poster placeholder"></div>
+              <% } %>
+            </div>
 
-                  if (!d || Number.isNaN(d.getTime())) return s;
-                  const dd = String(d.getDate()).padStart(2, '0');
-                  const mm = String(d.getMonth() + 1).padStart(2, '0');
-                  const yyyy = d.getFullYear();
-                  return `${dd}/${mm}/${yyyy}`;
-                })() %> | <%= event.time %>
-              </p>
+            <!-- Detail -->
+            <div class="events-detail-col">
+              <div class="events-detail-inner">
+                <h3 class="events-detail-title"><%= event.title %></h3>
 
+                <div class="events-detail-meta">
+                  <div class="events-meta-item">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>
+                      <%= (() => {
+                        const s = String(event.day || '').trim();
+                        let d = null;
+                        const m1 = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+                        if (m1) d = new Date(Number(m1[1]), Number(m1[2]) - 1, Number(m1[3]));
+                        if (!d || Number.isNaN(d.getTime())) return s;
+                        const dd = String(d.getDate()).padStart(2, '0');
+                        const mm = String(d.getMonth() + 1).padStart(2, '0');
+                        const yyyy = d.getFullYear();
+                        return `${dd}/${mm}/${yyyy}`;
+                      })() %>
+                    </span>
+                  </div>
 
+                  <% if (event.time) { %>
+                  <div class="events-meta-item">
+                    <i class="fas fa-clock"></i>
+                    <span><%= event.time %></span>
+                  </div>
+                  <% } %>
 
-              <p class="location"><%= event.location %></p>
+                  <% if (event.location) { %>
+                  <div class="events-meta-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span><%= event.location %></span>
+                  </div>
+                  <% } %>
+                </div>
 
-              <div class="actions">
-                <% if (event.googleForm) { %>
-                  <a class="btn" href="<%= event.googleForm %>" target="_blank" rel="noopener">Daftar</a>
-                <% } else { %>
-                  <span class="btn ghost" style="cursor: default; opacity: 0.7;" aria-disabled="true">Daftar</span>
+                <% if (event.description) { %>
+                <p class="events-detail-desc"><%= event.description %></p>
                 <% } %>
-                <button class="btn ghost view-details" data-id="<%= event.id %>" type="button">Detail</button>
+
+                <div class="events-detail-actions">
+                  <% if (event.googleForm) { %>
+                    <a class="btn primary" href="<%= event.googleForm %>" target="_blank" rel="noopener">
+                      <i class="fas fa-external-link-alt"></i> Daftar
+                    </a>
+                  <% } else { %>
+                    <span class="btn ghost" style="cursor: default; opacity: 0.7;" aria-disabled="true">Daftar</span>
+                  <% } %>
+                  <button class="btn ghost view-details" data-id="<%= event.id %>" type="button">
+                    <i class="fas fa-info-circle"></i> Detail
+                  </button>
+                </div>
               </div>
             </div>
+
           </div>
         </div>
       <% }) %>
-    <% } else { %>
-      <div class="carousel-item" style="display:flex; align-items:center; justify-content:center;">
-        <p class="lead" style="width: 100%; text-align: center;">Belum ada event.</p>
+
       </div>
 
-    <% } %>
-    </div>
+      <!-- Dots navigation -->
+      <div class="events-dots" id="events-dots"></div>
 
-    <button class="carousel-btn prev" type="button" aria-label="Sebelumnya">‹</button>
-    <button class="carousel-btn next" type="button" aria-label="Berikutnya">›</button>
+    <% } else { %>
+      <div style="display:flex; align-items:center; justify-content:center; padding: 40px 0;">
+        <p class="lead" style="width: 100%; text-align: center;">Belum ada event.</p>
+      </div>
+    <% } %>
+
   </div>
 </section>
 
@@ -142,44 +168,44 @@
 
 <section id="documentation" class="section docs-section reveal">
   <div class="section-header">
-
     <h2>Dokumentasi Event</h2>
     <p>Dokumentasi acara dapat diakses melalui Google Drive.</p>
   </div>
 
-  <div class="carousel-wrapper docs-carousel" id="docs-carousel" data-carousel-mode="single">
-    <div class="carousel-track" id="docs-carousel-track">
+  <div class="docs-grid-slider" id="docs-slider">
+    <div class="docs-grid-track" id="docs-grid-track">
 
     <% if (events && events.length) { %>
 
       <% events.forEach((event) => { %>
-        <div class="carousel-item doc-slide">
-          <div class="slide-card doc-slide-card">
-
-            <div class="meta doc-slide-meta">
-              <h3 class="doc-slide-title"><%= event.title %></h3>
-
+        <div class="docs-grid-item">
+          <div class="docs-grid-card">
+            <div class="docs-grid-body">
+              <h3 class="docs-grid-title"><%= event.title %></h3>
               <% if (event.driveLink) { %>
                 <a class="btn primary btn-sm" href="<%= event.driveLink %>" target="_blank" rel="noopener">
-                  Buka Google Drive
+                  <i class="fas fa-external-link-alt"></i> Buka Google Drive
                 </a>
               <% } else { %>
-                <span class="btn ghost btn-sm" style="cursor: default;">Link Google Drive belum tersedia</span>
+                <span class="btn ghost btn-sm" style="cursor: default; opacity: 0.7;">Link Google Drive belum tersedia</span>
               <% } %>
             </div>
           </div>
         </div>
       <% }) %>
     <% } else { %>
-      <div class="carousel-item" style="display:flex; align-items:center; justify-content:center;">
+      <div class="docs-grid-item" style="display:flex; align-items:center; justify-content:center; grid-column: 1 / -1;">
         <p class="lead" style="width: 100%; text-align: center;">Belum ada data event.</p>
       </div>
 
     <% } %>
     </div>
 
-    <button class="carousel-btn prev" type="button" aria-label="Sebelumnya">‹</button>
-    <button class="carousel-btn next" type="button" aria-label="Berikutnya">›</button>
+    <div class="docs-slider-nav">
+      <button class="docs-slider-btn prev" type="button" aria-label="Sebelumnya">‹</button>
+      <span class="docs-slider-pages" id="docs-slider-pages">1 / 1</span>
+      <button class="docs-slider-btn next" type="button" aria-label="Berikutnya">›</button>
+    </div>
   </div>
 </section>
 

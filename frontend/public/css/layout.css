@@ -259,30 +259,319 @@ html.theme-light .carousel-btn:hover {
   transform: translateY(-50%) scale(0.95);
 }
 
-/* Docs carousel special styling */
-.doc-slide-card .doc-slide-meta {
-  padding: 10px 14px;
+/* ── Events Showcase (Poster + Detail + Dots) ── */
+.events-showcase {
+  max-width: 100%;
+  margin: 0 auto;
+  position: relative;
+}
+
+.events-showcase-inner {
+  position: relative;
+  overflow: hidden;
+}
+
+.events-slide {
+  display: none;
+  animation: events-fade-in 400ms ease both;
+}
+
+.events-slide.active {
+  display: block;
+}
+
+@keyframes events-fade-in {
+  from { opacity: 0; transform: translateX(30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.events-slide-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.events-poster-col {
+  position: relative;
+}
+
+.events-poster {
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  background-size: cover;
+  background-position: center;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  transition: transform 300ms ease;
+}
+
+.events-poster:hover {
+  transform: scale(1.02);
+}
+
+.events-poster.placeholder {
+  background: linear-gradient(135deg, #1a2d5a, #0E2040);
+  display: grid;
+  place-items: center;
+}
+
+.events-detail-col {
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+}
+
+.events-detail-inner {
+  padding: 4px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.events-detail-title {
+  margin: 0;
+  font-size: clamp(1.3rem, 3vw, 2rem);
+  font-weight: 800;
+  color: var(--section-heading);
+  line-height: 1.2;
+}
+
+.events-detail-meta {
+  display: flex;
+  flex-direction: column;
   gap: 10px;
 }
 
-.doc-slide-title {
+.events-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.events-meta-item i {
+  width: 18px;
+  text-align: center;
+  color: var(--accent);
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.events-detail-desc {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  font-size: 0.95rem;
+}
+
+.events-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+/* Dots navigation */
+.events-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 24px;
+  padding: 8px 0;
+}
+
+.events-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--border-accent);
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: all 300ms ease;
+  flex-shrink: 0;
+}
+
+.events-dot:hover {
+  border-color: var(--accent);
+  transform: scale(1.2);
+}
+
+.events-dot.active {
+  width: 28px;
+  border-radius: 999px;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Responsive: mobile — poster on top */
+@media (max-width: 768px) {
+  .events-slide-layout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .events-poster {
+    max-width: 280px;
+    margin: 0 auto;
+    aspect-ratio: 9 / 16;
+  }
+
+  .events-detail-inner {
+    padding: 0;
+    gap: 12px;
+  }
+
+  .events-detail-title {
+    text-align: center;
+  }
+
+  .events-detail-meta {
+    align-items: center;
+  }
+
+  .events-detail-desc {
+    text-align: center;
+  }
+
+  .events-detail-actions {
+    justify-content: center;
+  }
+
+  .events-dots {
+    margin-top: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .events-poster {
+    max-width: 220px;
+  }
+}
+
+/* ── Documentation Grid Slider ── */
+.docs-grid-slider {
+  position: relative;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.docs-grid-track {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 14px;
+  transition: opacity 250ms ease;
+}
+
+.docs-grid-item {
+  min-width: 0;
+}
+
+.docs-grid-card {
+  height: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  transition: transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+  overflow: hidden;
+}
+
+.docs-grid-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--border-accent);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15);
+}
+
+.docs-grid-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.docs-grid-title {
   margin: 0;
   font-size: 0.85rem;
   font-weight: 700;
-  flex: 1;
-  min-width: 0;
-  line-height: 1.3;
+  color: var(--text);
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Slider pagination navigation */
+.docs-slider-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.docs-slider-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  font-size: 1.2rem;
+  transition: background 200ms ease, border-color 200ms ease, transform 200ms ease;
+}
+
+.docs-slider-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-accent);
+  transform: scale(1.08);
+}
+
+.docs-slider-btn:active {
+  transform: scale(0.95);
+}
+
+.docs-slider-pages {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  min-width: 48px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Responsive: 4 columns on mobile */
+@media (max-width: 900px) {
+  .docs-grid-track {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+
+  .docs-grid-body {
+    padding: 12px;
+  }
+
+  .docs-grid-title {
+    font-size: 0.8rem;
+  }
+
+  .docs-slider-nav {
+    gap: 10px;
+    margin-top: 16px;
+  }
 }
 
 @media (max-width: 620px) {
-  .doc-slide-meta {
-    flex-direction: column;
-    align-items: stretch;
-    text-align: center;
+  .docs-grid-track {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
 }
 

@@ -75,12 +75,12 @@ html.theme-light .btn.ghost {
   padding: clamp(26px, 5vw, 48px);
   border-radius: var(--radius);
   border: 1px solid var(--border);
-  background: var(--card-bg);
+  background: var(--card);
   box-shadow: var(--shadow);
 }
 
 html.theme-light .section {
-  background: var(--card-bg);
+  background: var(--card);
 }
 
 .section-header {
@@ -99,13 +99,13 @@ html.theme-light .section {
 .hero-card,
 .auth-card {
   border: 1px solid var(--border);
-  background: var(--card-bg);
+  background: var(--card);
   box-shadow: var(--shadow);
 }
 
 html.theme-light .hero-card,
 html.theme-light .auth-card {
-  background: var(--card-bg);
+  background: var(--card);
 }
 
 .hero-card {

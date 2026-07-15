@@ -1,47 +1,6 @@
-# Update Progress
-
-## Main Tasks
-
-- [x] Analyze codebase and understand architecture
-- [x] **FIX CRITICAL BUG**: Admin "Add New Event" & "Add New Documentation" redirect to main site
-  - Fixed all admin EJS templates to use `/admin/` prefix routes
-  - Fixed form.ejs, events.ejs, documentation.ejs, create-admin.ejs
-- [x] Split CSS into multiple files for better performance
-  - Created: variables.css, base.css, navbar.css, hero.css, components.css, layout.css
-  - Main style.css now imports all modular files
-- [x] Remove glass morphism, redesign to normal landing page with same colors
-  - Removed all `backdrop-filter: blur()` for better rendering performance
-  - Simplified backgrounds to solid colors with gradients
-  - Kept same brand colors (navy blue + electric blue)
-- [x] Redesign main website layout with better UX
-  - Cleaner card designs without heavy glass effects
-  - Better spacing and typography
-- [x] Fix mobile navbar responsive bugs
-  - Close nav on outside click
-  - Close nav on link click (mobile)
-  - Close nav on Escape key
-  - Proper hamburger toggle behavior
-- [x] Fix analytics section scrolling issue
-  - Changed topbar from `position: sticky` to `position: fixed`
-  - Added proper padding to shell to account for fixed topbar
-- [x] Improve responsive design across all devices
-  - Better mobile breakpoints
-  - Improved touch targets
-  - All device friendly layouts
-- [x] Achieve performance score 95+ (minify, optimize assets)
-  - Added aggressive caching headers (7d default, 1 year for CSS/JS)
-  - Removed unused JS files (load-swiper.js, swiper-init-window.js, swiper-init.js, event-alert.js)
-  - Removed unused image icon files (replaced with Font Awesome)
-  - Simplified CSS (removed 1661-line monolithic file into modular files)
-- [x] Add security improvements (headers, validation, etc.)
-  - Added X-Content-Type-Options, X-Frame-Options, X-XSS-Protection
-  - Added Referrer-Policy, Permissions-Policy headers
-  - Added proper cache-control headers
-  - Rate limiting already in place for login
-  - Passwords hashed with bcrypt
-- [x] Improve icons (use external icon library)
-  - Replaced all custom PNG icons with Font Awesome 6.5.1
-  - Navbar icons, social media icons now use FA
-- [x] Fix any other bugs found during testing
-  - Fixed theme toggle localStorage bug (incorrect condition)
-  - All Node.js files pass syntax check
+- Ada bug dibagian sign out dev/dashboard, dia malah direct ke halaman login admin, perbaiki agar ketika dev sign out, kembalinya adalah ke halaman login dev
+- Ganti konsep css menjadi solid color, dengan tetap menggunakan pallete code yang sama
+- Di mobile, saat scroll ke bawah, ada halaman putih yang tampak muncul dan hilang, serta tidak smooth scrolling. Kemungkinan karna terlalu berat ejs nya
+- Minify css dan js
+- Buat security, agar admin tidak bisa mengakses dashboard dev
+- Buat security terhadap serangan serangan website seperti sql injection, brute force attack, dll. Gunakan method method keamanan yang ada pada expressjs dan bcryptjs untuk password.
