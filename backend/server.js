@@ -464,6 +464,31 @@ app.post("/admin/admins/new", ensureAuth, async (req, res) => {
 // Redirect root admin to login
 app.get("/admin", (req, res) => res.redirect("/admin/login"));
 
+// ============== SPEED INSIGHTS API ==============
+const { getSpeedInsightsData, getMetricRating } = require("./speedInsights");
+
+app.get("/api/dev/speed-insights", ensureDevAuth, async (req, res) => {
+  try {
+    const timeRange = req.query.range || "7d";
+    const data = await getSpeedInsightsData(timeRange);
+    return res.json(data);
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/api/dev/speed-insights/status", ensureDevAuth, (req, res) => {
+  const token = process.env.VERCEL_TOKEN || "";
+  const projectId = process.env.VERCEL_PROJECT_ID || "";
+  return res.json({
+    configured: !!(token && projectId),
+    hasToken: !!token,
+    hasProjectId: !!projectId,
+  });
+});
+
+module.exports = { getMetricRating };
+
 // ============== EXPORT (for Vercel) ==============
 module.exports = app;
 

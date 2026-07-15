@@ -576,6 +576,91 @@
     }
     .add-admin-btn:hover { background: rgba(63,185,80,0.1); border-color: rgba(63,185,80,0.3); }
 
+    /* ── SPEED INSIGHTS ── */
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .si-summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .si-summary-item {
+      padding: 14px 20px;
+      border-right: 1px solid var(--border2);
+      text-align: center;
+    }
+    .si-summary-item:last-child { border-right: none; }
+
+    .si-summary-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .si-summary-value {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .si-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .si-table th {
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .si-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border2);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .si-table tr:last-child td { border-bottom: none; }
+    .si-table tr:hover td { background: var(--surface2); }
+
+    .si-path-cell {
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      font-size: 11px;
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .si-metric-val {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .si-metric-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+
     /* ── RESPONSIVE ── */
     @media (max-width: 768px) {
       .metrics-row { grid-template-columns: 1fr 1fr; }
@@ -714,6 +799,70 @@
               <small style="opacity:0.6;">Visit the site to start collecting data.</small>
             </div>
           <% } %>
+        </div>
+      </div>
+
+      <!-- SPEED INSIGHTS (Vercel Web Vitals) -->
+      <div class="section-card" id="speed-insights-card">
+        <div class="section-header">
+          <span>Speed Insights <span style="font-weight:400;font-size:11px;color:var(--muted);">— Vercel Web Vitals</span></span>
+          <span class="sub">
+            <span id="si-records-count" style="display:none;"></span>
+            <span id="si-status-badge"></span>
+          </span>
+        </div>
+        <div id="speed-insights-body" style="min-height:160px;">
+          <div id="si-loading" style="padding:40px 20px;text-align:center;color:var(--muted);font-size:13px;">
+            <div style="margin-bottom:10px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;animation:spin 1s linear infinite;">
+                <circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" stroke-linecap="round"/>
+              </svg>
+            </div>
+            Loading Speed Insights...
+          </div>
+          <div id="si-not-configured" style="display:none;padding:40px 20px;text-align:center;color:var(--muted);font-size:13px;">
+            <div style="margin-bottom:10px;font-size:24px;">⚡</div>
+            Speed Insights belum dikonfigurasi.<br>
+            <small style="opacity:0.6;">Set VERCEL_TOKEN dan VERCEL_PROJECT_ID di environment variables.</small>
+          </div>
+          <div id="si-error" style="display:none;padding:40px 20px;text-align:center;color:var(--red);font-size:13px;"></div>
+          <div id="si-data" style="display:none;">
+            <div class="si-summary" id="si-summary">
+              <div class="si-summary-item">
+                <div class="si-summary-label">Pages Tracked</div>
+                <div class="si-summary-value" id="si-total-pages">0</div>
+              </div>
+              <div class="si-summary-item">
+                <div class="si-summary-label">Total Records</div>
+                <div class="si-summary-value" id="si-total-records">0</div>
+              </div>
+              <div class="si-summary-item">
+                <div class="si-summary-label">Avg LCP</div>
+                <div class="si-summary-value" id="si-avg-lcp">—</div>
+              </div>
+              <div class="si-summary-item">
+                <div class="si-summary-label">Avg FCP</div>
+                <div class="si-summary-value" id="si-avg-fcp">—</div>
+              </div>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="si-table" id="si-table">
+                <thead>
+                  <tr>
+                    <th>Path</th>
+                    <th title="Largest Contentful Paint">LCP</th>
+                    <th title="First Contentful Paint">FCP</th>
+                    <th title="Time to First Byte">TTFB</th>
+                    <th title="Cumulative Layout Shift">CLS</th>
+                    <th title="Interaction to Next Paint">INP</th>
+                    <th title="Number of measurements">#</th>
+                  </tr>
+                </thead>
+                <tbody id="si-table-body">
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1195,6 +1344,118 @@
 
   // Auto-refresh admin statuses every 15 seconds
   setInterval(refreshAdminTable, 15000);
+
+  // ── SPEED INSIGHTS ──
+  async function loadSpeedInsights() {
+    try {
+      // First check configuration status
+      const statusRes = await fetch('/api/dev/speed-insights/status');
+      const status = await statusRes.json();
+
+      if (!status.configured) {
+        document.getElementById('si-loading').style.display = 'none';
+        document.getElementById('si-not-configured').style.display = 'block';
+        document.getElementById('si-status-badge').textContent = '⚠ Not configured';
+        return;
+      }
+
+      document.getElementById('si-status-badge').textContent = '✓ Enabled';
+      document.getElementById('si-status-badge').style.color = '#3fb950';
+
+      // Fetch speed insights data
+      const range = document.getElementById('range-select').value || '7d';
+      const res = await fetch('/api/dev/speed-insights?range=' + range);
+      const data = await res.json();
+
+      document.getElementById('si-loading').style.display = 'none';
+
+      if (data.error) {
+        document.getElementById('si-error').textContent = data.error;
+        document.getElementById('si-error').style.display = 'block';
+        return;
+      }
+
+      if (!data.paths || !data.paths.length) {
+        document.getElementById('si-error').textContent = 'No speed insights data available yet. Visit the site to start collecting Web Vitals.';
+        document.getElementById('si-error').style.display = 'block';
+        return;
+      }
+
+      // Show data
+      document.getElementById('si-data').style.display = 'block';
+      document.getElementById('si-records-count').style.display = 'inline';
+      document.getElementById('si-records-count').textContent = data.total + ' records';
+
+      // Summary
+      document.getElementById('si-total-pages').textContent = data.paths.length;
+      document.getElementById('si-total-records').textContent = data.total;
+
+      // Calculate averages
+      const validLcp = data.paths.filter(p => p.lcp.median != null).map(p => p.lcp.median);
+      const validFcp = data.paths.filter(p => p.fcp.median != null).map(p => p.fcp.median);
+
+      if (validLcp.length) {
+        const avgLcp = Math.round(validLcp.reduce((a, b) => a + b, 0) / validLcp.length);
+        document.getElementById('si-avg-lcp').textContent = avgLcp + 'ms';
+        document.getElementById('si-avg-lcp').style.color = getSiColor(avgLcp, 'lcp');
+      }
+      if (validFcp.length) {
+        const avgFcp = Math.round(validFcp.reduce((a, b) => a + b, 0) / validFcp.length);
+        document.getElementById('si-avg-fcp').textContent = avgFcp + 'ms';
+        document.getElementById('si-avg-fcp').style.color = getSiColor(avgFcp, 'fcp');
+      }
+
+      // Build table
+      let html = '';
+      data.paths.slice(0, 20).forEach(p => {
+        const lcpStr = p.lcp.median != null ? p.lcp.median + 'ms' : '—';
+        const fcpStr = p.fcp.median != null ? p.fcp.median + 'ms' : '—';
+        const ttfbStr = p.ttfb.median != null ? p.ttfb.median + 'ms' : '—';
+        const clsStr = p.cls.median != null ? p.cls.median.toFixed(2) : '—';
+        const inpStr = p.inp.median != null ? p.inp.median + 'ms' : '—';
+
+        html += `<tr>
+          <td class="si-path-cell" title="${p.path}">${p.path}</td>
+          <td class="si-metric-val"><span class="si-metric-dot" style="background:${getSiColor(p.lcp.median, 'lcp')}"></span>${lcpStr}</td>
+          <td class="si-metric-val"><span class="si-metric-dot" style="background:${getSiColor(p.fcp.median, 'fcp')}"></span>${fcpStr}</td>
+          <td class="si-metric-val"><span class="si-metric-dot" style="background:${getSiColor(p.ttfb.median, 'ttfb')}"></span>${ttfbStr}</td>
+          <td class="si-metric-val"><span class="si-metric-dot" style="background:${getSiColor(p.cls.median, 'cls')}"></span>${clsStr}</td>
+          <td class="si-metric-val"><span class="si-metric-dot" style="background:${getSiColor(p.inp.median, 'inp')}"></span>${inpStr}</td>
+          <td style="color:var(--muted);font-size:11px;">${p.count}</td>
+        </tr>`;
+      });
+
+      document.getElementById('si-table-body').innerHTML = html;
+
+    } catch (e) {
+      document.getElementById('si-loading').style.display = 'none';
+      document.getElementById('si-error').textContent = 'Failed to load Speed Insights: ' + e.message;
+      document.getElementById('si-error').style.display = 'block';
+      console.warn('[speed-insights] load error', e);
+    }
+  }
+
+  function getSiColor(value, metric) {
+    if (value === null || value === undefined) return '#8b949e';
+    const thresholds = {
+      lcp: { good: 2500, poor: 4000 },
+      fcp: { good: 1800, poor: 3000 },
+      ttfb: { good: 800, poor: 1800 },
+      cls: { good: 0.1, poor: 0.25 },
+      inp: { good: 200, poor: 500 },
+    };
+    const t = thresholds[metric];
+    if (!t) return '#8b949e';
+    if (value <= t.good) return '#3fb950';
+    if (value <= t.poor) return '#d29922';
+    return '#f85149';
+  }
+
+  // Load Speed Insights on page load
+  loadSpeedInsights();
+
+  // Auto-refresh Speed Insights every 60 seconds
+  setInterval(loadSpeedInsights, 60000);
   </script>
 
 </body>
