@@ -287,7 +287,7 @@ html.theme-light .carousel-btn:hover {
 
 .events-slide-layout {
   display: grid;
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  grid-template-columns: minmax(0, 0.55fr) minmax(0, 1.45fr);
   gap: 24px;
   align-items: start;
 }
@@ -298,6 +298,7 @@ html.theme-light .carousel-btn:hover {
 
 .events-poster {
   width: 100%;
+  max-width: 280px;
   aspect-ratio: 9 / 16;
   background-size: cover;
   background-position: center;
@@ -442,7 +443,7 @@ html.theme-light .carousel-btn:hover {
   }
 
   .events-poster {
-    max-width: 280px;
+    max-width: 200px;
     margin: 0 auto;
     aspect-ratio: 9 / 16;
   }
@@ -584,10 +585,10 @@ html.theme-light .carousel-btn:hover {
   font-variant-numeric: tabular-nums;
 }
 
-/* Responsive: tablet 2 columns, mobile 1 column */
+/* Responsive: mobile 1 column */
 @media (max-width: 900px) {
   .docs-grid-track {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
     gap: 14px;
   }
 
@@ -603,16 +604,9 @@ html.theme-light .carousel-btn:hover {
     gap: 10px;
     margin-top: 16px;
   }
-}
-
-@media (max-width: 620px) {
-  .docs-grid-track {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
 
   .docs-grid-card {
-    max-width: 380px;
+    max-width: 400px;
     margin: 0 auto;
   }
 }

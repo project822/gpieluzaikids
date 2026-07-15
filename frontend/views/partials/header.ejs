@@ -39,24 +39,22 @@
             <span class="nav-date-suffix">&nbsp;</span>
           </div>
 
-          <!-- Notification Bell -->
-          <% const hasEvents = typeof events !== 'undefined' && events && events.length; %>
-          <div class="nav-notif" id="nav-notif">
+          <!-- Notification Bell (seperti nav link) -->
+          <div class="nav-notif-wrap">
             <button class="nav-notif-btn" id="nav-notif-btn" type="button" aria-label="Notifikasi">
               <i class="fas fa-bell"></i>
-              <% if (hasEvents) { %><span class="nav-notif-dot"></span><% } %>
             </button>
-            <!-- Notification Popup -->
-            <% if (hasEvents) { %>
+            <!-- Popup notifikasi hanya jika ada event -->
+            <% if (typeof events !== 'undefined' && events && events.length) { %>
               <% const latestEvent = events[0]; %>
               <div class="nav-notif-popup" id="nav-notif-popup">
-                <div class="nav-notif-header">Notifikasi</div>
-                <a class="nav-notif-item" href="#events">
+                <div class="nav-notif-item-wrap">
                   <div class="nav-notif-icon"><i class="fas fa-calendar-alt"></i></div>
                   <div class="nav-notif-body">
-                    <span class="nav-notif-label">Event Terbaru</span>
+                    <span class="nav-notif-label">Event Baru</span>
                     <span class="nav-notif-title"><%= latestEvent.title %></span>
-                    <span class="nav-notif-time">
+                    <span class="nav-notif-meta">
+                      <i class="fas fa-calendar-alt"></i>
                       <%= (() => {
                         const s = String(latestEvent.day || '').trim();
                         let d = null;
@@ -70,8 +68,9 @@
                       })() %>
                       <% if (latestEvent.time) { %> | <%= latestEvent.time %><% } %>
                     </span>
+                    <span class="nav-notif-link">Lihat Event &rarr;</span>
                   </div>
-                </a>
+                </div>
               </div>
             <% } %>
           </div>

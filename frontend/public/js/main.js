@@ -96,14 +96,29 @@
       console.error("[nav]", err);
     }
 
-    // 3) Notification popup toggle
+    // 3) Notification popup toggle + direct ke events
     try {
       const notifBtn = document.getElementById("nav-notif-btn");
       const notifPopup = document.getElementById("nav-notif-popup");
       if (notifBtn && notifPopup) {
         notifBtn.addEventListener("click", (e) => {
           e.stopPropagation();
-          notifPopup.classList.toggle("open");
+          // Toggle popup
+          const isOpen = notifPopup.classList.toggle("open");
+          // Kalau popup lagi terbuka dan diklik, langsung ke #events
+          if (isOpen) {
+            setTimeout(function() {
+              notifPopup.querySelector(".nav-notif-item-wrap").addEventListener("click", function handler() {
+                notifPopup.classList.remove("open");
+                // Scroll ke events
+                const target = document.querySelector("#events");
+                if (target) {
+                  target.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+                this.removeEventListener("click", handler);
+              });
+            }, 100);
+          }
         });
         document.addEventListener("click", (e) => {
           if (!notifBtn.contains(e.target) && !notifPopup.contains(e.target)) {
