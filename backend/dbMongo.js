@@ -1,39 +1,71 @@
 const { MongoClient } = require("mongodb");
 
-const MONGO_URI =
-  process.env.MONGO_URI ||
-  "mongodb+srv://USER:PASSWORD@cluster0.xxxxx.mongodb.net/gereja?retryWrites=true&w=majority";
+const MONGO_URI = process.env.MONGO_URI || "";
 const DB_NAME = process.env.MONGO_DB_NAME || "gereja";
+
+if (!MONGO_URI) {
+  // Jangan biarkan aplikasi diam-diam mencoba connect ke placeholder palsu.
+  // Lebih baik gagal cepat & jelas di log daripada request menggantung.
+  console.error(
+    "[MongoDB] FATAL: environment variable MONGO_URI belum di-set. " +
+      "Set MONGO_URI di file .env (lokal) atau di Vercel Project Settings > Environment Variables (production).",
+  );
+}
 
 let client = null;
 let db = null;
+let connectingPromise = null; // mencegah race condition saat banyak request connect bersamaan
 
 /**
- * Koneksi ke MongoDB (singleton) - cache untuk Vercel serverless
+ * Koneksi ke MongoDB (singleton) - cache untuk Vercel serverless.
+ * Aman dipanggil bersamaan dari banyak request paralel (tidak akan connect dobel).
  */
 async function connect() {
   if (db) return db;
+  if (connectingPromise) return connectingPromise;
 
-  client = new MongoClient(MONGO_URI, {
-    maxPoolSize: 10,
-    serverSelectionTimeoutMS: 5000,
-    connectTimeoutMS: 5000,
-  });
-
-  await client.connect();
-  db = client.db(DB_NAME);
-
-  // Pastikan collections & indexes dibuat
-  try {
-    await db.collection("events").createIndex({ id: 1 }, { unique: true });
-    await db.collection("admins").createIndex({ username: 1 }, { unique: true });
-    await db.collection("pageviews").createIndex({ timestamp: -1 });
-  } catch (e) {
-    // Index mungkin sudah ada, ignore error
+  if (!MONGO_URI) {
+    throw new Error(
+      "MONGO_URI tidak diset. Tidak bisa terhubung ke MongoDB.",
+    );
   }
 
-  console.log("[MongoDB] Connected to", DB_NAME);
-  return db;
+  connectingPromise = (async () => {
+    try {
+      client = new MongoClient(MONGO_URI, {
+        maxPoolSize: 10,
+        serverSelectionTimeoutMS: 5000,
+        connectTimeoutMS: 5000,
+      });
+
+      await client.connect();
+      const database = client.db(DB_NAME);
+
+      // Pastikan collections & indexes dibuat
+      try {
+        await database.collection("events").createIndex({ id: 1 }, { unique: true });
+        await database.collection("admins").createIndex({ username: 1 }, { unique: true });
+        await database.collection("pageviews").createIndex({ timestamp: -1 });
+      } catch (e) {
+        // Index mungkin sudah ada, ignore error
+        console.warn("[MongoDB] createIndex warning:", e.message);
+      }
+
+      console.log("[MongoDB] Connected to", DB_NAME);
+      db = database;
+      return db;
+    } catch (err) {
+      // Reset state supaya request berikutnya boleh coba connect lagi
+      client = null;
+      db = null;
+      console.error("[MongoDB] Connection failed:", err.message);
+      throw err;
+    } finally {
+      connectingPromise = null;
+    }
+  })();
+
+  return connectingPromise;
 }
 
 /**
@@ -237,14 +269,14 @@ async function getPageViewStats(timeRange = "7d") {
   const chartData = {};
   if (timeRange === "24h") {
     for (let i = 23; i >= 0; i--) {
-      const d = new Date(Date.now() - i * 60 * 60 * 1000);
-      chartData[`${d.getHours().toString().padStart(2, "0")}:00`] = 0;
+      const d2 = new Date(Date.now() - i * 60 * 60 * 1000);
+      chartData[`${d2.getHours().toString().padStart(2, "0")}:00`] = 0;
     }
   } else {
     const days = timeRange === "30d" ? 30 : 7;
     for (let i = days - 1; i >= 0; i--) {
-      const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
-      const label = `${d.getDate()} ${d.toLocaleString("id-ID", { month: "short" })}`;
+      const d2 = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+      const label = `${d2.getDate()} ${d2.toLocaleString("id-ID", { month: "short" })}`;
       chartData[label] = 0;
     }
   }
@@ -312,7 +344,4 @@ module.exports = {
   getAdminStatuses,
   logPageView,
   getPageViewStats,
-  // Untuk migrasi data dari db.json ke MongoDB
-  db,
-  client,
 };
