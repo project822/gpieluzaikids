@@ -1,6 +1,0 @@
-- Ada bug dibagian sign out dev/dashboard, dia malah direct ke halaman login admin, perbaiki agar ketika dev sign out, kembalinya adalah ke halaman login dev
-- Ganti konsep css menjadi solid color, dengan tetap menggunakan pallete code yang sama
-- Di mobile, saat scroll ke bawah, ada halaman putih yang tampak muncul dan hilang, serta tidak smooth scrolling. Kemungkinan karna terlalu berat ejs nya
-- Minify css dan js
-- Buat security, agar admin tidak bisa mengakses dashboard dev
-- Buat security terhadap serangan serangan website seperti sql injection, brute force attack, dll. Gunakan method method keamanan yang ada pada expressjs dan bcryptjs untuk password.
