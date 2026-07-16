@@ -7,7 +7,7 @@ const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const multer = require("multer");
 
-const db = require("./db");
+const db = require("./dbMongo");
 const { rateLimitLogin } = require("./rateLimit");
 
 const app = express();
@@ -139,19 +139,30 @@ function ensureDevAuth(req, res, next) {
   return res.redirect("/dev/login");
 }
 
-// Init default admin
-(async function ensureAdmin() {
-  const admins = db.getAdmins();
-  if (!admins || admins.length === 0) {
-    const passwordHash = await bcrypt.hash("admin123", 10);
-    db.addAdmin({ username: "admin", passwordHash });
-    console.log("Default admin created: username=admin password=admin123");
+// ============== CONNECT TO MONGODB & INIT ==============
+(async function initDb() {
+  try {
+    await db.connect();
+    console.log("[DB] MongoDB connected successfully");
+
+    // Init default admin jika belum ada
+    const admins = await db.getAdmins();
+    if (!admins || admins.length === 0) {
+      const passwordHash = await bcrypt.hash("admin123", 10);
+      await db.addAdmin({ username: "admin", passwordHash });
+      console.log("Default admin created: username=admin password=admin123");
+    }
+  } catch (err) {
+    console.error("[DB] Failed to connect to MongoDB:", err.message);
+    console.error("[DB] Make sure MONGO_URI environment variable is set correctly.");
+    console.error("[DB] Fallback: server will continue but database features will fail.");
   }
 })();
 
 // ============== PUBLIC ROUTES ==============
-app.get("/", (req, res) => {
-  const events = db.getEvents().slice().reverse();
+app.get("/", async (req, res) => {
+  const events = await db.getEvents();
+  // events already sorted by day descending from MongoDB
   res.render("index", { events });
 });
 
@@ -160,8 +171,8 @@ app.get("/events/:id", (req, res) => res.redirect("/"));
 app.get("/documentation", (req, res) => res.redirect("/"));
 app.get("/contact", (req, res) => res.redirect("/"));
 
-app.get("/api/events/:id", (req, res) => {
-  const event = db.getEvent(req.params.id);
+app.get("/api/events/:id", async (req, res) => {
+  const event = await db.getEvent(req.params.id);
   if (!event) return res.status(404).json({ error: "Not found" });
   res.json(event);
 });
@@ -173,7 +184,7 @@ app.get("/admin/login", (req, res) => res.render("login", { error: null }));
 
 async function handleAdminLogin(req, res) {
   const { username, password } = req.body;
-  const admins = db.getAdmins();
+  const admins = await db.getAdmins();
   const admin = (admins || []).find((a) => a.username === username);
   if (!admin) {
     return res.render("login", { error: "Invalid credentials" });
@@ -183,7 +194,7 @@ async function handleAdminLogin(req, res) {
     return res.render("login", { error: "Invalid credentials" });
   }
   req.session.user = { username };
-  db.setAdminOnline(username);
+  await db.setAdminOnline(username);
   
   // Only redirect to admin-accessible paths, NOT dev paths (e.g. /admin/dashboard → /dev/dashboard)
   const savedRedirect = req.session.redirectTo || "";
@@ -266,22 +277,24 @@ app.post("/dev/login", (req, res) => {
 });
 
 // Dashboard monitoring (canonical URL)
-app.get("/dev/dashboard", ensureDevAuth, (req, res) => {
+app.get("/dev/dashboard", ensureDevAuth, async (req, res) => {
   const timeRange = req.query.range || "7d";
-  const metrics = db.getMetrics();
-  const adminStatuses = db.getAdminStatuses();
-  const admins = db.getAdmins() || [];
+  const [metrics, adminStatuses, admins, pvStats] = await Promise.all([
+    db.getMetrics(),
+    db.getAdminStatuses(),
+    db.getAdmins(),
+    db.getPageViewStats(timeRange),
+  ]);
   const avgLatencyMs =
     metrics && metrics.totalRequests
       ? Math.round(
           (metrics.totalLatencyMsSum || 0) / (metrics.totalRequests || 1),
         )
       : 0;
-  const pvStats = db.getPageViewStats(timeRange);
   return res.render("dashboard", {
     metrics,
     avgLatencyMs,
-    admins,
+    admins: admins || [],
     adminStatuses,
     pvStats,
     timeRange,
@@ -306,10 +319,12 @@ app.get("/admin/events/dashboard-monitoring", ensureDevAuth, (req, res) => {
 });
 
 // Real-time stats API for dashboard auto-refresh
-app.get("/api/dev/stats", ensureDevAuth, (req, res) => {
+app.get("/api/dev/stats", ensureDevAuth, async (req, res) => {
   const timeRange = req.query.range || "7d";
-  const pvStats = db.getPageViewStats(timeRange);
-  const metrics = db.getMetrics();
+  const [pvStats, metrics] = await Promise.all([
+    db.getPageViewStats(timeRange),
+    db.getMetrics(),
+  ]);
   const avgLatencyMs =
     metrics && metrics.totalRequests
       ? Math.round((metrics.totalLatencyMsSum || 0) / (metrics.totalRequests || 1))
@@ -323,13 +338,13 @@ app.post("/dev/api/admins/add", ensureDevAuth, async (req, res) => {
   if (!username || !password) {
     return res.status(400).json({ error: "Username dan password wajib diisi" });
   }
-  const admins = db.getAdmins();
+  const admins = await db.getAdmins();
   const exists = (admins || []).some((a) => a.username === username);
   if (exists) {
     return res.status(400).json({ error: "Username sudah dipakai" });
   }
   const passwordHash = await bcrypt.hash(password, 10);
-  db.addAdmin({ username, passwordHash });
+  await db.addAdmin({ username, passwordHash });
   return res.json({ ok: true, username });
 });
 
@@ -339,36 +354,38 @@ app.post("/dev/api/admins/reset-password", ensureDevAuth, async (req, res) => {
   if (!username || !newPassword) {
     return res.status(400).json({ error: "Username dan password baru wajib diisi" });
   }
-  const admins = db.getAdmins();
+  const admins = await db.getAdmins();
   const exists = (admins || []).some((a) => a.username === username);
   if (!exists) {
     return res.status(400).json({ error: "Username tidak ditemukan" });
   }
   const passwordHash = await bcrypt.hash(newPassword, 10);
-  db.updateAdminPassword(username, passwordHash);
+  await db.updateAdminPassword(username, passwordHash);
   return res.json({ ok: true, username });
 });
 
 // ============== DEV API: Delete Admin ==============
-app.post("/dev/api/admins/delete", ensureDevAuth, (req, res) => {
+app.post("/dev/api/admins/delete", ensureDevAuth, async (req, res) => {
   const { username } = req.body || {};
   if (!username) {
     return res.status(400).json({ error: "Username wajib diisi" });
   }
-  db.deleteAdmin(username);
+  await db.deleteAdmin(username);
   return res.json({ ok: true });
 });
 
 // ============== DEV API: Get Admin Statuses (for real-time refresh) ==============
-app.get("/dev/api/admins/statuses", ensureDevAuth, (req, res) => {
-  const adminStatuses = db.getAdminStatuses();
-  const admins = db.getAdmins() || [];
-  return res.json({ admins, adminStatuses });
+app.get("/dev/api/admins/statuses", ensureDevAuth, async (req, res) => {
+  const [adminStatuses, admins] = await Promise.all([
+    db.getAdminStatuses(),
+    db.getAdmins(),
+  ]);
+  return res.json({ admins: admins || [], adminStatuses });
 });
 
 // Events management
-app.get("/admin/events", ensureAuth, (req, res) => {
-  const events = db.getEvents().slice().reverse();
+app.get("/admin/events", ensureAuth, async (req, res) => {
+  const events = await db.getEvents();
   return res.render("events", { events });
 });
 
@@ -380,7 +397,7 @@ app.post(
   "/admin/events/new",
   ensureAuth,
   upload.single("poster"),
-  (req, res) => {
+  async (req, res) => {
     const { title, day, time, location, googleForm } = req.body;
     const poster = req.file ? `/uploads/${req.file.filename}` : "";
     const event = {
@@ -392,13 +409,13 @@ app.post(
       poster,
       googleForm,
     };
-    db.addEvent(event);
+    await db.addEvent(event);
     res.redirect("/admin/events");
   },
 );
 
-app.get("/admin/events/:id/edit", ensureAuth, (req, res) => {
-  const event = db.getEvent(req.params.id);
+app.get("/admin/events/:id/edit", ensureAuth, async (req, res) => {
+  const event = await db.getEvent(req.params.id);
   if (!event) return res.status(404).send("Not found");
   res.render("form", { event });
 });
@@ -407,37 +424,37 @@ app.post(
   "/admin/events/:id/edit",
   ensureAuth,
   upload.single("poster"),
-  (req, res) => {
+  async (req, res) => {
     const { title, day, time, location, googleForm } = req.body;
     const patch = { title, day, time, location, googleForm };
     if (req.file) patch.poster = `/uploads/${req.file.filename}`;
-    db.updateEvent(req.params.id, patch);
+    await db.updateEvent(req.params.id, patch);
     res.redirect("/admin/events");
   },
 );
 
-app.post("/admin/api/events/delete", ensureAuth, (req, res) => {
+app.post("/admin/api/events/delete", ensureAuth, async (req, res) => {
   const { id } = req.body || {};
   if (!id) return res.status(400).json({ error: "Missing event id" });
-  const ev = db.getEvent(id);
+  const ev = await db.getEvent(id);
   if (!ev) return res.status(404).json({ error: "Event not found" });
-  db.deleteEvent(id);
+  await db.deleteEvent(id);
   return res.json({ ok: true });
 });
 
 // Documentation
-app.get("/admin/documentation", ensureAuth, (req, res) => {
-  const events = db.getEvents().slice().reverse();
+app.get("/admin/documentation", ensureAuth, async (req, res) => {
+  const events = await db.getEvents();
   return res.render("documentation", { events });
 });
 
-app.post("/admin/api/documentation/add", ensureAuth, (req, res) => {
+app.post("/admin/api/documentation/add", ensureAuth, async (req, res) => {
   const { eventId, driveLink } = req.body || {};
   if (!eventId || !driveLink)
     return res.status(400).json({ error: "Missing eventId or driveLink" });
-  const ev = db.getEvent(eventId);
+  const ev = await db.getEvent(eventId);
   if (!ev) return res.status(404).json({ error: "Event not found" });
-  db.updateEvent(eventId, { driveLink });
+  await db.updateEvent(eventId, { driveLink });
   return res.json({ ok: true });
 });
 
@@ -453,7 +470,7 @@ app.post("/admin/admins/new", ensureAuth, async (req, res) => {
       .status(400)
       .render("create-admin", { error: "Username dan password wajib diisi" });
   }
-  const admins = db.getAdmins();
+  const admins = await db.getAdmins();
   const exists = (admins || []).some((a) => a.username === username);
   if (exists) {
     return res
@@ -461,7 +478,7 @@ app.post("/admin/admins/new", ensureAuth, async (req, res) => {
       .render("create-admin", { error: "Username sudah dipakai" });
   }
   const passwordHash = await bcrypt.hash(password, 10);
-  db.addAdmin({ username, passwordHash });
+  await db.addAdmin({ username, passwordHash });
   return res.redirect("/admin/events");
 });
 
