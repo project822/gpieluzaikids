@@ -6,6 +6,7 @@ const session = require("express-session");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const multer = require("multer");
+const sharp = require("sharp");
 
 const db = require("./dbMongo");
 const { rateLimitLogin } = require("./rateLimit");
@@ -73,7 +74,10 @@ app.use(
     maxAge: "7d",
     immutable: true,
     setHeaders: (res, filePath) => {
-      if (filePath.endsWith(".css") || filePath.endsWith(".js")) {
+      // Aset yang jarang berubah (poster upload selalu dapat nama file baru,
+      // logo/ikon statis) aman di-cache lama di browser -> kunjungan berikutnya
+      // tidak perlu download ulang.
+      if (/\.(css|js|png|jpe?g|gif|webp|svg|ico|woff2?|ttf)$/i.test(filePath)) {
         res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
       }
     },
@@ -90,24 +94,62 @@ app.use(
 );
 
 // Multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    // Buat folder uploads jika belum ada
-    try {
-      if (!fs.existsSync(UPLOADS_DIR)) {
-        fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-      }
-      cb(null, UPLOADS_DIR);
-    } catch (err) {
-      cb(err);
+// Pakai memoryStorage: file masuk sebagai buffer di req.file.buffer,
+// supaya bisa diproses (crop 9:16 + resize + convert WebP) via sharp
+// SEBELUM ditulis ke disk. Ini menghindari nyimpen file mentah yang
+// besar/berat, sekaligus jadi tempat kita validasi ukuran & tipe file.
+const MAX_POSTER_SIZE_BYTES = 4 * 1024 * 1024; // 4MB
+const POSTER_WIDTH = 720;
+const POSTER_HEIGHT = 1280; // rasio 9:16, ukuran moderat (tidak perlu lebih besar untuk web)
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_POSTER_SIZE_BYTES },
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype || !file.mimetype.startsWith("image/")) {
+      return cb(new Error("File harus berupa gambar (jpg, png, webp, dst)."));
     }
-  },
-  filename: (req, file, cb) => {
-    const safeName = file.originalname.replace(/\s+/g, "-");
-    cb(null, `${Date.now()}-${safeName}`);
+    cb(null, true);
   },
 });
-const upload = multer({ storage });
+
+// Bungkus upload.single("poster") supaya error (file kegedean / bukan gambar)
+// tidak nge-crash request, tapi redirect balik ke form dengan pesan error yang jelas.
+function uploadPoster(req, res, next) {
+  upload.single("poster")(req, res, (err) => {
+    if (!err) return next();
+
+    const isEdit = req.params && req.params.id;
+    const backTo = isEdit ? `/admin/events/${req.params.id}/edit` : "/admin/events/new";
+
+    let message = "Gagal mengunggah poster. Silakan coba lagi.";
+    if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
+      message = "Ukuran file poster maksimal 4MB.";
+    } else if (err.message) {
+      message = err.message;
+    }
+    return res.redirect(`${backTo}?error=${encodeURIComponent(message)}`);
+  });
+}
+
+// Crop ke rasio 9:16 (cover, fokus otomatis ke area paling "menarik" biar tidak
+// asal potong tengah), resize ke ukuran moderat, lalu convert ke WebP.
+async function processPosterImage(buffer) {
+  return sharp(buffer)
+    .rotate() // auto-orient sesuai EXIF (foto dari HP kadang kesimpen miring)
+    .resize(POSTER_WIDTH, POSTER_HEIGHT, { fit: "cover", position: "attention" })
+    .webp({ quality: 80 })
+    .toBuffer();
+}
+
+async function savePosterFile(buffer) {
+  if (!fs.existsSync(UPLOADS_DIR)) {
+    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+  }
+  const filename = `${Date.now()}-${crypto.randomUUID()}.webp`;
+  await fs.promises.writeFile(path.join(UPLOADS_DIR, filename), buffer);
+  return `/uploads/${filename}`;
+}
 
 // ============== FAVICON ==============
 app.get("/favicon.ico", (req, res) => res.status(204).end());
@@ -177,11 +219,34 @@ function ensureDevAuth(req, res, next) {
   }
 })();
 
+// ============== EVENTS CACHE (kurangi TTFB di route publik) ==============
+// Cache singkat (30 detik) di memory server. Homepage adalah route paling
+// sering di-hit; tanpa cache ini, tiap request nunggu round-trip ke MongoDB
+// (yang makin berat kalau region Vercel Function beda benua dengan region
+// cluster Atlas). Data admin (dashboard/events management) TETAP query
+// langsung ke DB (fresh), cache cuma dipakai buat halaman publik.
+let eventsCache = { data: null, expiresAt: 0 };
+const EVENTS_CACHE_TTL_MS = 30 * 1000;
+
+async function getEventsCached() {
+  const now = Date.now();
+  if (eventsCache.data && eventsCache.expiresAt > now) {
+    return eventsCache.data;
+  }
+  const events = await db.getEvents();
+  eventsCache = { data: events, expiresAt: now + EVENTS_CACHE_TTL_MS };
+  return events;
+}
+
+function invalidateEventsCache() {
+  eventsCache.expiresAt = 0;
+}
+
 // ============== PUBLIC ROUTES ==============
 app.get(
   "/",
   asyncHandler(async (req, res) => {
-    const events = await db.getEvents();
+    const events = await getEventsCached();
     // events already sorted by day descending from MongoDB
     res.render("index", { events });
   }),
@@ -440,16 +505,28 @@ app.get(
 );
 
 app.get("/admin/events/new", ensureAuth, (req, res) => {
-  return res.render("form", { event: null });
+  return res.render("form", { event: null, error: req.query.error || null });
 });
 
 app.post(
   "/admin/events/new",
   ensureAuth,
-  upload.single("poster"),
+  uploadPoster,
   asyncHandler(async (req, res) => {
     const { title, day, time, location, googleForm } = req.body;
-    const poster = req.file ? `/uploads/${req.file.filename}` : "";
+
+    let poster = "";
+    if (req.file) {
+      try {
+        const processed = await processPosterImage(req.file.buffer);
+        poster = await savePosterFile(processed);
+      } catch (err) {
+        console.error("[Poster] Gagal memproses gambar:", err.message);
+        const message = "Gagal memproses gambar poster. Pastikan file adalah gambar yang valid.";
+        return res.redirect(`/admin/events/new?error=${encodeURIComponent(message)}`);
+      }
+    }
+
     const event = {
       id: crypto.randomUUID(),
       title,
@@ -460,6 +537,7 @@ app.post(
       googleForm,
     };
     await db.addEvent(event);
+    invalidateEventsCache();
     res.redirect("/admin/events");
   }),
 );
@@ -470,19 +548,31 @@ app.get(
   asyncHandler(async (req, res) => {
     const event = await db.getEvent(req.params.id);
     if (!event) return res.status(404).send("Not found");
-    res.render("form", { event });
+    res.render("form", { event, error: req.query.error || null });
   }),
 );
 
 app.post(
   "/admin/events/:id/edit",
   ensureAuth,
-  upload.single("poster"),
+  uploadPoster,
   asyncHandler(async (req, res) => {
     const { title, day, time, location, googleForm } = req.body;
     const patch = { title, day, time, location, googleForm };
-    if (req.file) patch.poster = `/uploads/${req.file.filename}`;
+
+    if (req.file) {
+      try {
+        const processed = await processPosterImage(req.file.buffer);
+        patch.poster = await savePosterFile(processed);
+      } catch (err) {
+        console.error("[Poster] Gagal memproses gambar:", err.message);
+        const message = "Gagal memproses gambar poster. Pastikan file adalah gambar yang valid.";
+        return res.redirect(`/admin/events/${req.params.id}/edit?error=${encodeURIComponent(message)}`);
+      }
+    }
+
     await db.updateEvent(req.params.id, patch);
+    invalidateEventsCache();
     res.redirect("/admin/events");
   }),
 );
@@ -496,6 +586,7 @@ app.post(
     const ev = await db.getEvent(id);
     if (!ev) return res.status(404).json({ error: "Event not found" });
     await db.deleteEvent(id);
+    invalidateEventsCache();
     return res.json({ ok: true });
   }),
 );

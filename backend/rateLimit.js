@@ -15,6 +15,34 @@ const stateByIp = new Map();
 const stateByAccount = new Map();
 const stateByIpAccount = new Map();
 
+// FIX: sebelumnya Map ini tidak pernah dibersihkan sama sekali, jadi setiap
+// IP/username unik yang pernah login akan tetap tersimpan di memori selamanya
+// selama proses server hidup -> memory leak perlahan pada server yang lama nyala.
+// Sekarang dibersihkan berkala: entri yang sudah tidak diblokir dan tidak ada
+// percobaan dalam 24 jam terakhir akan dihapus.
+const STALE_AFTER_MS = 24 * 60 * 60 * 1000;
+
+function sweepMap(map, now) {
+  for (const [key, record] of map) {
+    const stillBlocked = record.blockedUntil && now < record.blockedUntil;
+    const lastAttempt = record.attempts.length
+      ? record.attempts[record.attempts.length - 1]
+      : 0;
+    const isStale = !stillBlocked && now - lastAttempt > STALE_AFTER_MS;
+    if (isStale) map.delete(key);
+  }
+}
+
+const cleanupTimer = setInterval(() => {
+  const now = Date.now();
+  sweepMap(stateByIp, now);
+  sweepMap(stateByAccount, now);
+  sweepMap(stateByIpAccount, now);
+}, 30 * 60 * 1000);
+// .unref() supaya timer ini tidak menahan proses Node tetap hidup
+// (mis. saat proses lain mencoba shutdown/exit dengan bersih).
+if (typeof cleanupTimer.unref === "function") cleanupTimer.unref();
+
 function getIp(req) {
   return req.ip || req.connection?.remoteAddress || "unknown";
 }

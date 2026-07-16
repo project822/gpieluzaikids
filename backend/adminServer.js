@@ -1,5 +1,6 @@
 const express = require("express");
 const path = require("path");
+const fs = require("fs");
 const session = require("express-session");
 const bcrypt = require("bcrypt");
 const multer = require("multer");
@@ -13,15 +14,21 @@ const ADMIN_VIEWS_DIR = path.join(__dirname, "views", "admin");
 const PUBLIC_ASSETS_DIR = path.join(__dirname, "..", "frontend", "public");
 const UPLOADS_DIR = path.join(PUBLIC_ASSETS_DIR, "uploads");
 
+// Bungkus route async supaya error tidak bikin request menggantung tanpa respons.
+const asyncHandler = (fn) => (req, res, next) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};
+
 (async function ensureAdmin() {
-  const admins = db.getAdmins();
-
-  // Default admin jika belum ada
-  if (!admins || admins.length === 0) {
-    const passwordHash = await bcrypt.hash("admin123", 10);
-
-    db.addAdmin({ username: "admin", passwordHash });
-    console.log("Default admin created: username=admin password=admin123");
+  try {
+    const admins = db.getAdmins();
+    if (!admins || admins.length === 0) {
+      const passwordHash = await bcrypt.hash("admin123", 10);
+      db.addAdmin({ username: "admin", passwordHash });
+      console.log("Default admin created: username=admin password=admin123");
+    }
+  } catch (err) {
+    console.error("[ensureAdmin] Gagal membuat admin default:", err.message);
   }
 })();
 
@@ -40,15 +47,17 @@ app.set("views", ADMIN_VIEWS_DIR);
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static(PUBLIC_ASSETS_DIR, {
-  maxAge: '7d',
-  immutable: true,
-  setHeaders: (res, path) => {
-    if (path.endsWith('.css') || path.endsWith('.js')) {
-      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    }
-  }
-}));
+app.use(
+  express.static(PUBLIC_ASSETS_DIR, {
+    maxAge: "7d",
+    immutable: true,
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith(".css") || filePath.endsWith(".js")) {
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      }
+    },
+  }),
+);
 
 app.use(
   session({
@@ -59,10 +68,20 @@ app.use(
 );
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOADS_DIR),
+  destination: (req, file, cb) => {
+    // FIX: folder uploads harus dibuat dulu, kalau tidak multer akan gagal
+    // dengan ENOENT ketika folder belum ada (mis. deploy baru / clean checkout).
+    try {
+      if (!fs.existsSync(UPLOADS_DIR)) {
+        fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+      }
+      cb(null, UPLOADS_DIR);
+    } catch (err) {
+      cb(err);
+    }
+  },
   filename: (req, file, cb) => {
     const safeName = file.originalname.replace(/\s+/g, "-");
-
     cb(null, `${Date.now()}-${safeName}`);
   },
 });
@@ -111,12 +130,9 @@ app.get("/dev/dashboard", ensureDevAuth, (req, res) => {
   const metrics = db.getMetrics();
   const adminStatuses = db.getAdminStatuses();
   const admins = db.getAdmins() || [];
-  const avgLatencyMs =
-    metrics && metrics.totalRequests
-      ? Math.round(
-          (metrics.totalLatencyMsSum || 0) / (metrics.totalRequests || 1),
-        )
-      : 0;
+  const avgLatencyMs = metrics && metrics.totalRequests
+    ? Math.round((metrics.totalLatencyMsSum || 0) / (metrics.totalRequests || 1))
+    : 0;
   const pvStats = db.getPageViewStats(timeRange);
 
   return res.render("dashboard", {
@@ -147,36 +163,44 @@ app.get("/admin/events/dashboard-monitoring", ensureDevAuth, (req, res) => {
 });
 
 // ============== DEV API: Add Admin ==============
-app.post("/dev/api/admins/add", ensureDevAuth, async (req, res) => {
-  const { username, password } = req.body || {};
-  if (!username || !password) {
-    return res.status(400).json({ error: "Username dan password wajib diisi" });
-  }
-  const admins = db.getAdmins();
-  const exists = (admins || []).some((a) => a.username === username);
-  if (exists) {
-    return res.status(400).json({ error: "Username sudah dipakai" });
-  }
-  const passwordHash = await bcrypt.hash(password, 10);
-  db.addAdmin({ username, passwordHash });
-  return res.json({ ok: true, username });
-});
+app.post(
+  "/dev/api/admins/add",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
+    const { username, password } = req.body || {};
+    if (!username || !password) {
+      return res.status(400).json({ error: "Username dan password wajib diisi" });
+    }
+    const admins = db.getAdmins();
+    const exists = (admins || []).some((a) => a.username === username);
+    if (exists) {
+      return res.status(400).json({ error: "Username sudah dipakai" });
+    }
+    const passwordHash = await bcrypt.hash(password, 10);
+    db.addAdmin({ username, passwordHash });
+    return res.json({ ok: true, username });
+  }),
+);
 
 // ============== DEV API: Reset Password ==============
-app.post("/dev/api/admins/reset-password", ensureDevAuth, async (req, res) => {
-  const { username, newPassword } = req.body || {};
-  if (!username || !newPassword) {
-    return res.status(400).json({ error: "Username dan password baru wajib diisi" });
-  }
-  const admins = db.getAdmins();
-  const exists = (admins || []).some((a) => a.username === username);
-  if (!exists) {
-    return res.status(400).json({ error: "Username tidak ditemukan" });
-  }
-  const passwordHash = await bcrypt.hash(newPassword, 10);
-  db.updateAdminPassword(username, passwordHash);
-  return res.json({ ok: true, username });
-});
+app.post(
+  "/dev/api/admins/reset-password",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
+    const { username, newPassword } = req.body || {};
+    if (!username || !newPassword) {
+      return res.status(400).json({ error: "Username dan password baru wajib diisi" });
+    }
+    const admins = db.getAdmins();
+    const exists = (admins || []).some((a) => a.username === username);
+    if (!exists) {
+      return res.status(400).json({ error: "Username tidak ditemukan" });
+    }
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    db.updateAdminPassword(username, passwordHash);
+    return res.json({ ok: true, username });
+  }),
+);
 
 // ============== DEV API: Delete Admin ==============
 app.post("/dev/api/admins/delete", ensureDevAuth, (req, res) => {
@@ -198,15 +222,15 @@ app.get("/dev/api/admins/statuses", ensureDevAuth, (req, res) => {
 // ============== SPEED INSIGHTS API ==============
 const { getSpeedInsightsData, getMetricRating } = require("./speedInsights");
 
-app.get("/api/dev/speed-insights", ensureDevAuth, async (req, res) => {
-  try {
+app.get(
+  "/api/dev/speed-insights",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
     const timeRange = req.query.range || "7d";
     const data = await getSpeedInsightsData(timeRange);
     return res.json(data);
-  } catch (e) {
-    return res.status(500).json({ error: e.message });
-  }
-});
+  }),
+);
 
 app.get("/api/dev/speed-insights/status", ensureDevAuth, (req, res) => {
   const token = process.env.VERCEL_TOKEN || "";
@@ -223,10 +247,9 @@ app.get("/dev/api/stats", ensureDevAuth, (req, res) => {
   const timeRange = req.query.range || "7d";
   const pvStats = db.getPageViewStats(timeRange);
   const metrics = db.getMetrics();
-  const avgLatencyMs =
-    metrics && metrics.totalRequests
-      ? Math.round((metrics.totalLatencyMsSum || 0) / (metrics.totalRequests || 1))
-      : 0;
+  const avgLatencyMs = metrics && metrics.totalRequests
+    ? Math.round((metrics.totalLatencyMsSum || 0) / (metrics.totalRequests || 1))
+    : 0;
   return res.json({ pvStats, metrics: { ...metrics, avgLatencyMs } });
 });
 
@@ -237,7 +260,7 @@ app.post(
     max: 5,
     blockMs: 10 * 60 * 1000,
   }),
-  async (req, res) => {
+  asyncHandler(async (req, res) => {
     const { username, password } = req.body;
 
     const admins = db.getAdmins();
@@ -255,27 +278,34 @@ app.post(
 
     req.session.user = { username };
     db.setAdminOnline(username);
-    
+
     // Only redirect to admin-accessible paths, NOT dev paths
     const savedRedirect = req.session.redirectTo || "";
     let redirectTo = "/events";
-    if (savedRedirect && !savedRedirect.includes("/dashboard") && !savedRedirect.includes("/dev/") && (savedRedirect.startsWith("/events") || savedRedirect.startsWith("/documentation") || savedRedirect.startsWith("/admins") || savedRedirect === "/")) {
+    if (
+      savedRedirect &&
+      !savedRedirect.includes("/dashboard") &&
+      !savedRedirect.includes("/dev/") &&
+      (savedRedirect.startsWith("/events") ||
+        savedRedirect.startsWith("/documentation") ||
+        savedRedirect.startsWith("/admins") ||
+        savedRedirect === "/")
+    ) {
       redirectTo = savedRedirect;
     }
     delete req.session.redirectTo;
     return res.redirect(redirectTo);
-  },
+  }),
 );
 
 app.get("/logout", (req, res) => {
-  const username =
-    req.session && req.session.user ? req.session.user.username : null;
+  const username = req.session && req.session.user ? req.session.user.username : null;
   req.session.destroy(() => {
     if (username) {
       try {
         db.setAdminOffline(username);
       } catch (e) {
-        // ignore
+        console.error("[Logout] setAdminOffline gagal:", e.message);
       }
     }
     res.redirect("/login");
@@ -293,7 +323,6 @@ app.get("/events/new", ensureAuth, (req, res) => {
 
 app.get("/documentation", ensureAuth, (req, res) => {
   const events = db.getEvents().slice().reverse();
-
   return res.render("documentation", { events });
 });
 
@@ -301,29 +330,29 @@ app.get("/admins/new", ensureAuth, (req, res) => {
   return res.render("create-admin", { error: null });
 });
 
-app.post("/admins/new", ensureAuth, async (req, res) => {
-  const { username, password } = req.body || {};
+app.post(
+  "/admins/new",
+  ensureAuth,
+  asyncHandler(async (req, res) => {
+    const { username, password } = req.body || {};
 
-  if (!username || !password) {
-    return res
-      .status(400)
-      .render("create-admin", { error: "Username dan password wajib diisi" });
-  }
+    if (!username || !password) {
+      return res.status(400).render("create-admin", { error: "Username dan password wajib diisi" });
+    }
 
-  const admins = db.getAdmins();
-  const exists = (admins || []).some((a) => a.username === username);
+    const admins = db.getAdmins();
+    const exists = (admins || []).some((a) => a.username === username);
 
-  if (exists) {
-    return res
-      .status(400)
-      .render("create-admin", { error: "Username sudah dipakai" });
-  }
+    if (exists) {
+      return res.status(400).render("create-admin", { error: "Username sudah dipakai" });
+    }
 
-  const passwordHash = await bcrypt.hash(password, 10);
-  db.addAdmin({ username, passwordHash });
+    const passwordHash = await bcrypt.hash(password, 10);
+    db.addAdmin({ username, passwordHash });
 
-  return res.redirect("/events");
-});
+    return res.redirect("/events");
+  }),
+);
 
 app.post("/events/new", ensureAuth, upload.single("poster"), (req, res) => {
   const { title, day, time, location, googleForm } = req.body;
@@ -344,9 +373,7 @@ app.post("/events/new", ensureAuth, upload.single("poster"), (req, res) => {
 
 app.get("/events/:id/edit", ensureAuth, (req, res) => {
   const event = db.getEvent(req.params.id);
-
   if (!event) return res.status(404).send("Not found");
-
   res.render("form", { event });
 });
 
@@ -357,9 +384,7 @@ app.post(
   (req, res) => {
     const { title, day, time, location, googleForm } = req.body;
     const patch = { title, day, time, location, googleForm };
-
     if (req.file) patch.poster = `/uploads/${req.file.filename}`;
-
     db.updateEvent(req.params.id, patch);
     res.redirect("/events");
   },
@@ -369,33 +394,40 @@ app.use("/admin/api", ensureAuth);
 
 app.post("/admin/api/events/delete", (req, res) => {
   const { id } = req.body || {};
-
   if (!id) return res.status(400).json({ error: "Missing event id" });
-
   const ev = db.getEvent(id);
-
   if (!ev) return res.status(404).json({ error: "Event not found" });
-
   db.deleteEvent(id);
   return res.json({ ok: true });
 });
 
 app.post("/admin/api/documentation/add", (req, res) => {
   const { eventId, driveLink } = req.body || {};
-
-  if (!eventId || !driveLink)
-    return res.status(400).json({ error: "Missing eventId or driveLink" });
-
+  if (!eventId || !driveLink) return res.status(400).json({ error: "Missing eventId or driveLink" });
   const ev = db.getEvent(eventId);
-
   if (!ev) return res.status(404).json({ error: "Event not found" });
-
   db.updateEvent(eventId, { driveLink });
   return res.json({ ok: true });
 });
 
-app.listen(PORT, () => {
-  console.log(`Admin server running http://localhost:${PORT}`);
+// ============== 404 HANDLER ==============
+app.use((req, res) => {
+  res.status(404).send("Halaman tidak ditemukan.");
+});
+
+// ============== GLOBAL ERROR HANDLER ==============
+app.use((err, req, res, next) => {
+  console.error("[AdminServer Unhandled Error]", err);
+  if (res.headersSent) return next(err);
+  res.status(500).send("Terjadi kesalahan pada server admin.");
 });
 
 module.exports = app;
+
+// FIX: hanya listen kalau file ini dijalankan langsung, bukan saat di-require
+// sebagai module (mis. dari entrypoint serverless). Konsisten dengan server.js.
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Admin server running http://localhost:${PORT}`);
+  });
+}

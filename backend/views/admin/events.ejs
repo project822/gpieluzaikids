@@ -19,7 +19,15 @@
         <div class="admin-event-card">
           <div class="admin-event-media">
             <% if (event.poster) { %>
-              <img src="<%= event.poster %>" alt="<%= event.title %>">
+              <img
+                src="<%= event.poster %>"
+                alt="<%= event.title %>"
+                width="180"
+                height="320"
+                style="aspect-ratio: 9 / 16; object-fit: cover;"
+                loading="lazy"
+                decoding="async"
+              >
             <% } else { %>
               <div class="admin-event-empty">No Poster</div>
             <% } %>

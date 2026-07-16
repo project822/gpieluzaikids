@@ -55,9 +55,15 @@
             <!-- Poster 9:16 -->
             <div class="events-poster-col">
               <% if (event.poster) { %>
-                <div class="events-poster" style="background-image: url('<%= event.poster %>');"></div>
+                <% if (idx === 0) { %>
+                  <!-- Slide pertama = kemungkinan besar LCP element: load eager, JANGAN lazy -->
+                  <div class="events-poster" style="aspect-ratio: 9 / 16; background-image: url('<%= event.poster %>');"></div>
+                <% } else { %>
+                  <!-- Slide selanjutnya: lazy via IntersectionObserver (lihat script di bawah) -->
+                  <div class="events-poster events-poster-lazy" style="aspect-ratio: 9 / 16;" data-bg="<%= event.poster %>"></div>
+                <% } %>
               <% } else { %>
-                <div class="events-poster placeholder"></div>
+                <div class="events-poster placeholder" style="aspect-ratio: 9 / 16;"></div>
               <% } %>
             </div>
 
@@ -224,7 +230,7 @@
   <div class="modal-dialog">
     <button class="modal-close" aria-label="Tutup" type="button">&times;</button>
     <div class="modal-body">
-      <img id="modal-poster" src="" alt="Poster event">
+      <img id="modal-poster" src="" alt="Poster event" loading="lazy" decoding="async">
       <div>
         <h3 id="modal-title"></h3>
         <p id="modal-time"></p>
@@ -235,5 +241,40 @@
     </div>
   </div>
 </div>
+
+<script>
+(function () {
+  // Lazy-load poster event (selain slide pertama) pakai IntersectionObserver.
+  // Background-image tidak bisa pakai atribut loading="lazy" bawaan browser,
+  // makanya URL-nya disimpan di data-bg dulu dan baru dipasang saat elemen
+  // mendekati viewport.
+  var lazyPosters = document.querySelectorAll('.events-poster-lazy[data-bg]');
+  if (!lazyPosters.length) return;
+
+  if (!('IntersectionObserver' in window)) {
+    // Fallback browser lama: langsung pasang semua
+    lazyPosters.forEach(function (el) {
+      el.style.backgroundImage = "url('" + el.dataset.bg + "')";
+    });
+    return;
+  }
+
+  var observer = new IntersectionObserver(
+    function (entries, obs) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          var el = entry.target;
+          el.style.backgroundImage = "url('" + el.dataset.bg + "')";
+          el.classList.remove('events-poster-lazy');
+          obs.unobserve(el);
+        }
+      });
+    },
+    { rootMargin: '200px 0px' }
+  );
+
+  lazyPosters.forEach(function (el) { observer.observe(el); });
+})();
+</script>
 
 <%- include('partials/footer') %>

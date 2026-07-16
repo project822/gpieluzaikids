@@ -3,8 +3,8 @@ const path = require("path");
 
 const dbPath = path.join(__dirname, "..", "database", "db.json");
 
-function ensureDbDir() {
-  const dir = path.dirname(dbPath);
+function ensureDbDir(targetPath) {
+  const dir = path.dirname(targetPath);
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
@@ -14,106 +14,94 @@ function getDbPathFallback() {
   return path.join(process.env.TMPDIR || "/tmp", "db.json");
 }
 
+function defaultData() {
+  return {
+    admins: [],
+    events: [],
+    metrics: {
+      totalRequests: 0,
+      totalLatencyMsSum: 0,
+      lastRequestAt: null,
+    },
+    adminStatus: {},
+  };
+}
+
+// FIX: logika init & migrasi sebelumnya diduplikasi persis di blok try dan catch
+// (rawan divergen kalau salah satu diedit tapi yang lain lupa). Sekarang jadi
+// satu fungsi bersama yang dipakai untuk path asli maupun path fallback (/tmp),
+// supaya perilaku selalu konsisten.
+function readFrom(targetPath, { allowWrite }) {
+  ensureDbDir(targetPath);
+
+  if (!fs.existsSync(targetPath)) {
+    fs.writeFileSync(targetPath, JSON.stringify(defaultData(), null, 2));
+  }
+
+  const data = JSON.parse(fs.readFileSync(targetPath, "utf8"));
+
+  let mutated = false;
+
+  // Migration: versi lama pakai `admin` (single admin)
+  if (data.admin && !data.admins) {
+    data.admins = [
+      { username: data.admin.username, passwordHash: data.admin.passwordHash },
+    ];
+    delete data.admin;
+    mutated = true;
+  }
+
+  if (!data.admins) data.admins = [];
+  if (!data.events) data.events = [];
+
+  if (!data.metrics) {
+    data.metrics = {
+      totalRequests: 0,
+      totalLatencyMsSum: 0,
+      lastRequestAt: null,
+    };
+    mutated = true;
+  }
+  if (!data.adminStatus) {
+    data.adminStatus = {};
+    mutated = true;
+  }
+
+  if (mutated && allowWrite) {
+    fs.writeFileSync(targetPath, JSON.stringify(data, null, 2));
+  }
+
+  return data;
+}
+
 function read() {
-  let effectiveDbPath = dbPath;
-
   try {
-    ensureDbDir();
-    if (!fs.existsSync(effectiveDbPath)) {
-      const init = {
-        admins: [],
-        events: [],
-        metrics: {
-          totalRequests: 0,
-          totalLatencyMsSum: 0,
-          lastRequestAt: null,
-        },
-        adminStatus: {},
-      };
-
-      fs.writeFileSync(effectiveDbPath, JSON.stringify(init, null, 2));
-    }
-
-    const data = JSON.parse(fs.readFileSync(effectiveDbPath, "utf8"));
-
-    // Migration: versi lama pakai `admin` (single admin)
-    if (data.admin && !data.admins) {
-      data.admins = [
-        {
-          username: data.admin.username,
-          passwordHash: data.admin.passwordHash,
-        },
-      ];
-      delete data.admin;
-      write(data);
-    }
-
-    if (!data.admins) data.admins = [];
-    if (!data.events) data.events = [];
-
-    // Metrics + Admin status (tambahan fitur monitoring)
-    if (!data.metrics) {
-      data.metrics = {
-        totalRequests: 0,
-        totalLatencyMsSum: 0,
-        lastRequestAt: null,
-      };
-    }
-    if (!data.adminStatus) data.adminStatus = {};
-
-    return data;
+    return readFrom(dbPath, { allowWrite: true });
   } catch (e) {
     // Fallback untuk environment seperti Vercel yang tidak bisa write ke filesystem repo.
-    effectiveDbPath = getDbPathFallback();
-
-    if (!fs.existsSync(effectiveDbPath)) {
-      const init = {
-        admins: [],
-        events: [],
-        metrics: {
-          totalRequests: 0,
-          totalLatencyMsSum: 0,
-          lastRequestAt: null,
-        },
-        adminStatus: {},
-      };
-      fs.writeFileSync(effectiveDbPath, JSON.stringify(init, null, 2));
-    }
-
-    const data = JSON.parse(fs.readFileSync(effectiveDbPath, "utf8"));
-
-    // Migration: versi lama pakai `admin` (single admin)
-    if (data.admin && !data.admins) {
-      data.admins = [
-        { username: data.admin.username, passwordHash: data.admin.passwordHash },
-      ];
-      delete data.admin;
-      fs.writeFileSync(effectiveDbPath, JSON.stringify(data, null, 2));
-    }
-
-    if (!data.admins) data.admins = [];
-    if (!data.events) data.events = [];
-
-    if (!data.metrics) {
-      data.metrics = {
-        totalRequests: 0,
-        totalLatencyMsSum: 0,
-        lastRequestAt: null,
-      };
-    }
-    if (!data.adminStatus) data.adminStatus = {};
-
-    return data;
+    // CATATAN PENTING: /tmp di lingkungan serverless bersifat sementara (ephemeral) dan
+    // TIDAK dijamin persisten antar-invocation. Kalau server ini dijalankan di Vercel,
+    // data yang ditulis lewat fallback ini bisa "hilang" saat instance function di-daur ulang.
+    // Untuk data yang perlu persisten di Vercel, gunakan database eksternal (mis. MongoDB),
+    // seperti yang sudah dipakai di dbMongo.js.
+    return readFrom(getDbPathFallback(), { allowWrite: true });
   }
 }
 
 function write(data) {
   try {
-    ensureDbDir();
+    ensureDbDir(dbPath);
     fs.writeFileSync(dbPath, JSON.stringify(data, null, 2));
   } catch (e) {
-    const fallbackPath = getDbPathFallback();
-    fs.writeFileSync(fallbackPath, JSON.stringify(data, null, 2));
+    try {
+      const fallbackPath = getDbPathFallback();
+      ensureDbDir(fallbackPath);
+      fs.writeFileSync(fallbackPath, JSON.stringify(data, null, 2));
+    } catch (e2) {
+      // FIX: kalau fallback juga gagal ditulis, jangan biarkan exception mentah
+      // merambat tak tertangani ke caller (bisa bikin request crash tanpa respons).
+      console.error("[db.write] Gagal menyimpan data (path utama & fallback):", e2.message);
+    }
   }
 }
 
@@ -235,67 +223,69 @@ function getAdminStatuses() {
 function logPageView({ path, ip, userAgent }) {
   const data = read();
   data.pageviews = data.pageviews || [];
-  
+
   data.pageviews.push({
     path,
-    ip: ip || '127.0.0.1',
-    userAgent: userAgent || '',
-    timestamp: new Date().toISOString()
+    ip: ip || "127.0.0.1",
+    userAgent: userAgent || "",
+    timestamp: new Date().toISOString(),
   });
-  
+
   // Keep only the last 5000 pageviews to avoid database growth
   if (data.pageviews.length > 5000) {
     data.pageviews = data.pageviews.slice(data.pageviews.length - 5000);
   }
-  
+
   write(data);
 }
 
 function getPageViewStats(timeRange = "7d") {
   const data = read();
   const pageviews = data.pageviews || [];
-  
+
   const now = new Date();
   let cutOff = new Date();
   if (timeRange === "24h") {
     cutOff.setHours(now.getHours() - 24);
   } else if (timeRange === "30d") {
     cutOff.setDate(now.getDate() - 30);
-  } else { // default "7d"
+  } else {
     cutOff.setDate(now.getDate() - 7);
   }
-  
-  const filtered = pageviews.filter(p => new Date(p.timestamp) >= cutOff);
-  
+
+  const filtered = pageviews.filter((p) => new Date(p.timestamp) >= cutOff);
+
   // 1. Visitors (unique IPs)
-  const uniqueIps = new Set(filtered.map(p => p.ip));
+  const uniqueIps = new Set(filtered.map((p) => p.ip));
   const visitorsCount = uniqueIps.size;
-  
+
   // 2. Page views
   const pageViewsCount = filtered.length;
-  
+
   // 3. Bounce Rate
   const visitsByIp = {};
-  filtered.forEach(p => {
+  filtered.forEach((p) => {
     visitsByIp[p.ip] = (visitsByIp[p.ip] || 0) + 1;
   });
   const totalIps = Object.keys(visitsByIp).length;
-  const singlePageIps = Object.values(visitsByIp).filter(count => count === 1).length;
+  const singlePageIps = Object.values(visitsByIp).filter((count) => count === 1).length;
   const bounceRate = totalIps > 0 ? Math.round((singlePageIps / totalIps) * 100) : 0;
-  
+
   // 4. Online Users (active in the last 5 minutes)
   const fiveMinAgo = new Date();
   fiveMinAgo.setMinutes(now.getMinutes() - 5);
-  const activeOnline = new Set(pageviews.filter(p => new Date(p.timestamp) >= fiveMinAgo).map(p => p.ip)).size;
-  
+  const activeOnline = new Set(
+    pageviews.filter((p) => new Date(p.timestamp) >= fiveMinAgo).map((p) => p.ip),
+  ).size;
+
   // 5. Chart Data
   const chartData = {};
-  
+
   if (timeRange === "24h") {
     for (let i = 23; i >= 0; i--) {
       const d = new Date();
       d.setHours(now.getHours() - i);
-      const label = `${d.getHours().toString().padStart(2, '0')}:00`;
+      const label = `${d.getHours().toString().padStart(2, "0")}:00`;
       chartData[label] = 0;
     }
   } else {
@@ -303,41 +293,41 @@ function getPageViewStats(timeRange = "7d") {
     for (let i = daysToGenerate - 1; i >= 0; i--) {
       const d = new Date();
       d.setDate(now.getDate() - i);
-      const label = `${d.getDate()} ${d.toLocaleString('id-ID', { month: 'short' })}`;
+      const label = `${d.getDate()} ${d.toLocaleString("id-ID", { month: "short" })}`;
       chartData[label] = 0;
     }
   }
-  
-  filtered.forEach(p => {
+
+  filtered.forEach((p) => {
     const d = new Date(p.timestamp);
     let key;
     if (timeRange === "24h") {
-      key = `${d.getHours().toString().padStart(2, '0')}:00`;
+      key = `${d.getHours().toString().padStart(2, "0")}:00`;
     } else {
-      key = `${d.getDate()} ${d.toLocaleString('id-ID', { month: 'short' })}`;
+      key = `${d.getDate()} ${d.toLocaleString("id-ID", { month: "short" })}`;
     }
     if (chartData[key] !== undefined) {
       chartData[key]++;
     }
   });
-  
+
   // 6. Top Paths
   const pathsCount = {};
-  filtered.forEach(p => {
+  filtered.forEach((p) => {
     pathsCount[p.path] = (pathsCount[p.path] || 0) + 1;
   });
   const topPaths = Object.entries(pathsCount)
     .map(([path, count]) => ({ path, count }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 10);
-    
+
   return {
     visitors: visitorsCount,
     pageviews: pageViewsCount,
     bounceRate,
     online: activeOnline || 1,
     chartData,
-    topPaths
+    topPaths,
   };
 }
 
@@ -353,17 +343,17 @@ module.exports = {
   addAdmin,
   deleteAdmin,
   updateAdminPassword,
-  
+
   // Monitoring
   incRequestMetrics,
   getMetrics,
   setAdminOnline,
   setAdminOffline,
   getAdminStatuses,
-  
+
   // Pageview Analytics
   logPageView,
   getPageViewStats,
-  
+
   dbPath,
 };

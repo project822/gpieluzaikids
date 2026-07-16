@@ -6,6 +6,12 @@
     <p>Lengkapi detail event</p>
   </div>
 
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="form-error" style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);color:#ef4444;padding:12px 14px;border-radius:10px;margin-bottom:16px;">
+      <%= error %>
+    </div>
+  <% } %>
+
   <form
     class="admin-form"
     method="post"
@@ -58,6 +64,9 @@
   <label>
     Poster (optional)
     <input type="file" name="poster" accept="image/*">
+    <small style="display:block; margin-top:4px; color: var(--muted, #94a3b8); font-weight:400;">
+      Gambar otomatis di-crop ke rasio 9:16. Maksimal ukuran file 4MB.
+    </small>
   </label>
 
   <div class="form-actions">
