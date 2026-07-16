@@ -85,6 +85,13 @@ html.theme-light #home .hero-card {
 
 #home .hero-logo-img {
   border-radius: 50%;
+  filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.35));
+  transition: filter 400ms ease, transform 400ms ease;
+}
+
+#home .hero-logo-img:hover {
+  filter: drop-shadow(0 0 24px rgba(59, 130, 246, 0.6));
+  transform: scale(1.04);
 }
 
 /* Responsive */

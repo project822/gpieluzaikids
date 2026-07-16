@@ -101,23 +101,24 @@
       const notifBtn = document.getElementById("nav-notif-btn");
       const notifPopup = document.getElementById("nav-notif-popup");
       if (notifBtn && notifPopup) {
+        // Add badge if there's content
+        const hasContent = notifPopup.querySelector(".nav-notif-item-wrap");
+        if (hasContent) notifBtn.classList.add("has-new");
+
         notifBtn.addEventListener("click", (e) => {
           e.stopPropagation();
-          // Toggle popup
           const isOpen = notifPopup.classList.toggle("open");
-          // Kalau popup lagi terbuka dan diklik, langsung ke #events
           if (isOpen) {
-            setTimeout(function() {
-              notifPopup.querySelector(".nav-notif-item-wrap").addEventListener("click", function handler() {
+            const wrap = notifPopup.querySelector(".nav-notif-item-wrap");
+            if (wrap) {
+              const handler = function() {
                 notifPopup.classList.remove("open");
-                // Scroll ke events
                 const target = document.querySelector("#events");
-                if (target) {
-                  target.scrollIntoView({ behavior: "smooth", block: "start" });
-                }
+                if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
                 this.removeEventListener("click", handler);
-              });
-            }, 100);
+              };
+              wrap.addEventListener("click", handler);
+            }
           }
         });
         document.addEventListener("click", (e) => {

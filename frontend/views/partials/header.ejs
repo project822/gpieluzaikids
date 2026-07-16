@@ -5,8 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><%= title || 'GPI Eluzai Kids' %></title>
     <link rel="icon" type="image/png" href="/images/logo-placeholder.png">
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+
+    <!-- Preconnect & Preload critical resources -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://vitals.vercel-insights.com" crossorigin>
+    <link rel="preload" href="/images/logo-placeholder.png" as="image" fetchpriority="high">
+    <link rel="preload" href="/css/style.min.css" as="style">
+
+    <!-- Inline critical CSS (above-fold) -->
+    <style>/* critical */:root{--font-sans:system-ui,-apple-system,Arial,Helvetica,sans-serif;--electric-blue:#3B82F6;--navy:#0F172A;--white:#FFF;--bg:#0F172A;--surface:#1a2332;--card:#131d2e;--text:#FFF;--text-secondary:#94a3b8;--text-muted:#64748b;--accent:#3B82F6;--danger:#ef4444;--border:rgba(255,255,255,.08);--radius:14px;--nav-height:68px;--nav-bg:#0F172A;--surface-strong:#1f2a3d;--ghost-border:rgba(255,255,255,.12);--section-heading:#FFF;--muted:#94a3b8;--text-color:#FFF;--bg-gradient:linear-gradient(170deg,#0a1628 0%,#0F172A 25%,#152240 55%,#1a2d5a 100%);--shadow-soft:0 2px 8px rgba(0,0,0,.2);--shadow:0 4px 12px rgba(0,0,0,.3)}html.theme-light{--bg:#FFF;--surface:#f1f5f9;--card:#FFF;--text:#0F172A;--text-secondary:#475569;--text-muted:#94a3b8;--accent:#3B82F6;--border:rgba(15,23,42,.08);--bg-gradient:linear-gradient(170deg,#f8faff 0%,#fff 35%,#f0f6ff 70%,#e8f0fe 100%);--nav-bg:#FFF;--surface-strong:#e2e8f0;--section-heading:#0F172A;--muted:#64748b;--text-color:#0F172A;--ghost-border:rgba(15,23,42,.12)}*,::after,::before{box-sizing:border-box;margin:0;padding:0}body,html{min-height:100%}body{font-family:var(--font-sans);color:var(--text-color);background:var(--bg-gradient);background-attachment:fixed;-webkit-font-smoothing:antialiased}.container{width:min(100% - 32px,1160px);margin:0 auto;padding:30px 0}.nav{position:sticky;top:0;z-index:20;border-bottom:1px solid transparent;background:var(--nav-bg)}.nav-inner{width:min(100% - 28px,1160px);min-height:var(--nav-height);margin:0 auto;display:flex;align-items:center;gap:14px}.brand{display:inline-flex;align-items:center;gap:12px;color:var(--text-color);text-decoration:none;flex-shrink:0}.logo-img{width:46px;height:46px;display:block;object-fit:contain;border-radius:50%;background:#eef4ff;box-shadow:var(--shadow-soft)}.nav-links{margin:0 0 0 auto;padding:0;list-style:none;display:flex;align-items:center;gap:4px}.nav-links a{display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:8px 12px;border-radius:999px;color:var(--text-color);font-weight:600;font-size:.9rem;white-space:nowrap}html.theme-light .logo-img{background:#fff}.modern-hero{position:relative;min-height:calc(100vh - var(--nav-height) - 60px);display:grid;place-items:center;overflow:hidden}.hero-content{position:relative;z-index:1;width:min(100%,780px);padding:24px 0;text-align:center}#home .hero-content{padding:0}#home .hero-card{background:linear-gradient(180deg,#1a2a46 0,#0e2040 100%);border:0;box-shadow:none;width:100%;max-width:780px;padding:clamp(22px,4vw,38px);border-radius:20px;display:grid;gap:14px;min-height:260px}#home .hero-logo-wrap{display:grid;gap:10px;justify-items:center}#home .hero-logo-img{border-radius:50%;filter:drop-shadow(0 0 12px rgba(59,130,246,.35))}.logo-title{margin:0;color:var(--section-heading);font-size:clamp(2rem,7vw,4.6rem);line-height:1;font-weight:800}.lead{max-width:720px;margin:0;color:var(--muted);line-height:1.7}.hero-ctas{display:flex;flex-wrap:wrap;align-items:center;gap:10px;justify-content:center}.btn{display:inline-flex;min-height:42px;align-items:center;justify-content:center;gap:8px;border:1px solid var(--ghost-border);border-radius:999px;padding:10px 16px;color:var(--text-color);background:var(--surface);font-weight:700;text-decoration:none;cursor:pointer;transition:background .2s}.btn.primary{color:#fff;background:linear-gradient(135deg,#3b82f6,#2563eb);border-color:transparent}.btn.ghost{color:var(--text-color);background:#1a2a46;border-color:var(--ghost-border)}.btn.ghost:hover,.btn.primary:hover,.btn:hover{transform:translateY(-2px)}.btn:active{transform:translateY(0)}.nav-toggle{display:none}.theme-toggle{order:4;min-height:38px;margin-left:8px;padding:7px 12px;border-radius:999px;font-size:.88rem;font-weight:800;border:1px solid var(--border);color:var(--text-color);background:var(--surface);cursor:pointer;flex-shrink:0}.nav-date{display:inline-flex;align-items:center;gap:6px;padding:0 10px;border:1px solid var(--border);border-radius:999px;min-height:38px;background:var(--surface);color:var(--muted);font-weight:600;font-size:.82rem;white-space:nowrap;flex-shrink:0}.section{margin:28px 0;padding:clamp(26px,5vw,48px);border-radius:var(--radius);border:1px solid var(--border);background:var(--card);box-shadow:var(--shadow)}.reveal{opacity:0;transform:translateY(18px);transition:opacity .6s,transform .6s}.reveal.active{opacity:1;transform:none}body.page-is-ready{animation:page-in 440ms ease both}@keyframes page-in{0%{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@media(max-width:620px){.modern-hero{min-height:calc(100vh - var(--nav-height) - 36px)}:root{--nav-height:64px}.container{width:min(100% - 20px,1160px);padding:18px 0}.btn{width:100%}.hero-ctas{flex-direction:column;align-items:stretch}}</style>
+
+    <!-- Full stylesheet (non-critical) loaded asynchronously -->
+    <link rel="stylesheet" href="/css/style.min.css" media="print" onload="this.media='all';this.onload=null">
+    <noscript><link rel="stylesheet" href="/css/style.min.css"></noscript>
+
+    <!-- Font Awesome (3rd-party) loaded asynchronously -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" media="print" onload="this.media='all';this.onload=null" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer"></noscript>
 
     <!-- Vercel Analytics -->
     <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
@@ -25,7 +40,8 @@
       <nav class="nav" aria-label="Navigasi utama">
         <div class="nav-inner">
 
-          <a class="brand" href="/" aria-label="Homepage">
+          <!-- Brand logo: hidden on mobile, visible on desktop -->
+          <a class="brand brand-desktop" href="/" aria-label="Homepage">
             <img src="/images/logo-placeholder.png" alt="Gereja" class="logo-img" width="46" height="46">
           </a>
 
@@ -82,6 +98,13 @@
           </div>
 
           <ul class="nav-links">
+            <!-- Logo inside menu for mobile only -->
+            <li class="nav-links-logo">
+              <a href="#home" aria-label="Homepage">
+                <img src="/images/logo-placeholder.png" alt="Gereja" class="logo-img" width="46" height="46">
+                <span>GPI Eluzai Kids</span>
+              </a>
+            </li>
             <li>
               <a href="#home"><i class="fas fa-home nav-link-icon"></i> Home</a>
             </li>

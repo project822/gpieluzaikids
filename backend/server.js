@@ -1,3 +1,4 @@
+const compression = require("compression");
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
@@ -52,6 +53,9 @@ app.use((req, res, next) => {
 // ============== EXPRESS SETUP ==============
 app.set("view engine", "ejs");
 app.set("views", [viewsDir, adminViewsDir]);
+
+// Gzip compression for all responses
+app.use(compression());
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
