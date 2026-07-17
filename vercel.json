@@ -1,11 +1,11 @@
 {
   "version": 2,
   "functions": {
-    "backend/server.js": {
+    "api/server.js": {
       "includeFiles": "frontend/public/**"
     }
   },
   "rewrites": [
-    { "source": "/(.*)", "destination": "backend/server.js" }
+    { "source": "/(.*)", "destination": "api/server.js" }
   ]
 }
