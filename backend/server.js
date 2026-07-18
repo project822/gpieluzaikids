@@ -3,7 +3,12 @@ const express = require("express");
 const path = require("path");
 const fs = require("fs");
 const session = require("express-session");
-const MongoStore = require("connect-mongo");
+// FIX: di beberapa versi, require("connect-mongo") lewat CommonJS bisa
+// mengembalikan { default: MongoStore, ... } alih-alih class-nya langsung
+// (interop CJS/ESM) -> MongoStore.create jadi "is not a function". Unwrap
+// .default kalau ada, supaya jalan di kedua kemungkinan bentuk export.
+const connectMongoModule = require("connect-mongo");
+const MongoStore = connectMongoModule.default || connectMongoModule;
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const multer = require("multer");
@@ -97,6 +102,18 @@ if (!process.env.MONGO_URI) {
   console.error(
     "[Session] FATAL: MONGO_URI belum di-set, session store tidak bisa connect ke MongoDB. " +
       "Login/session akan tidak stabil sampai MONGO_URI diperbaiki.",
+  );
+}
+
+if (typeof MongoStore.create !== "function") {
+  console.error(
+    "[Session] FATAL: MongoStore.create bukan function. Bentuk module connect-mongo " +
+      "tidak sesuai dugaan. Keys yang tersedia:",
+    Object.keys(connectMongoModule),
+  );
+  throw new Error(
+    "connect-mongo module tidak sesuai dugaan (MongoStore.create bukan function). " +
+      "Cek versi 'connect-mongo' yang ter-install (harus v4+) dan lihat log di atas untuk detail.",
   );
 }
 
