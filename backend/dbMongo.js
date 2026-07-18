@@ -163,18 +163,47 @@ async function getMetrics() {
 }
 
 // ───────────── Admin Status ─────────────
+// FIX: sebelumnya status "online" murni event-based (cuma di-set true saat
+// login, false saat klik Logout). Kalau admin nutup tab / session expire /
+// server restart TANPA klik Logout, status "online: true" itu nyangkut di
+// DB SELAMANYA -> dashboard nampilin admin "online" padahal sudah lama tidak
+// aktif, dan "Last Online" juga cuma nunjuk waktu login (bukan aktivitas
+// terakhir yang sebenarnya).
+//
+// Sekarang dipakai pola heartbeat: setiap request yang admin itu buat (lihat
+// touchAdminActivity, dipanggil dari middleware ensureAuth di server.js)
+// meng-update `lastSeen`. Status "online" DIHITUNG saat dibaca (bukan
+// disimpan sebagai flag statis): admin dianggap online HANYA kalau sesinya
+// masih aktif (belum logout) DAN ada aktivitas dalam beberapa menit terakhir.
+// Ini sama seperti cara "Online Users" pengunjung situs dihitung di
+// getPageViewStats (window 5 menit) -> otomatis "sembuh" sendiri tanpa perlu
+// event logout yang eksplisit.
+const ADMIN_ONLINE_THRESHOLD_MS = 3 * 60 * 1000; // 3 menit tanpa aktivitas = dianggap offline
 
 async function setAdminOnline(username) {
   const d = await connect();
+  const now = new Date().toISOString();
   await d.collection("adminStatus").updateOne(
     { username },
     {
       $set: {
-        online: true,
-        lastOnline: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        sessionActive: true,
+        lastSeen: now,
+        updatedAt: now,
       },
     },
+    { upsert: true },
+  );
+}
+
+// Dipanggil di setiap request admin yang sudah login (lihat ensureAuth di
+// server.js), fire-and-forget - supaya "Last Online" mencerminkan aktivitas
+// nyata, bukan cuma waktu login.
+async function touchAdminActivity(username) {
+  const d = await connect();
+  await d.collection("adminStatus").updateOne(
+    { username },
+    { $set: { lastSeen: new Date().toISOString() } },
     { upsert: true },
   );
 }
@@ -183,16 +212,23 @@ async function setAdminOffline(username) {
   const d = await connect();
   await d.collection("adminStatus").updateOne(
     { username },
-    { $set: { online: false, updatedAt: new Date().toISOString() } },
+    { $set: { sessionActive: false, updatedAt: new Date().toISOString() } },
   );
 }
 
 async function getAdminStatuses() {
   const d = await connect();
   const statuses = await d.collection("adminStatus").find().toArray();
+  const now = Date.now();
   const result = {};
   statuses.forEach((s) => {
-    result[s.username] = s;
+    const lastSeenMs = s.lastSeen ? new Date(s.lastSeen).getTime() : 0;
+    const isRecentlyActive = now - lastSeenMs < ADMIN_ONLINE_THRESHOLD_MS;
+    result[s.username] = {
+      ...s,
+      online: Boolean(s.sessionActive) && isRecentlyActive,
+      lastOnline: s.lastSeen || s.lastOnline || null,
+    };
   });
   return result;
 }
@@ -218,51 +254,76 @@ async function getPageViewStats(timeRange = "7d") {
   else if (timeRange === "30d") cutOff.setDate(now.getDate() - 30);
   else cutOff.setDate(now.getDate() - 7);
 
-  // Hitung visitors (unique IPs)
-  const visitorsResult = await d
-    .collection("pageviews")
-    .aggregate([
-      { $match: { timestamp: { $gte: cutOff } } },
-      { $group: { _id: "$ip" } },
-      { $count: "count" },
-    ])
-    .toArray();
-  const visitorsCount = visitorsResult[0]?.count || 0;
+  const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
 
-  // Hitung total pageviews
-  const totalCount = await d
-    .collection("pageviews")
-    .countDocuments({ timestamp: { $gte: cutOff } });
-
-  // Bounce Rate (satu IP hanya punya 1 pageview)
-  const bounceResult = await d
-    .collection("pageviews")
-    .aggregate([
-      { $match: { timestamp: { $gte: cutOff } } },
-      { $group: { _id: "$ip", count: { $sum: 1 } } },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: 1 },
-          singlePage: { $sum: { $cond: [{ $eq: ["$count", 1] }, 1, 0] } },
+  // FIX: sebelumnya 6 query Mongo dijalankan berurutan (await satu-satu),
+  // padahal semuanya independen satu sama lain -> total waktu tunggu = jumlah
+  // semua query. Dijalankan paralel via Promise.all, total waktu tunggu jadi
+  // cuma sebesar query PALING LAMBAT (bisa motong latency dashboard drastis).
+  // Query "topPaths" juga dihapus karena section "Top Pages" sudah tidak
+  // dipakai di dashboard.
+  const [
+    visitorsResult,
+    totalCount,
+    bounceResult,
+    onlineResult,
+    chartDocs,
+  ] = await Promise.all([
+    d
+      .collection("pageviews")
+      .aggregate([
+        { $match: { timestamp: { $gte: cutOff } } },
+        { $group: { _id: "$ip" } },
+        { $count: "count" },
+      ])
+      .toArray(),
+    d.collection("pageviews").countDocuments({ timestamp: { $gte: cutOff } }),
+    d
+      .collection("pageviews")
+      .aggregate([
+        { $match: { timestamp: { $gte: cutOff } } },
+        { $group: { _id: "$ip", count: { $sum: 1 } } },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: 1 },
+            singlePage: { $sum: { $cond: [{ $eq: ["$count", 1] }, 1, 0] } },
+          },
         },
-      },
-    ])
-    .toArray();
+      ])
+      .toArray(),
+    d
+      .collection("pageviews")
+      .aggregate([
+        { $match: { timestamp: { $gte: fiveMinAgo } } },
+        { $group: { _id: "$ip" } },
+        { $count: "count" },
+      ])
+      .toArray(),
+    d
+      .collection("pageviews")
+      .aggregate([
+        { $match: { timestamp: { $gte: cutOff } } },
+        {
+          $group: {
+            _id: {
+              $cond: [
+                { $eq: [timeRange, "24h"] },
+                { $dateToString: { format: "%H:00", date: "$timestamp" } },
+                { $dateToString: { format: "%d %b", date: "$timestamp" } },
+              ],
+            },
+            count: { $sum: 1 },
+          },
+        },
+      ])
+      .toArray(),
+  ]);
+
+  const visitorsCount = visitorsResult[0]?.count || 0;
   const bounceRate = bounceResult[0]
     ? Math.round((bounceResult[0].singlePage / bounceResult[0].total) * 100)
     : 0;
-
-  // Online users (active in last 5 minutes)
-  const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
-  const onlineResult = await d
-    .collection("pageviews")
-    .aggregate([
-      { $match: { timestamp: { $gte: fiveMinAgo } } },
-      { $group: { _id: "$ip" } },
-      { $count: "count" },
-    ])
-    .toArray();
   const activeOnline = onlineResult[0]?.count || 0;
 
   // Chart Data
@@ -281,39 +342,9 @@ async function getPageViewStats(timeRange = "7d") {
     }
   }
 
-  const chartDocs = await d
-    .collection("pageviews")
-    .aggregate([
-      { $match: { timestamp: { $gte: cutOff } } },
-      {
-        $group: {
-          _id: {
-            $cond: [
-              { $eq: [timeRange, "24h"] },
-              { $dateToString: { format: "%H:00", date: "$timestamp" } },
-              { $dateToString: { format: "%d %b", date: "$timestamp" } },
-            ],
-          },
-          count: { $sum: 1 },
-        },
-      },
-    ])
-    .toArray();
   chartDocs.forEach((doc) => {
     if (chartData[doc._id] !== undefined) chartData[doc._id] = doc.count;
   });
-
-  // Top Paths
-  const topPaths = await d
-    .collection("pageviews")
-    .aggregate([
-      { $match: { timestamp: { $gte: cutOff } } },
-      { $group: { _id: "$path", count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-      { $limit: 10 },
-      { $project: { _id: 0, path: "$_id", count: 1 } },
-    ])
-    .toArray();
 
   return {
     visitors: visitorsCount,
@@ -321,7 +352,6 @@ async function getPageViewStats(timeRange = "7d") {
     bounceRate,
     online: activeOnline || 1,
     chartData,
-    topPaths,
   };
 }
 
@@ -340,6 +370,7 @@ module.exports = {
   incRequestMetrics,
   getMetrics,
   setAdminOnline,
+  touchAdminActivity,
   setAdminOffline,
   getAdminStatuses,
   logPageView,

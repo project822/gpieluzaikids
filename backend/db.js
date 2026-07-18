@@ -311,15 +311,7 @@ function getPageViewStats(timeRange = "7d") {
     }
   });
 
-  // 6. Top Paths
-  const pathsCount = {};
-  filtered.forEach((p) => {
-    pathsCount[p.path] = (pathsCount[p.path] || 0) + 1;
-  });
-  const topPaths = Object.entries(pathsCount)
-    .map(([path, count]) => ({ path, count }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 10);
+  // 6. (Top Paths dihapus - section "Top Pages" sudah tidak dipakai di dashboard)
 
   return {
     visitors: visitorsCount,
@@ -327,7 +319,6 @@ function getPageViewStats(timeRange = "7d") {
     bounceRate,
     online: activeOnline || 1,
     chartData,
-    topPaths,
   };
 }
 

@@ -211,7 +211,15 @@ app.use((req, res, next) => {
 
 // ============== AUTH MIDDLEWARE ==============
 function ensureAuth(req, res, next) {
-  if (req.session && req.session.user) return next();
+  if (req.session && req.session.user) {
+    // Heartbeat: tandai admin ini masih aktif SEKARANG. Fire-and-forget
+    // supaya tidak nambah latency ke request utama; kalau gagal, cukup
+    // di-log (jangan sampai bikin request admin gagal cuma gara-gara ini).
+    db.touchAdminActivity(req.session.user.username).catch((e) => {
+      console.error("[AdminHeartbeat] touchAdminActivity gagal:", e.message);
+    });
+    return next();
+  }
   if (req.session) {
     req.session.redirectTo = req.originalUrl;
   }
