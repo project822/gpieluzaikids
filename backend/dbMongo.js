@@ -69,6 +69,16 @@ async function connect() {
 }
 
 /**
+ * Ambil MongoClient yang sudah konek (dipakai ulang oleh session store /
+ * connect-mongo, supaya tidak bikin koneksi MongoDB terpisah sendiri-sendiri
+ * -> lebih hemat & lebih stabil, terutama saat cold start di serverless).
+ */
+async function getClient() {
+  await connect();
+  return client;
+}
+
+/**
  * Tutup koneksi (untuk graceful shutdown)
  */
 async function close() {
@@ -357,6 +367,7 @@ async function getPageViewStats(timeRange = "7d") {
 
 module.exports = {
   connect,
+  getClient,
   close,
   getEvents,
   getEvent,

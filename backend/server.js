@@ -21,6 +21,16 @@ const { getSpeedInsightsData, getMetricRating } = require("./speedInsights");
 const app = express();
 const PORT = process.env.PORT || 10082;
 
+// PENTING: Vercel (dan hampir semua platform serverless/hosting modern)
+// jalan di belakang proxy/edge network -> koneksi asli dari browser ke
+// Vercel memang HTTPS, tapi permintaan yang diterima Express DI DALAM
+// function sebenarnya proxied secara internal. Tanpa "trust proxy":
+// - req.protocol/req.secure bisa salah baca (pengaruh ke cookie `secure`)
+// - req.ip bisa kebaca sebagai IP proxy, BUKAN IP asli pengunjung
+//   (bikin rate-limiter login jadi keliru: request dari banyak orang
+//   berbeda bisa dianggap satu IP yang sama -> bisa salah nge-block).
+app.set("trust proxy", 1);
+
 // ============== HELPER: bungkus route async supaya error tidak bikin request menggantung ==============
 // Tanpa ini, kalau sebuah async handler reject (mis. MongoDB gagal connect),
 // Express 4 TIDAK akan menangkapnya otomatis -> response tidak pernah dikirim ->
@@ -117,21 +127,37 @@ if (typeof MongoStore.create !== "function") {
   );
 }
 
+const sessionStore = MongoStore.create({
+  // Pakai ulang koneksi MongoDB yang sama dengan sisa aplikasi (bukan
+  // bikin koneksi baru terpisah lewat mongoUrl) -> lebih hemat & lebih
+  // stabil, terutama saat cold start di serverless (Vercel).
+  clientPromise: db.getClient(),
+  dbName: process.env.MONGO_DB_NAME || "gereja",
+  collectionName: "sessions",
+  ttl: 14 * 24 * 60 * 60, // 14 hari (detik)
+});
+
+// Supaya kalau session gagal disimpan/dibaca (mis. koneksi Mongo bermasalah),
+// itu KELIHATAN di log -> bukan gagal diam-diam yang bikin user "ke-bounce"
+// balik ke halaman login tanpa pesan error apapun.
+sessionStore.on("error", (err) => {
+  console.error("[SessionStore] Error:", err.message);
+});
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "dev-secret-change-this-admin",
     resave: false,
     saveUninitialized: false,
-    store: MongoStore.create({
-      mongoUrl: process.env.MONGO_URI,
-      dbName: process.env.MONGO_DB_NAME || "gereja",
-      collectionName: "sessions",
-      ttl: 14 * 24 * 60 * 60, // 14 hari (detik)
-    }),
+    store: sessionStore,
     cookie: {
       maxAge: 14 * 24 * 60 * 60 * 1000, // 14 hari (ms)
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      // 'auto': Secure flag otomatis nyala kalau request asli-nya HTTPS
+      // (terdeteksi lewat req.secure, akurat sekarang berkat trust proxy
+      // di atas), tanpa bergantung env var NODE_ENV yang bisa saja tidak
+      // ke-set persis "production" di semua situasi deploy.
+      secure: "auto",
       sameSite: "lax",
     },
   }),
