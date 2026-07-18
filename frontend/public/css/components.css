@@ -1,4 +1,4 @@
-/* ── Buttons ── */
+/* ── Buttons (flat solid style, Cloudly-inspired) ── */
 .btn,
 .submit-btn {
   display: inline-flex;
@@ -7,22 +7,22 @@
   justify-content: center;
   gap: 8px;
   border: 1px solid var(--ghost-border);
-  border-radius: 999px;
-  padding: 10px 16px;
+  border-radius: 10px;
+  padding: 10px 18px;
   color: var(--text-color);
   background: var(--surface);
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.1;
   text-decoration: none;
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.15);
-  transition: background 200ms ease, transform 200ms ease, box-shadow 200ms ease;
+  box-shadow: var(--shadow-sm);
+  transition: background 180ms ease, transform 180ms ease, box-shadow 180ms ease;
 }
 
 .btn:hover,
 .submit-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 30px rgba(14, 165, 233, 0.22);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-soft);
 }
 
 .btn:active,
@@ -33,35 +33,41 @@
 .btn.primary,
 .submit-btn {
   color: #ffffff;
-  background: linear-gradient(135deg, #3B82F6, #2563eb);
+  background: var(--electric-blue);
   border-color: transparent;
+}
+
+.btn.primary:hover,
+.submit-btn:hover {
+  background: var(--accent-hover);
 }
 
 .btn.ghost {
   color: var(--text-color);
-  background: #1a2a46;
+  background: #eef4ff;
   border-color: var(--ghost-border);
   box-shadow: none;
 }
 
-html.theme-light .btn.ghost {
-  background: #eef4ff;
+html.theme-dark .btn.ghost {
+  background: #1a2a46;
 }
 
 .btn.danger {
   color: #ffffff;
-  background: linear-gradient(135deg, #dc2626, #ef4444);
+  background: var(--danger);
   border-color: transparent;
 }
 
 .btn.danger:hover {
-  box-shadow: 0 10px 24px rgba(239, 68, 68, 0.3);
+  background: #dc2626;
 }
 
 .btn-sm {
-  min-height: 30px;
-  padding: 4px 12px;
+  min-height: 32px;
+  padding: 5px 14px;
   font-size: 0.78rem;
+  border-radius: 8px;
 }
 
 .btn[style*="cursor: not-allowed"],
@@ -217,12 +223,12 @@ html.theme-light .auth-card {
   border-radius: 12px;
   padding: 10px 12px;
   color: var(--danger);
-  background: #2d1a1a;
+  background: #fef2f2;
   font-weight: 700;
 }
 
-html.theme-light .error {
-  background: #fef2f2;
+html.theme-dark .error {
+  background: #2d1a1a;
 }
 
 /* ── Forms ── */
@@ -241,14 +247,14 @@ textarea {
   border-radius: 12px;
   padding: 11px 13px;
   color: var(--text-color);
-  background: #122548;
+  background: #ffffff;
   outline: none;
 }
 
-html.theme-light input,
-html.theme-light select,
-html.theme-light textarea {
-  background: #ffffff;
+html.theme-dark input,
+html.theme-dark select,
+html.theme-dark textarea {
+  background: #122548;
 }
 
 textarea {
@@ -270,13 +276,13 @@ select:focus,
 textarea:focus {
   border-color: #3B82F6;
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
-  background: #152959;
+  background: #f0f6ff;
 }
 
-html.theme-light input:focus,
-html.theme-light select:focus,
-html.theme-light textarea:focus {
-  background: #f0f6ff;
+html.theme-dark input:focus,
+html.theme-dark select:focus,
+html.theme-dark textarea:focus {
+  background: #152959;
 }
 
 select option {
@@ -439,13 +445,14 @@ select option {
   padding: 10px 18px;
   border: 1px solid rgba(59, 130, 246, 0.18);
   border-radius: var(--radius-sm);
-  background: #0F172A;
-  color: #FFFFFF;
+  background: #FFFFFF;
+  color: #0F172A;
   text-decoration: none;
   cursor: pointer;
   transition: border-color 200ms ease, transform 200ms ease;
   position: relative;
   z-index: 2;
+  box-shadow: var(--shadow-soft);
 }
 
 .event-alert-banner:hover {
@@ -468,21 +475,17 @@ select option {
   display: inline-flex;
   padding: 3px 10px;
   border-radius: 999px;
-  background: #3B82F6;
+  background: var(--electric-blue);
   color: #FFFFFF;
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   white-space: nowrap;
 }
 
-html.theme-light .event-alert-banner {
-  background: #FFFFFF;
-  color: #0F172A;
-}
-
-html.theme-light .event-alert-badge {
+html.theme-dark .event-alert-banner {
+  background: #0F172A;
   color: #FFFFFF;
 }
 

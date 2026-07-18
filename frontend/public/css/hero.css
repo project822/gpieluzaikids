@@ -26,9 +26,9 @@
 }
 
 #home .hero-card {
-  background: linear-gradient(180deg, #1a2a46 0%, #0E2040 100%);
-  border: 0;
-  box-shadow: none;
+  background: linear-gradient(180deg, #ffffff 0%, #f4f8ff 100%);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
   width: 100%;
   max-width: 780px;
   padding: clamp(22px, 4vw, 38px);
@@ -38,8 +38,10 @@
   min-height: 260px;
 }
 
-html.theme-light #home .hero-card {
-  background: linear-gradient(180deg, #ffffff 0%, #f4f8ff 100%);
+html.theme-dark #home .hero-card {
+  background: linear-gradient(180deg, #1a2a46 0%, #0E2040 100%);
+  border: 0;
+  box-shadow: none;
 }
 
 #home .hero-logo-wrap {

@@ -95,7 +95,7 @@
   border: 1px solid var(--border);
   border-radius: 999px;
   color: var(--text-color);
-  background: #0A1A33;
+  background: #eef4ff;
   cursor: pointer;
   font-size: 1.5rem;
   display: grid;
@@ -105,28 +105,28 @@
 }
 
 .modal-close:hover {
-  background: #3d1f1f;
+  background: #fce4e4;
   transform: scale(1.08);
 }
 
-html.theme-light .modal-close {
-  background: #eef4ff;
+html.theme-dark .modal-close {
+  background: #0A1A33;
 }
 
-html.theme-light .modal-close:hover {
-  background: #fce4e4;
+html.theme-dark .modal-close:hover {
+  background: #3d1f1f;
 }
 
 /* ── Footer ── */
 .footer {
   margin-top: 26px;
   border-top: 1px solid var(--border);
-  background: #07142e;
+  background: #f4f8ff;
   color: var(--muted);
 }
 
-html.theme-light .footer {
-  background: #f4f8ff;
+html.theme-dark .footer {
+  background: #07142e;
 }
 
 .footer .container {
@@ -156,15 +156,15 @@ html.theme-light .footer {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #1a2a46;
+  background: #eef4ff;
   border: 1px solid var(--border);
   text-decoration: none;
   box-shadow: var(--shadow-soft);
   transition: transform 200ms ease, background 200ms ease, border-color 200ms ease;
 }
 
-html.theme-light .social-icon {
-  background: #eef4ff;
+html.theme-dark .social-icon {
+  background: #1a2a46;
 }
 
 .social-icon:hover,
@@ -231,7 +231,7 @@ html.theme-light .social-icon {
   height: 40px;
   border-radius: 999px;
   border: 1px solid var(--border);
-  background: #1a2a46;
+  background: #eef4ff;
   color: var(--text-color);
   cursor: pointer;
   display: grid;
@@ -240,21 +240,21 @@ html.theme-light .social-icon {
   transition: background 200ms ease, border-color 200ms ease, transform 200ms ease;
 }
 
-html.theme-light .carousel-btn {
-  background: #eef4ff;
+html.theme-dark .carousel-btn {
+  background: #1a2a46;
 }
 
 .carousel-btn.prev { left: 8px; }
 .carousel-btn.next { right: 8px; }
 
 .carousel-btn:hover {
-  background: #1f3150;
+  background: #e0eaff;
   border-color: rgba(56, 189, 248, 0.5);
   transform: translateY(-50%) scale(1.08);
 }
 
-html.theme-light .carousel-btn:hover {
-  background: #e0eaff;
+html.theme-dark .carousel-btn:hover {
+  background: #1f3150;
 }
 
 .carousel-btn:active {

@@ -1,4 +1,5 @@
 /* ── CSS Custom Properties (Theme) ── */
+/* Default theme = LIGHT (Navy + White + Electric Blue, Cloudly-style) */
 :root {
   --font-sans: system-ui, -apple-system, Arial, Helvetica, sans-serif;
 
@@ -7,7 +8,49 @@
   --navy: #0F172A;
   --white: #FFFFFF;
 
-  /* Dark theme (default) — clean minimal surfaces */
+  /* Light theme (default) — clean white surfaces, navy text/accents */
+  --bg: #FFFFFF;
+  --surface: #f1f5f9;
+  --surface-hover: #e2e8f0;
+  --card: #FFFFFF;
+  --card-hover: #f8fafc;
+  --text: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --accent: #3B82F6;
+  --accent-hover: #2563eb;
+  --danger: #ef4444;
+  --border: rgba(15, 23, 42, 0.08);
+  --border-hover: rgba(15, 23, 42, 0.15);
+  --border-accent: rgba(59, 130, 246, 0.3);
+  --radius: 14px;
+  --radius-sm: 8px;
+  --radius-lg: 20px;
+  --nav-height: 68px;
+  --nav-bg: #FFFFFF;
+  --surface-strong: #e2e8f0;
+  --surface-solid: #FFFFFF;
+  --card-bg-soft: #FFFFFF;
+  --ghost-border: rgba(15, 23, 42, 0.12);
+  --section-heading: #0F172A;
+  --muted: #64748b;
+  --text-color: #0F172A;
+  --bg-gradient: linear-gradient(170deg, #f8faff 0%, #ffffff 35%, #f0f6ff 70%, #e8f0fe 100%);
+  --shadow-soft: 0 2px 8px rgba(15, 23, 42, 0.06);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08);
+  --shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.12);
+
+  /* Sidebar/navy surfaces (used for nav-on-dark-navy accents, e.g. mobile menu, footer) */
+  --navy-surface: #0F172A;
+  --navy-surface-hover: #16213a;
+  --navy-border: rgba(255, 255, 255, 0.08);
+  --navy-text: #FFFFFF;
+  --navy-text-muted: #94a3b8;
+}
+
+/* Dark theme — optional alternate, toggled via html.theme-dark */
+html.theme-dark {
   --bg: #0F172A;
   --surface: #1a2332;
   --surface-hover: #1f2a3d;
@@ -18,14 +61,9 @@
   --text-muted: #64748b;
   --accent: #3B82F6;
   --accent-hover: #2563eb;
-  --danger: #ef4444;
   --border: rgba(255, 255, 255, 0.08);
   --border-hover: rgba(255, 255, 255, 0.15);
   --border-accent: rgba(59, 130, 246, 0.3);
-  --radius: 14px;
-  --radius-sm: 8px;
-  --radius-lg: 20px;
-  --nav-height: 68px;
   --nav-bg: #0F172A;
   --surface-strong: #1f2a3d;
   --surface-solid: #0F172A;
@@ -41,7 +79,8 @@
   --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.4);
 }
 
-/* Light theme — clean white background */
+/* Backward-compat: if any existing script still toggles html.theme-light,
+   keep it pointing at the (now-default) light values so nothing breaks. */
 html.theme-light {
   --bg: #FFFFFF;
   --surface: #f1f5f9;
@@ -65,8 +104,8 @@ html.theme-light {
   --section-heading: #0F172A;
   --muted: #64748b;
   --text-color: #0F172A;
-  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.04);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
-  --shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.08);
+  --shadow-soft: 0 2px 8px rgba(15, 23, 42, 0.06);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08);
+  --shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.12);
 }
