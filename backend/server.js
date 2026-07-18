@@ -3,6 +3,7 @@ const express = require("express");
 const path = require("path");
 const fs = require("fs");
 const session = require("express-session");
+const MongoStore = require("connect-mongo");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const multer = require("multer");
@@ -85,11 +86,37 @@ app.use(
 );
 
 // Session
+// PENTING: default express-session pakai MemoryStore (di RAM proses Node).
+// Di Vercel (serverless), tiap request bisa dilayani instance/container yang
+// BERBEDA -> instance lain tidak tahu session yang dibuat di instance lain,
+// jadi user bisa "ke-logout" secara acak / dapat "Network error" saat fetch
+// API karena request-nya di-redirect ke halaman login (bukan JSON).
+// Solusinya: simpan session di MongoDB (sudah dipakai project ini) supaya
+// semua instance baca dari sumber yang sama.
+if (!process.env.MONGO_URI) {
+  console.error(
+    "[Session] FATAL: MONGO_URI belum di-set, session store tidak bisa connect ke MongoDB. " +
+      "Login/session akan tidak stabil sampai MONGO_URI diperbaiki.",
+  );
+}
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "dev-secret-change-this-admin",
     resave: false,
     saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGO_URI,
+      dbName: process.env.MONGO_DB_NAME || "gereja",
+      collectionName: "sessions",
+      ttl: 14 * 24 * 60 * 60, // 14 hari (detik)
+    }),
+    cookie: {
+      maxAge: 14 * 24 * 60 * 60 * 1000, // 14 hari (ms)
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+    },
   }),
 );
 
