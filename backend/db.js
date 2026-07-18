@@ -189,15 +189,32 @@ function getMetrics() {
   );
 }
 
+const ADMIN_ONLINE_THRESHOLD_MS = 3 * 60 * 1000; // 3 menit tanpa aktivitas = dianggap offline
+
 function setAdminOnline(username) {
+  const data = read();
+  data.adminStatus = data.adminStatus || {};
+
+  const now = new Date().toISOString();
+  data.adminStatus[username] = {
+    ...(data.adminStatus[username] || {}),
+    sessionActive: true,
+    lastSeen: now,
+    updatedAt: now,
+  };
+
+  write(data);
+}
+
+// Dipanggil di setiap request admin yang sudah login, supaya "Last Online"
+// mencerminkan aktivitas nyata, bukan cuma waktu login.
+function touchAdminActivity(username) {
   const data = read();
   data.adminStatus = data.adminStatus || {};
 
   data.adminStatus[username] = {
     ...(data.adminStatus[username] || {}),
-    online: true,
-    lastOnline: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    lastSeen: new Date().toISOString(),
   };
 
   write(data);
@@ -209,7 +226,7 @@ function setAdminOffline(username) {
 
   if (!data.adminStatus[username]) data.adminStatus[username] = {};
 
-  data.adminStatus[username].online = false;
+  data.adminStatus[username].sessionActive = false;
   data.adminStatus[username].updatedAt = new Date().toISOString();
 
   write(data);
@@ -217,7 +234,20 @@ function setAdminOffline(username) {
 
 function getAdminStatuses() {
   const data = read();
-  return data.adminStatus || {};
+  const raw = data.adminStatus || {};
+  const now = Date.now();
+  const result = {};
+  Object.keys(raw).forEach((username) => {
+    const s = raw[username];
+    const lastSeenMs = s.lastSeen ? new Date(s.lastSeen).getTime() : 0;
+    const isRecentlyActive = now - lastSeenMs < ADMIN_ONLINE_THRESHOLD_MS;
+    result[username] = {
+      ...s,
+      online: Boolean(s.sessionActive) && isRecentlyActive,
+      lastOnline: s.lastSeen || s.lastOnline || null,
+    };
+  });
+  return result;
 }
 
 function logPageView({ path, ip, userAgent }) {
@@ -339,6 +369,7 @@ module.exports = {
   incRequestMetrics,
   getMetrics,
   setAdminOnline,
+  touchAdminActivity,
   setAdminOffline,
   getAdminStatuses,
 
