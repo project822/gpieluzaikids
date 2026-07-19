@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Developer Login — GPI Eluzai Kids</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Vercel Analytics -->
+  <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+  <script defer src="https://unpkg.com/@vercel/speed-insights/dist/index.js"></script>
+
+  <link rel="stylesheet" href="/dashboard-assets/css/login.css">
+</head>
+<body>
+
+  <div class="page">
+    <div class="card">
+
+      <!-- Logo / Title -->
+      <div class="logo-area">
+        <div class="logo-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+          </svg>
+        </div>
+        <div class="logo-title">Developer Portal</div>
+        <div class="logo-sub">GPI Eluzai Kids</div>
+        <div class="dev-badge">
+          <span class="dev-badge-dot"></span>
+          Dev Access
+        </div>
+      </div>
+
+      <!-- Error -->
+      <% if (error) { %>
+        <div class="error-msg">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <%= error %>
+        </div>
+      <% } %>
+
+      <!-- Form -->
+      <form method="post" action="/dev/login">
+
+        <div class="form-group">
+          <label for="dev-username">Username</label>
+          <div class="input-wrap">
+            <input
+              id="dev-username"
+              type="text"
+              name="username"
+              placeholder="username"
+              required
+              autocomplete="username"
+              spellcheck="false"
+            >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="dev-password">Password</label>
+          <div class="input-wrap">
+            <input
+              id="dev-password"
+              type="password"
+              name="password"
+              placeholder="**********"
+              required
+              autocomplete="current-password"
+            >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+            </svg>
+          </div>
+        </div>
+
+        <button class="submit-btn" type="submit" id="dev-submit-btn">
+          Access Dashboard
+        </button>
+
+      </form>
+
+      <div class="card-footer">
+        Restricted to <span>authorized developers</span> only.<br>
+        Access is logged and monitored.
+      </div>
+
+    </div>
+
+    <div class="page-footer">
+      gpieluzaikids.vercel.app &mdash; Developer Console
+    </div>
+  </div>
+
+  <script>
+    // Loading state on submit
+    document.getElementById('dev-submit-btn').closest('form').addEventListener('submit', function() {
+      const btn = document.getElementById('dev-submit-btn');
+      btn.textContent = 'Authenticating...';
+      btn.style.opacity = '0.7';
+      btn.disabled = true;
+    });
+  </script>
+
+</body>
+</html>
