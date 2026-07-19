@@ -1,0 +1,39 @@
+/* ── ANALYTICS PAGE ── */
+
+.refresh-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.refresh-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse-dot 2s infinite;
+}
+.refresh-label { font-size: 11.5px; color: var(--muted); }
+
+.stat-card {
+  cursor: pointer;
+  position: relative;
+  transition: box-shadow 0.15s;
+}
+.stat-card:hover { box-shadow: var(--shadow-md); }
+.stat-card.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 12px; right: 12px;
+  height: 2px;
+  background: var(--blue);
+  border-radius: 2px;
+}
+
+.chart-wrap {
+  padding: 20px 22px;
+}
+.chart-canvas-wrap {
+  position: relative;
+  height: 260px;
+}

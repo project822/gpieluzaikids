@@ -14,6 +14,12 @@ const ADMIN_VIEWS_DIR = path.join(__dirname, "views", "admin");
 const PUBLIC_ASSETS_DIR = path.join(__dirname, "..", "frontend", "public");
 const UPLOADS_DIR = path.join(PUBLIC_ASSETS_DIR, "uploads");
 
+// Folder dashboard/ berada DI LUAR backend/ (sejajar dengan backend/ & frontend/),
+// berisi semua halaman dev dashboard (Overview, Analytics, Monitoring, Admins)
+// beserta CSS-nya masing-masing.
+const DASHBOARD_DIR = path.join(__dirname, "..", "dashboard");
+const DASHBOARD_VIEWS_DIR = path.join(DASHBOARD_DIR, "views");
+
 // Bungkus route async supaya error tidak bikin request menggantung tanpa respons.
 const asyncHandler = (fn) => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch(next);
@@ -43,7 +49,9 @@ app.use((req, res, next) => {
 });
 
 app.set("view engine", "ejs");
-app.set("views", ADMIN_VIEWS_DIR);
+// Express menerima array direktori views: EJS akan mencari template di
+// ADMIN_VIEWS_DIR dulu, lalu di DASHBOARD_VIEWS_DIR (folder dashboard/ di luar backend).
+app.set("views", [ADMIN_VIEWS_DIR, DASHBOARD_VIEWS_DIR]);
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -57,6 +65,14 @@ app.use(
       }
     },
   }),
+);
+
+// CSS untuk halaman-halaman dev dashboard (Overview/Analytics/Monitoring/Admins),
+// disajikan dari folder dashboard/ (di luar backend/) -> dashboard/css/*.css
+// menjadi URL /dashboard-assets/css/*.css
+app.use(
+  "/dashboard-assets",
+  express.static(DASHBOARD_DIR),
 );
 
 app.use(
@@ -125,23 +141,68 @@ app.post("/dev/login", (req, res) => {
   }
 });
 
+// Helper: hitung avgLatencyMs dari metrics, dipakai di semua halaman dashboard.
+function computeAvgLatencyMs(metrics) {
+  return metrics && metrics.totalRequests
+    ? Math.round((metrics.totalLatencyMsSum || 0) / (metrics.totalRequests || 1))
+    : 0;
+}
+
+// ============== DEV DASHBOARD PAGES ==============
+// Setiap halaman sidebar (Overview, Analytics, Monitoring, Admins) py view & route sendiri.
+
 app.get("/dev/dashboard", ensureDevAuth, (req, res) => {
   const timeRange = req.query.range || "7d";
   const metrics = db.getMetrics();
-  const adminStatuses = db.getAdminStatuses();
   const admins = db.getAdmins() || [];
-  const avgLatencyMs = metrics && metrics.totalRequests
-    ? Math.round((metrics.totalLatencyMsSum || 0) / (metrics.totalRequests || 1))
-    : 0;
+  const avgLatencyMs = computeAvgLatencyMs(metrics);
   const pvStats = db.getPageViewStats(timeRange);
 
-  return res.render("dashboard", {
+  return res.render("overview", {
     metrics,
     avgLatencyMs,
     admins,
-    adminStatuses,
     pvStats,
     timeRange,
+  });
+});
+
+app.get("/dev/dashboard/analytics", ensureDevAuth, (req, res) => {
+  const timeRange = req.query.range || "7d";
+  const metrics = db.getMetrics();
+  const avgLatencyMs = computeAvgLatencyMs(metrics);
+  const pvStats = db.getPageViewStats(timeRange);
+
+  return res.render("analytics", {
+    avgLatencyMs,
+    pvStats,
+    timeRange,
+  });
+});
+
+app.get("/dev/dashboard/monitoring", ensureDevAuth, (req, res) => {
+  const metrics = db.getMetrics();
+  const avgLatencyMs = computeAvgLatencyMs(metrics);
+
+  return res.render("monitoring", {
+    metrics,
+    avgLatencyMs,
+  });
+});
+
+app.get("/dev/dashboard/admins", ensureDevAuth, (req, res) => {
+  const adminStatuses = db.getAdminStatuses();
+  const admins = db.getAdmins() || [];
+
+  return res.render("admins", {
+    admins,
+    adminStatuses,
+  });
+});
+
+app.get("/dev/logout", (req, res) => {
+  req.session.destroy(() => {
+    res.redirect("/dev/login");
   });
 });
 

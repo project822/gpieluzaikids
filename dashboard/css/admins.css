@@ -1,0 +1,65 @@
+/* ── ADMINS PAGE ── */
+
+.admins-intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--blue-bg);
+  border: 1px solid rgba(59,130,246,0.25);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+.admins-intro svg {
+  width: 17px;
+  height: 17px;
+  color: var(--blue);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.admin-table { width: 100%; border-collapse: collapse; }
+.admin-table th {
+  padding: 10px 20px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border);
+}
+.admin-table td {
+  padding: 12px 20px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border-2);
+}
+.admin-table tr:last-child td { border-bottom: none; }
+.admin-table tr:hover td { background: var(--bg); }
+
+.admin-actions-cell {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.admin-action-btn {
+  padding: 4px 9px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  font-weight: 700;
+  transition: all 0.15s;
+}
+.admin-action-btn:hover { background: var(--bg); color: var(--text); }
+.admin-action-btn.reset { color: var(--orange); border-color: rgba(217,119,6,0.3); }
+.admin-action-btn.reset:hover { background: var(--orange-bg); }
+.admin-action-btn.delete { color: var(--red); border-color: rgba(220,38,38,0.3); }
+.admin-action-btn.delete:hover { background: var(--red-bg); }

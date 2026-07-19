@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Monitoring — Dev Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/dashboard-assets/css/base.css">
+  <link rel="stylesheet" href="/dashboard-assets/css/monitoring.css">
+
+  <!-- Vercel Analytics -->
+  <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+  <script defer src="https://unpkg.com/@vercel/speed-insights/dist/index.js"></script>
+</head>
+<body>
+
+  <div class="dash-shell">
+    <%- include('_sidebar', { active: 'monitoring' }) %>
+
+    <div class="main">
+      <header class="topbar">
+        <div class="topbar-heading">
+          <h1>Monitoring</h1>
+          <p>Speed Insights (Web Vitals) &amp; server health.</p>
+        </div>
+        <div class="topbar-actions">
+          <select class="select-btn" id="range-select" onchange="loadSpeedInsights()">
+            <option value="24h">Last 24 Hours</option>
+            <option value="7d" selected>Last 7 Days</option>
+            <option value="30d">Last 30 Days</option>
+          </select>
+        </div>
+      </header>
+
+      <main class="content">
+
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total Requests</div>
+            <div class="stat-value" id="sm-requests"><%= metrics && metrics.totalRequests ? metrics.totalRequests : 0 %></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Avg Latency</div>
+            <div class="stat-value" id="sm-latency"><%= avgLatencyMs %>ms</div>
+          </div>
+          <div class="stat-card" style="grid-column: span 2;">
+            <div class="stat-label">Last Request</div>
+            <div class="stat-value" style="font-size:16px;" id="sm-last">
+              <% if (metrics && metrics.lastRequestAt) { %>
+                <%= new Date(metrics.lastRequestAt).toLocaleString('id-ID') %>
+              <% } else { %>—<% } %>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="speed-insights-card">
+          <div class="section-header">
+            <span>Speed Insights <span style="font-weight:500;font-size:11.5px;color:var(--muted);">— Vercel Web Vitals</span></span>
+            <span class="sub">
+              <span id="si-records-count" style="display:none;"></span>
+              <span id="si-status-badge"></span>
+              <a href="https://vercel.com/dashboard" target="_blank" rel="noopener" style="margin-left:10px;color:var(--blue);text-decoration:none;font-weight:700;">Buka di Vercel ↗</a>
+            </span>
+          </div>
+          <div id="speed-insights-body" style="min-height:160px;">
+            <div id="si-loading" style="padding:40px 20px;text-align:center;color:var(--muted);font-size:13px;">
+              <div style="margin-bottom:10px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;animation:spin 1s linear infinite;">
+                  <circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" stroke-linecap="round"/>
+                </svg>
+              </div>
+              Loading Speed Insights...
+            </div>
+            <div id="si-not-configured" style="display:none;padding:40px 20px;text-align:center;color:var(--muted);font-size:13px;">
+              <div style="margin-bottom:10px;font-size:24px;">⚡</div>
+              Speed Insights belum dikonfigurasi.<br>
+              <small style="opacity:0.7;">Set VERCEL_TOKEN dan VERCEL_PROJECT_ID di environment variables.</small><br>
+              <small style="opacity:0.7;display:block;margin-top:6px;">Catatan: Vercel belum menyediakan REST API publik resmi untuk data ini, jadi meski sudah dikonfigurasi, data di sini bisa saja tidak lengkap/berubah sewaktu-waktu. Untuk data yang pasti akurat, lihat langsung di <a href="https://vercel.com/dashboard" target="_blank" rel="noopener" style="color:var(--blue);">Vercel Dashboard ↗</a>.</small>
+            </div>
+            <div id="si-error" style="display:none;padding:40px 20px;text-align:center;color:var(--red);font-size:13px;"></div>
+            <div id="si-data" style="display:none;">
+              <div class="si-summary" id="si-summary">
+                <div class="si-summary-item">
+                  <div class="si-summary-label">Pages Tracked</div>
+                  <div class="si-summary-value" id="si-total-pages">0</div>
+                </div>
+                <div class="si-summary-item">
+                  <div class="si-summary-label">Total Records</div>
+                  <div class="si-summary-value" id="si-total-records">0</div>
+                </div>
+                <div class="si-summary-item">
+                  <div class="si-summary-label">Avg LCP</div>
+                  <div class="si-summary-value" id="si-avg-lcp">—</div>
+                </div>
+                <div class="si-summary-item">
+                  <div class="si-summary-label">Avg FCP</div>
+                  <div class="si-summary-value" id="si-avg-fcp">—</div>
+                </div>
+              </div>
+              <div style="overflow-x:auto;">
+                <table class="si-table" id="si-table">
+                  <thead>
+                    <tr>
+                      <th>Path</th>
+                      <th title="Largest Contentful Paint">LCP</th>
+                      <th title="First Contentful Paint">FCP</th>
+                      <th title="Time to First Byte">TTFB</th>
+                      <th title="Cumulative Layout Shift">CLS</th>
+                      <th title="Interaction to Next Paint">INP</th>
+                      <th title="Number of measurements">#</th>
+                    </tr>
+                  </thead>
+                  <tbody id="si-table-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+  async function loadSpeedInsights() {
+    try {
+      const statusRes = await fetch('/api/dev/speed-insights/status');
+      const status = await statusRes.json();
+
+      if (!status.configured) {
+        document.getElementById('si-loading').style.display = 'none';
+        document.getElementById('si-not-configured').style.display = 'block';
+        document.getElementById('si-status-badge').textContent = '⚠ Not configured';
+        return;
+      }
+
+      document.getElementById('si-status-badge').textContent = '✓ Enabled';
+      document.getElementById('si-status-badge').style.color = '#16A34A';
+
+      const range = document.getElementById('range-select').value || '7d';
+      const res = await fetch('/api/dev/speed-insights?range=' + range);
+      const data = await res.json();
+
+      document.getElementById('si-loading').style.display = 'none';
+
+      if (data.error) {
+        document.getElementById('si-error').textContent = data.error;
+        document.getElementById('si-error').style.display = 'block';
+        return;
+      }
+
+      if (!data.paths || !data.paths.length) {
+        document.getElementById('si-error').textContent = 'No speed insights data available yet. Visit the site to start collecting Web Vitals.';
+        document.getElementById('si-error').style.display = 'block';
+        return;
+      }
+
+      document.getElementById('si-data').style.display = 'block';
+      document.getElementById('si-records-count').style.display = 'inline';
+      document.getElementById('si-records-count').textContent = data.total + ' records';
+
+      document.getElementById('si-total-pages').textContent = data.paths.length;
+      document.getElementById('si-total-records').textContent = data.total;
+
+      const validLcp = data.paths.filter(p => p.lcp.median != null).map(p => p.lcp.median);
+      const validFcp = data.paths.filter(p => p.fcp.median != null).map(p => p.fcp.median);
+
+      if (validLcp.length) {
+        const avgLcp = Math.round(validLcp.reduce((a, b) => a + b, 0) / validLcp.length);
+        document.getElementById('si-avg-lcp').textContent = avgLcp + 'ms';
+        document.getElementById('si-avg-lcp').style.color = getSiColor(avgLcp, 'lcp');
+      }
+      if (validFcp.length) {
+        const avgFcp = Math.round(validFcp.reduce((a, b) => a + b, 0) / validFcp.length);
+        document.getElementById('si-avg-fcp').textContent = avgFcp + 'ms';
+        document.getElementById('si-avg-fcp').style.color = getSiColor(avgFcp, 'fcp');
+      }
+
+      let html = '';
+      data.paths.slice(0, 20).forEach(p => {
+        const lcpStr = p.lcp.median != null ? p.lcp.median + 'ms' : '—';
+        const fcpStr = p.fcp.median != null ? p.fcp.median + 'ms' : '—';
+        const ttfbStr = p.ttfb.median != null ? p.ttfb.median + 'ms' : '—';
+        const clsStr = p.cls.median != null ? p.cls.median.toFixed(2) : '—';
+        const inpStr = p.inp.median != null ? p.inp.median + 'ms' : '—';
+
+        html += `<tr>
+          <td class="si-path-cell" title="${p.path}">${p.path}</td>
+          <td class="si-metric-val"><span class="si-metric-dot" style="background:${getSiColor(p.lcp.median, 'lcp')}"></span>${lcpStr}</td>
+          <td class="si-metric-val"><span class="si-metric-dot" style="background:${getSiColor(p.fcp.median, 'fcp')}"></span>${fcpStr}</td>
+          <td class="si-metric-val"><span class="si-metric-dot" style="background:${getSiColor(p.ttfb.median, 'ttfb')}"></span>${ttfbStr}</td>
+          <td class="si-metric-val"><span class="si-metric-dot" style="background:${getSiColor(p.cls.median, 'cls')}"></span>${clsStr}</td>
+          <td class="si-metric-val"><span class="si-metric-dot" style="background:${getSiColor(p.inp.median, 'inp')}"></span>${inpStr}</td>
+          <td style="color:var(--muted);font-size:11px;">${p.count}</td>
+        </tr>`;
+      });
+
+      document.getElementById('si-table-body').innerHTML = html;
+    } catch (e) {
+      document.getElementById('si-loading').style.display = 'none';
+      document.getElementById('si-error').textContent = 'Failed to load Speed Insights: ' + e.message;
+      document.getElementById('si-error').style.display = 'block';
+      console.warn('[monitoring] speed-insights error', e);
+    }
+  }
+
+  function getSiColor(value, metric) {
+    if (value === null || value === undefined) return '#94A3B8';
+    const thresholds = {
+      lcp: { good: 2500, poor: 4000 },
+      fcp: { good: 1800, poor: 3000 },
+      ttfb: { good: 800, poor: 1800 },
+      cls: { good: 0.1, poor: 0.25 },
+      inp: { good: 200, poor: 500 },
+    };
+    const t = thresholds[metric];
+    if (!t) return '#94A3B8';
+    if (value <= t.good) return '#16A34A';
+    if (value <= t.poor) return '#D97706';
+    return '#DC2626';
+  }
+
+  loadSpeedInsights();
+  setInterval(loadSpeedInsights, 60000);
+
+  // Live-refresh server metrics alongside speed insights
+  async function refreshServerMetrics() {
+    try {
+      const res = await fetch('/dev/api/stats');
+      if (!res.ok) return;
+      const json = await res.json();
+      const m = json.metrics;
+      document.getElementById('sm-requests').textContent = m.totalRequests || 0;
+      document.getElementById('sm-latency').textContent  = m.avgLatencyMs + 'ms';
+      if (m.lastRequestAt) {
+        document.getElementById('sm-last').textContent = new Date(m.lastRequestAt).toLocaleString('id-ID');
+      }
+    } catch (e) {
+      console.warn('[monitoring] server metrics error', e);
+    }
+  }
+  setInterval(refreshServerMetrics, 30000);
+  </script>
+
+</body>
+</html>

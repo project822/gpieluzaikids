@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Overview — Dev Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/dashboard-assets/css/base.css">
+  <link rel="stylesheet" href="/dashboard-assets/css/overview.css">
+
+  <!-- Vercel Analytics -->
+  <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+  <script defer src="https://unpkg.com/@vercel/speed-insights/dist/index.js"></script>
+</head>
+<body>
+
+  <div class="dash-shell">
+    <%- include('_sidebar', { active: 'overview' }) %>
+
+    <div class="main">
+      <header class="topbar">
+        <div class="topbar-heading">
+          <h1>Welcome back, Developer 👋</h1>
+          <p>Here's what's happening with gpieluzaikids.vercel.app.</p>
+        </div>
+        <div class="topbar-actions">
+          <div class="online-badge">
+            <span class="online-dot"></span>
+            <span><%= pvStats ? pvStats.online : 0 %></span> online
+          </div>
+          <a href="/admin/events" class="btn">Admin Panel</a>
+        </div>
+      </header>
+
+      <main class="content">
+
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-label">Visitors (7d)</div>
+            <div class="stat-value"><%= pvStats ? pvStats.visitors : 0 %></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Page Views</div>
+            <div class="stat-value"><%= pvStats ? pvStats.pageviews : 0 %></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Avg Latency</div>
+            <div class="stat-value"><%= avgLatencyMs %>ms</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Admin Accounts</div>
+            <div class="stat-value"><%= admins ? admins.length : 0 %></div>
+          </div>
+        </div>
+
+        <div class="overview-grid">
+
+          <a href="/dev/dashboard/analytics" class="card overview-link-card">
+            <div class="overview-link-icon" style="background: var(--blue-bg); color: var(--blue);">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18M7 16l4-4 4 4 4-4"/></svg>
+            </div>
+            <div>
+              <div class="overview-link-title">Analytics</div>
+              <div class="overview-link-sub">Traffic, page views &amp; bounce rate</div>
+            </div>
+          </a>
+
+          <a href="/dev/dashboard/monitoring" class="card overview-link-card">
+            <div class="overview-link-icon" style="background: var(--orange-bg); color: var(--orange);">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </div>
+            <div>
+              <div class="overview-link-title">Monitoring</div>
+              <div class="overview-link-sub">Speed Insights &amp; server metrics</div>
+            </div>
+          </a>
+
+          <a href="/dev/dashboard/admins" class="card overview-link-card">
+            <div class="overview-link-icon" style="background: var(--green-bg); color: var(--green);">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-3-6.65"/></svg>
+            </div>
+            <div>
+              <div class="overview-link-title">Admins</div>
+              <div class="overview-link-sub">Manage admin accounts &amp; access</div>
+            </div>
+          </a>
+
+        </div>
+
+        <div class="card" style="margin-top:16px;">
+          <div class="section-header">
+            <span>Server Status</span>
+            <span class="sub">Express/Node.js</span>
+          </div>
+          <div class="overview-server-row">
+            <div>
+              <div class="stat-label">Total Requests</div>
+              <div class="overview-server-value"><%= metrics && metrics.totalRequests ? metrics.totalRequests : 0 %></div>
+            </div>
+            <div>
+              <div class="stat-label">Last Request</div>
+              <div class="overview-server-value" style="font-size:14px;">
+                <% if (metrics && metrics.lastRequestAt) { %>
+                  <%= new Date(metrics.lastRequestAt).toLocaleString('id-ID') %>
+                <% } else { %>—<% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+</body>
+</html>

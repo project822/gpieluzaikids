@@ -1,0 +1,80 @@
+/* ── MONITORING PAGE ── */
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.si-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+}
+.si-summary-item {
+  padding: 14px 20px;
+  border-right: 1px solid var(--border-2);
+  text-align: center;
+}
+.si-summary-item:last-child { border-right: none; }
+.si-summary-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+.si-summary-value {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.si-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.si-table th {
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.si-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-2);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.si-table tr:last-child td { border-bottom: none; }
+.si-table tr:hover td { background: var(--bg); }
+
+.si-path-cell {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 11px;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.si-metric-val { font-variant-numeric: tabular-nums; }
+.si-metric-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+@media (max-width: 600px) {
+  .si-summary { grid-template-columns: 1fr 1fr; }
+}
