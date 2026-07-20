@@ -4,11 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Monitoring — Dev Console</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/dashboard-assets/css/base.css">
-  <link rel="stylesheet" href="/dashboard-assets/css/monitoring.css">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"></noscript>
+  <%- include('_critical-css') %>
+  <link rel="stylesheet" href="/dashboard-assets/css/base.css" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="/dashboard-assets/css/monitoring.css" media="print" onload="this.media='all'">
 
   <!-- Vercel Analytics -->
   <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>

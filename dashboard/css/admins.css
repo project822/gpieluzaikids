@@ -63,3 +63,5 @@
 .admin-action-btn.reset:hover { background: var(--orange-bg); }
 .admin-action-btn.delete { color: var(--red); border-color: rgba(220,38,38,0.3); }
 .admin-action-btn.delete:hover { background: var(--red-bg); }
+.admin-action-btn.force-logout { color: var(--orange); border-color: rgba(217,119,6,0.3); display: inline-flex; align-items: center; gap: 4px; }
+.admin-action-btn.force-logout:hover { background: var(--orange-bg); }
