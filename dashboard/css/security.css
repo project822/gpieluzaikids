@@ -1,0 +1,231 @@
+/* ── SECURITY PAGE ── */
+
+/* Two-column row */
+.sec-row {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 14px;
+  margin-bottom: 0;
+}
+
+/* Firewall list */
+.sec-firewall-card { }
+.sec-blocked-card  { }
+
+.sec-firewall-list { padding: 6px 0; }
+
+.sec-fw-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 20px;
+  border-bottom: 1px solid var(--border-2);
+  transition: background 0.12s;
+}
+.sec-fw-item:last-child { border-bottom: none; }
+.sec-fw-item:hover { background: var(--bg); }
+
+.sec-fw-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--green-bg);
+  color: var(--green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.sec-fw-icon svg { width: 17px; height: 17px; }
+
+.sec-fw-info { flex: 1; min-width: 0; }
+.sec-fw-name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text);
+}
+.sec-fw-val {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  margin-top: 1px;
+}
+
+/* Block IP section */
+.sec-block-add {
+  display: flex;
+  gap: 8px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sec-ip-field {
+  flex: 1;
+  padding: 8px 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  color: var(--text);
+  font-weight: 600;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.sec-ip-field:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px var(--blue-bg);
+  background: var(--surface);
+}
+
+.sec-feedback {
+  margin: 0 16px 6px;
+  padding: 7px 12px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.sec-feedback.success {
+  background: var(--green-bg);
+  border: 1px solid rgba(22,163,74,0.2);
+  color: var(--green);
+}
+.sec-feedback.error {
+  background: var(--red-bg);
+  border: 1px solid rgba(220,38,38,0.2);
+  color: var(--red);
+}
+
+.sec-ip-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 16px;
+  border-bottom: 1px solid var(--border-2);
+}
+.sec-ip-row:last-child { border-bottom: none; }
+
+.sec-ip-val {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--red);
+}
+
+.sec-unblock-btn {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(220,38,38,0.25);
+  background: var(--red-bg);
+  color: var(--red);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.sec-unblock-btn:hover { background: rgba(220,38,38,0.18); }
+
+/* Tables */
+.sec-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.sec-table th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  background: var(--bg);
+}
+.sec-table td {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-2);
+  font-weight: 600;
+  vertical-align: middle;
+}
+.sec-table tr:last-child td { border-bottom: none; }
+.sec-table tr:hover td { background: var(--bg); }
+
+.sec-ip-cell {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.sec-path-cell {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 11px;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+}
+
+.sec-ts-cell {
+  font-size: 11.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.sec-detail-cell {
+  font-size: 11.5px;
+  color: var(--muted);
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Count badge */
+.sec-count-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.sec-count-badge.high { background: var(--red-bg);    color: var(--red); }
+.sec-count-badge.mid  { background: var(--orange-bg); color: var(--orange); }
+.sec-count-badge.low  { background: var(--green-bg);  color: var(--green); }
+
+/* Type badge for logs */
+.sec-type-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.sec-type-badge.blocked_ip  { background: var(--red-bg);    color: var(--red); }
+.sec-type-badge.rate_limit  { background: var(--orange-bg); color: var(--orange); }
+.sec-type-badge.bot         { background: var(--blue-bg);   color: var(--blue); }
+.sec-type-badge.suspicious  { background: rgba(139,92,246,0.1); color: #7C3AED; }
+
+/* Empty state */
+.sec-empty {
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  padding: 20px;
+}
+
+@media (max-width: 1100px) {
+  .sec-row { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .sec-block-add { flex-direction: column; }
+}

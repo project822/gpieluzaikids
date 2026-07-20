@@ -365,6 +365,126 @@ async function getPageViewStats(timeRange = "7d") {
   };
 }
 
+// ───────────── Maintenance Mode ─────────────
+
+async function getMaintenanceMode() {
+  const d = await connect();
+  const doc = await d.collection("settings").findOne({ _id: "maintenance" });
+  return doc || { enabled: false, message: "Website sedang dalam perbaikan. Silakan kembali lagi nanti.", updatedAt: null };
+}
+
+async function setMaintenanceMode({ enabled, message }) {
+  const d = await connect();
+  await d.collection("settings").updateOne(
+    { _id: "maintenance" },
+    {
+      $set: {
+        enabled: Boolean(enabled),
+        message: message || "Website sedang dalam perbaikan. Silakan kembali lagi nanti.",
+        updatedAt: new Date().toISOString(),
+      },
+    },
+    { upsert: true },
+  );
+}
+
+// ───────────── Security: IP Log ─────────────
+
+const MAX_SECURITY_LOGS = 500;
+
+async function logSecurityEvent({ type, ip, path, userAgent, detail }) {
+  const d = await connect();
+  await d.collection("securityLogs").insertOne({
+    type,          // 'blocked_ip' | 'rate_limit' | 'bot' | 'suspicious'
+    ip: ip || "unknown",
+    path: path || "/",
+    userAgent: userAgent || "",
+    detail: detail || "",
+    timestamp: new Date(),
+  });
+
+  // Keep collection size bounded
+  const count = await d.collection("securityLogs").countDocuments();
+  if (count > MAX_SECURITY_LOGS) {
+    const oldest = await d.collection("securityLogs")
+      .find()
+      .sort({ timestamp: 1 })
+      .limit(count - MAX_SECURITY_LOGS)
+      .toArray();
+    const ids = oldest.map((o) => o._id);
+    await d.collection("securityLogs").deleteMany({ _id: { $in: ids } });
+  }
+}
+
+async function getSecurityLogs({ limit = 100, type } = {}) {
+  const d = await connect();
+  const query = type ? { type } : {};
+  return d.collection("securityLogs")
+    .find(query)
+    .sort({ timestamp: -1 })
+    .limit(limit)
+    .toArray();
+}
+
+async function getSecurityStats() {
+  const d = await connect();
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+  const [total24h, byType, topIps, totalBlocked] = await Promise.all([
+    d.collection("securityLogs").countDocuments({ timestamp: { $gte: oneDayAgo } }),
+    d.collection("securityLogs").aggregate([
+      { $match: { timestamp: { $gte: sevenDaysAgo } } },
+      { $group: { _id: "$type", count: { $sum: 1 } } },
+    ]).toArray(),
+    d.collection("securityLogs").aggregate([
+      { $match: { timestamp: { $gte: sevenDaysAgo } } },
+      { $group: { _id: "$ip", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 10 },
+    ]).toArray(),
+    d.collection("securityLogs").countDocuments({ type: "blocked_ip" }),
+  ]);
+
+  const typeMap = {};
+  byType.forEach((t) => { typeMap[t._id] = t.count; });
+
+  return {
+    events24h: total24h,
+    blocked: typeMap.blocked_ip || 0,
+    rateLimited: typeMap.rate_limit || 0,
+    botDetected: typeMap.bot || 0,
+    suspicious: typeMap.suspicious || 0,
+    topIps,
+    totalBlocked,
+  };
+}
+
+// ───────────── Blocked IPs ─────────────
+
+async function getBlockedIps() {
+  const d = await connect();
+  const doc = await d.collection("settings").findOne({ _id: "blockedIps" });
+  return doc ? (doc.ips || []) : [];
+}
+
+async function blockIp(ip) {
+  const d = await connect();
+  await d.collection("settings").updateOne(
+    { _id: "blockedIps" },
+    { $addToSet: { ips: ip }, $set: { updatedAt: new Date().toISOString() } },
+    { upsert: true },
+  );
+}
+
+async function unblockIp(ip) {
+  const d = await connect();
+  await d.collection("settings").updateOne(
+    { _id: "blockedIps" },
+    { $pull: { ips: ip }, $set: { updatedAt: new Date().toISOString() } },
+  );
+}
+
 module.exports = {
   connect,
   getClient,
@@ -386,4 +506,12 @@ module.exports = {
   getAdminStatuses,
   logPageView,
   getPageViewStats,
+  getMaintenanceMode,
+  setMaintenanceMode,
+  logSecurityEvent,
+  getSecurityLogs,
+  getSecurityStats,
+  getBlockedIps,
+  blockIp,
+  unblockIp,
 };

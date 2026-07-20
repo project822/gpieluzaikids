@@ -2,7 +2,7 @@
   "version": 2,
   "functions": {
     "api/server.js": {
-      "includeFiles": "frontend/public/**"
+      "includeFiles": "frontend/public/**,frontend/views/**,admin/**,dashboard/**,backend/**"
     }
   },
   "rewrites": [

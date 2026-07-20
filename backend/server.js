@@ -339,6 +339,57 @@ function invalidateEventsCache() {
   eventsCache.expiresAt = 0;
 }
 
+// ============== MAINTENANCE MODE MIDDLEWARE ==============
+// Intercept semua request ke halaman publik ketika maintenance aktif.
+// /admin/*, /dev/*, /api/*, dan aset statis tetap melewati middleware ini.
+app.use(asyncHandler(async (req, res, next) => {
+  // Lewati untuk jalur non-publik
+  const bypass = ["/admin", "/dev", "/api", "/dashboard-assets", "/_vercel"];
+  if (bypass.some((p) => req.path.startsWith(p))) return next();
+
+  // Lewati aset statis (favicon, css, js, images)
+  if (/\.(css|js|png|jpe?g|gif|webp|svg|ico|woff2?|ttf)$/i.test(req.path)) return next();
+
+  let maintenance;
+  try {
+    maintenance = await db.getMaintenanceMode();
+  } catch (_) {
+    // Kalau DB gagal, jangan blokir user — lanjut saja
+    return next();
+  }
+
+  if (!maintenance || !maintenance.enabled) return next();
+
+  // Render halaman maintenance
+  return res.status(503).send(`<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Website Sedang Dalam Perbaikan</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',-apple-system,sans-serif;background:#0F172A;color:#E2E8F0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+    .wrap{text-align:center;max-width:440px;}
+    .icon{font-size:48px;margin-bottom:20px;}
+    h1{font-size:22px;font-weight:800;color:#F1F5F9;margin-bottom:12px;}
+    p{font-size:14px;color:#94A3B8;line-height:1.65;margin-bottom:20px;}
+    small{font-size:12px;color:#475569;}
+    .badge{display:inline-block;padding:4px 14px;border-radius:999px;background:rgba(217,119,6,0.15);border:1px solid rgba(217,119,6,0.3);color:#D97706;font-size:11px;font-weight:700;letter-spacing:0.04em;margin-bottom:24px;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="icon">🔧</div>
+    <div class="badge">UNDER MAINTENANCE</div>
+    <h1>Website Sedang Dalam Perbaikan</h1>
+    <p>${maintenance.message || "Website sedang dalam perbaikan. Silakan kembali lagi nanti."}</p>
+    <small>— Tim gpieluzaikids</small>
+  </div>
+</body>
+</html>`);
+}));
+
 // ============== PUBLIC ROUTES ==============
 app.get(
   "/",
@@ -472,10 +523,11 @@ app.get(
   ensureDevAuth,
   asyncHandler(async (req, res) => {
     const timeRange = req.query.range || "7d";
-    const [metrics, admins, pvStats] = await Promise.all([
+    const [metrics, admins, pvStats, maintenanceMode] = await Promise.all([
       db.getMetrics(),
       db.getAdmins(),
       db.getPageViewStats(timeRange),
+      db.getMaintenanceMode(),
     ]);
     const avgLatencyMs = metrics && metrics.totalRequests
       ? Math.round((metrics.totalLatencyMsSum || 0) / (metrics.totalRequests || 1))
@@ -487,6 +539,7 @@ app.get(
       admins: admins || [],
       pvStats,
       timeRange,
+      maintenanceMode: maintenanceMode || { enabled: false },
     });
   }),
 );
@@ -812,6 +865,157 @@ app.get("/api/dev/speed-insights/status", ensureDevAuth, (req, res) => {
     hasProjectId: !!projectId,
   });
 });
+
+// ============== DEV DASHBOARD: NEW PAGES ==============
+
+// Health Check page
+app.get(
+  "/dev/dashboard/health",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
+    return res.render("health", {});
+  }),
+);
+
+// Maintenance page
+app.get(
+  "/dev/dashboard/maintenance",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
+    const maintenanceMode = await db.getMaintenanceMode();
+    return res.render("maintenance", { maintenanceMode });
+  }),
+);
+
+// Security page
+app.get(
+  "/dev/dashboard/security",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
+    const [secStats, secLogs, blockedIps] = await Promise.all([
+      db.getSecurityStats(),
+      db.getSecurityLogs({ limit: 50 }),
+      db.getBlockedIps(),
+    ]);
+    return res.render("security", { secStats, secLogs, blockedIps });
+  }),
+);
+
+// ============== DEV API: Health Check ==============
+app.get(
+  "/api/dev/health",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
+    const uptimeSeconds = Math.floor(process.uptime());
+    const mem = process.memoryUsage();
+    const memHeapUsedMB  = Math.round(mem.heapUsed  / 1024 / 1024);
+    const memHeapTotalMB = Math.round(mem.heapTotal / 1024 / 1024);
+
+    // DB ping
+    let dbStatus = "ok";
+    let dbPingMs = 0;
+    let dbError  = null;
+    try {
+      const t0 = Date.now();
+      const client = await db.getClient();
+      await client.db().command({ ping: 1 });
+      dbPingMs = Date.now() - t0;
+    } catch (err) {
+      dbStatus = "error";
+      dbError  = err.message;
+    }
+
+    // Metrics
+    let metrics = { totalRequests: 0, totalLatencyMsSum: 0 };
+    try { metrics = (await db.getMetrics()) || metrics; } catch (_) {}
+    const avgLatencyMs = metrics.totalRequests
+      ? Math.round((metrics.totalLatencyMsSum || 0) / metrics.totalRequests)
+      : 0;
+
+    // Maintenance
+    let maintenanceMode = false;
+    try {
+      const mt = await db.getMaintenanceMode();
+      maintenanceMode = mt ? mt.enabled : false;
+    } catch (_) {}
+
+    return res.json({
+      website: "ok",
+      db: dbStatus,
+      dbPingMs,
+      dbError,
+      uptimeSeconds,
+      platform: process.platform,
+      nodeVersion: process.version,
+      memHeapUsedMB,
+      memHeapTotalMB,
+      totalRequests: metrics.totalRequests || 0,
+      avgLatencyMs,
+      maintenanceMode,
+    });
+  }),
+);
+
+// ============== DEV API: Maintenance ==============
+app.get(
+  "/api/dev/maintenance/status",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
+    const mt = await db.getMaintenanceMode();
+    return res.json(mt || { enabled: false });
+  }),
+);
+
+app.post(
+  "/api/dev/maintenance",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
+    const { enabled, message } = req.body || {};
+    await db.setMaintenanceMode({ enabled: Boolean(enabled), message });
+    return res.json({ ok: true, enabled: Boolean(enabled) });
+  }),
+);
+
+// ============== DEV API: Security ==============
+app.get(
+  "/api/dev/security/stats",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
+    const [stats, blockedIps] = await Promise.all([
+      db.getSecurityStats(),
+      db.getBlockedIps(),
+    ]);
+    return res.json({ ...stats, blockedIpCount: blockedIps.length });
+  }),
+);
+
+app.post(
+  "/api/dev/security/block-ip",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
+    const { ip } = req.body || {};
+    if (!ip) return res.status(400).json({ error: "IP address wajib diisi" });
+    // Basic IP validation
+    const ipv4 = /^(\d{1,3}\.){3}\d{1,3}$/.test(ip);
+    const ipv6 = /^[0-9a-fA-F:]{3,39}$/.test(ip);
+    if (!ipv4 && !ipv6) return res.status(400).json({ error: "Format IP tidak valid" });
+
+    await db.blockIp(ip);
+    await db.logSecurityEvent({ type: "blocked_ip", ip, path: "/", detail: "Manually blocked via dashboard" });
+    return res.json({ ok: true, ip });
+  }),
+);
+
+app.post(
+  "/api/dev/security/unblock-ip",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
+    const { ip } = req.body || {};
+    if (!ip) return res.status(400).json({ error: "IP address wajib diisi" });
+    await db.unblockIp(ip);
+    return res.json({ ok: true, ip });
+  }),
+);
 
 // ============== 404 HANDLER (route tidak ditemukan) ==============
 app.use((req, res) => {

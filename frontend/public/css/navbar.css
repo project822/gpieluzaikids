@@ -1,21 +1,32 @@
-/* ── Navigation Bar ── */
+/* ── Navigation Bar (Deep Ocean Glass Panel) ── */
 .nav {
   position: sticky;
   top: 0;
   z-index: 20;
   border-bottom: 1px solid transparent;
   background: var(--nav-bg);
-  transition: background 260ms ease, border-color 260ms ease, box-shadow 260ms ease;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: background 260ms ease, border-color 260ms ease;
 }
 
 .nav.shrink {
-  border-bottom-color: var(--border);
-  background: var(--nav-bg);
-  box-shadow: 0 10px 30px rgba(2, 8, 23, 0.2);
+  border-bottom-color: var(--glass-border);
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+html.theme-light .nav {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+html.theme-light .nav.shrink {
+  background: rgba(255, 255, 255, 0.85);
 }
 
 .nav-inner {
-  width: min(100% - 28px, 1160px);
+  width: min(100% - 28px, 1280px);
   min-height: var(--nav-height);
   margin: 0 auto;
   display: flex;
@@ -27,7 +38,7 @@
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  color: var(--text-color);
+  color: var(--on-surface);
   text-decoration: none;
   flex-shrink: 0;
 }
@@ -38,18 +49,16 @@
   display: block;
   object-fit: contain;
   border-radius: 50%;
-  background: #eef4ff;
-  box-shadow: var(--shadow-soft);
-}
-
-html.theme-light .logo-img {
-  background: #ffffff;
+  background: rgba(30, 41, 59, 0.5);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.1);
 }
 
 .logo-img:hover {
   transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
 }
 
+/* ── Nav Links (Desktop) ── */
 .nav-links {
   margin: 0 0 0 auto;
   padding: 0;
@@ -65,17 +74,38 @@ html.theme-light .logo-img {
   gap: 6px;
   min-height: 38px;
   padding: 8px 12px;
-  border-radius: 999px;
-  color: var(--text-color);
-  font-weight: 600;
+  border-radius: var(--radius-sm);
+  color: var(--on-surface-variant);
+  font-family: var(--font-body);
+  font-weight: 500;
   font-size: 0.9rem;
   white-space: nowrap;
-  transition: background 200ms ease;
+  transition: background 200ms ease, color 200ms ease;
+  position: relative;
 }
 
 .nav-links a:hover,
 .nav-links a:focus-visible {
-  background: var(--surface-strong);
+  color: var(--on-surface);
+  background: rgba(59, 130, 246, 0.08);
+}
+
+/* ── Active Link Indicator (blue bottom border) ── */
+.nav-links a.active {
+  color: var(--on-surface);
+  background: rgba(59, 130, 246, 0.06);
+}
+
+.nav-links a.active::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 12px;
+  right: 12px;
+  height: 2px;
+  background: var(--electric-blue);
+  border-radius: var(--radius-full);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
 }
 
 .nav-link-icon {
@@ -84,17 +114,19 @@ html.theme-light .logo-img {
   opacity: 0.85;
 }
 
-/* Nav toggle (hamburger) */
+/* ── Nav Toggle (Hamburger) ── */
 .nav-toggle {
   display: none;
   width: 42px;
   height: 42px;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  color: var(--text-color);
-  background: var(--surface);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  color: var(--on-surface);
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   cursor: pointer;
   margin-left: auto;
   flex-shrink: 0;
@@ -106,7 +138,7 @@ html.theme-light .logo-img {
   width: 20px;
   height: 2px;
   display: block;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: currentColor;
 }
 
@@ -124,18 +156,21 @@ html.theme-light .logo-img {
 .hamburger::before { top: -7px; }
 .hamburger::after  { top: 7px; }
 
-/* Theme toggle */
+/* ── Theme Toggle ── */
 .theme-toggle {
   order: 4;
   min-height: 38px;
   margin-left: 8px;
   padding: 7px 12px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
   font-size: 0.88rem;
-  font-weight: 800;
-  border: 1px solid var(--border);
-  color: var(--text-color);
-  background: var(--surface);
+  font-weight: 600;
+  border: 1px solid var(--glass-border);
+  color: var(--on-surface);
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -143,31 +178,36 @@ html.theme-light .logo-img {
 .theme-toggle:hover,
 .nav-toggle:hover {
   transform: translateY(-1px);
-  background: var(--surface-strong);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.1);
 }
 
-/* Date display */
+/* ── Date Display ── */
 .nav-date {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 0 10px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
   min-height: 38px;
-  background: var(--surface);
-  color: var(--muted);
-  font-weight: 600;
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--on-surface-variant);
+  font-family: var(--font-label);
+  font-weight: 500;
   font-size: 0.82rem;
+  letter-spacing: 0.05em;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .nav-date-time {
-  color: var(--text-color);
+  color: var(--on-surface);
 }
 
-/* ── Notification Bell (seperti nav link) ── */
+/* ── Notification Bell ── */
 .nav-notif-wrap {
   position: relative;
   display: inline-flex;
@@ -179,18 +219,19 @@ html.theme-light .logo-img {
   gap: 6px;
   min-height: 38px;
   padding: 8px 12px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   border: none;
-  color: var(--text-color);
+  color: var(--on-surface-variant);
   background: transparent;
   cursor: pointer;
   font-size: 0.9rem;
-  font-weight: 600;
-  transition: background 200ms ease, transform 200ms ease;
+  font-weight: 500;
+  transition: background 200ms ease, transform 200ms ease, color 200ms ease;
 }
 
 .nav-notif-btn:hover {
-  background: var(--surface-strong);
+  color: var(--on-surface);
+  background: rgba(59, 130, 246, 0.08);
   transform: scale(1.05);
 }
 
@@ -198,17 +239,18 @@ html.theme-light .logo-img {
   transform: scale(0.92);
 }
 
-/* Popup */
+/* ── Notification Popup (Glass) ── */
 .nav-notif-popup {
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
   width: 320px;
   max-width: 90vw;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--card);
-  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   z-index: 50;
   overflow: hidden;
   opacity: 0;
@@ -239,14 +281,14 @@ html.theme-light .logo-img {
 }
 
 .nav-notif-item-wrap:hover {
-  background: var(--surface-hover);
+  background: rgba(59, 130, 246, 0.06);
 }
 
 .nav-notif-icon {
   width: 36px;
   height: 36px;
-  border-radius: 999px;
-  background: rgba(59, 130, 246, 0.12);
+  border-radius: var(--radius-full);
+  background: rgba(59, 130, 246, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -269,17 +311,19 @@ html.theme-light .logo-img {
 }
 
 .nav-notif-label {
+  font-family: var(--font-label);
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   color: var(--accent);
 }
 
 .nav-notif-title {
-  font-weight: 700;
+  font-family: var(--font-body);
+  font-weight: 600;
   font-size: 0.88rem;
-  color: var(--text-color);
+  color: var(--on-surface);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
@@ -289,8 +333,9 @@ html.theme-light .logo-img {
 }
 
 .nav-notif-meta {
+  font-family: var(--font-label);
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--on-surface-variant);
   display: flex;
   align-items: center;
   gap: 4px;
@@ -302,8 +347,9 @@ html.theme-light .logo-img {
 }
 
 .nav-notif-link {
+  font-family: var(--font-body);
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--accent);
   margin-top: 2px;
   transition: transform 200ms ease;
@@ -317,11 +363,12 @@ html.theme-light .logo-img {
 .nav-notif-empty {
   padding: 14px;
   text-align: center;
-  color: var(--text-muted);
+  color: var(--on-surface-variant);
+  font-family: var(--font-body);
   font-size: 0.82rem;
 }
 
-/* Badge dot on bell — solid electric blue, flat (Cloudly style) */
+/* ── Badge Dot on Bell ── */
 .nav-notif-btn.has-new::after {
   content: '';
   position: absolute;
@@ -331,10 +378,10 @@ html.theme-light .logo-img {
   height: 8px;
   border-radius: 50%;
   background: var(--electric-blue);
-  border: 2px solid var(--nav-bg);
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+  border: 2px solid rgba(15, 23, 42, 0.8);
 }
 
-/* Responsive notification on small screens */
 @media (max-width: 500px) {
   .nav-notif-popup {
     right: -50px;
@@ -343,13 +390,14 @@ html.theme-light .logo-img {
   }
 }
 
-/* ── Brand: show on desktop, hide on mobile ── */
+/* ── Desktop: hide mobile logo ── */
 @media (min-width: 901px) {
   .nav-links-logo {
     display: none;
   }
 }
 
+/* ── Mobile Responsive ── */
 @media (max-width: 900px) {
   .brand-desktop {
     display: none;
@@ -373,15 +421,17 @@ html.theme-light .logo-img {
     padding: 12px;
     flex-direction: column;
     align-items: stretch;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: #ffffff;
-    box-shadow: var(--shadow);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    background: var(--glass-bg);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    box-shadow: var(--elevation-md), 0 0 40px rgba(59, 130, 246, 0.08);
     z-index: 30;
   }
 
   html.theme-dark .nav-links {
-    background: #0A1A33;
+    background: rgba(15, 23, 42, 0.9);
   }
 
   .nav-open .nav-links {
@@ -391,12 +441,17 @@ html.theme-light .logo-img {
   .nav-links a {
     justify-content: center;
     padding: 12px;
+    border-radius: var(--radius-sm);
   }
 
-  /* Mobile logo in nav-links */
+  .nav-links a.active::after {
+    left: 12px;
+    right: 12px;
+  }
+
   .nav-links-logo {
     display: block;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--glass-border);
     margin-bottom: 8px;
     padding-bottom: 8px;
   }
@@ -406,14 +461,17 @@ html.theme-light .logo-img {
     align-items: center;
     gap: 10px;
     justify-content: center;
+    font-family: var(--font-display);
     font-size: 1rem;
     font-weight: 800;
-    color: var(--section-heading);
+    color: var(--on-surface);
     pointer-events: none;
   }
 
   .nav-links-logo .logo-img {
     width: 40px;
     height: 40px;
+    background: rgba(30, 41, 59, 0.5);
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.15);
   }
 }

@@ -224,8 +224,34 @@
               if (!res.ok) throw new Error("not found");
               const data = await res.json();
               if (modalTitle) modalTitle.textContent = data.title || "";
-              if (modalPoster) modalPoster.src = data.poster || "";
-              if (modalTime) modalTime.textContent = `${data.day || ""} | ${data.time || ""}`;
+
+              // Poster: show or hide column
+              const modalBody = document.getElementById("modal-body");
+              if (modalPoster) {
+                if (data.poster) {
+                  modalPoster.src = data.poster;
+                  modalPoster.style.display = "";
+                  if (modalBody) modalBody.classList.remove("no-poster");
+                } else {
+                  modalPoster.src = "";
+                  modalPoster.style.display = "none";
+                  if (modalBody) modalBody.classList.add("no-poster");
+                }
+              }
+
+              if (modalTime) {
+                const datePart = data.day ? (() => {
+                  const s = String(data.day).trim();
+                  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+                  if (m) {
+                    const d = new Date(+m[1], +m[2]-1, +m[3]);
+                    if (!isNaN(d)) return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+                  }
+                  return s;
+                })() : "";
+                const timePart = data.time ? ` | ${data.time}` : "";
+                modalTime.textContent = datePart + timePart;
+              }
               if (modalLocation) modalLocation.textContent = data.location || "";
               if (modalDesc) modalDesc.textContent = data.description || "";
               if (modalActions) {

@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Maintenance — Dev Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/dashboard-assets/css/base.css">
+  <link rel="stylesheet" href="/dashboard-assets/css/maintenance.css">
+
+  <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body>
+
+  <div class="dash-shell">
+    <%- include('_sidebar', { active: 'maintenance' }) %>
+
+    <div class="main">
+      <header class="topbar">
+        <div class="topbar-heading">
+          <h1>Maintenance Mode</h1>
+          <p>Aktifkan untuk menampilkan halaman "Under Maintenance" ke pengguna.</p>
+        </div>
+        <div class="topbar-actions">
+          <span id="mt-status-pill" class="status-pill <%= maintenanceMode.enabled ? 'online' : 'offline' %>" style="font-size:12px;padding:5px 12px;">
+            <span class="dot"></span>
+            <%= maintenanceMode.enabled ? 'AKTIF' : 'NONAKTIF' %>
+          </span>
+        </div>
+      </header>
+
+      <main class="content">
+
+        <!-- Toggle Card -->
+        <div class="mt-hero-card card">
+          <div class="mt-hero-left">
+            <div class="mt-hero-icon <%= maintenanceMode.enabled ? 'on' : 'off' %>" id="mt-hero-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            </div>
+            <div>
+              <div class="mt-hero-title">Maintenance Mode</div>
+              <div class="mt-hero-sub" id="mt-hero-sub">
+                <% if (maintenanceMode.enabled) { %>
+                  Pengguna sedang melihat halaman maintenance.
+                  <% if (maintenanceMode.updatedAt) { %>
+                    Diaktifkan <%= new Date(maintenanceMode.updatedAt).toLocaleString('id-ID') %>.
+                  <% } %>
+                <% } else { %>
+                  Website berjalan normal. Aktifkan untuk menampilkan halaman perawatan.
+                <% } %>
+              </div>
+            </div>
+          </div>
+          <div class="mt-toggle-wrap">
+            <label class="mt-toggle" title="Toggle Maintenance Mode">
+              <input type="checkbox" id="mt-toggle-input" <%= maintenanceMode.enabled ? 'checked' : '' %> onchange="toggleMaintenance(this.checked)">
+              <span class="mt-toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Message Editor -->
+        <div class="card mt-msg-card">
+          <div class="section-header">
+            <span>Pesan Maintenance</span>
+            <span class="sub">Ditampilkan ke pengguna saat maintenance aktif</span>
+          </div>
+          <div class="mt-msg-body">
+            <textarea id="mt-message" class="mt-textarea" rows="4" placeholder="Tulis pesan yang akan ditampilkan ke pengguna..."><%= maintenanceMode.message || 'Website sedang dalam perbaikan. Silakan kembali lagi nanti.' %></textarea>
+            <div class="mt-msg-actions">
+              <div class="mt-msg-hint">Pesan ini muncul di halaman maintenance yang dilihat pengunjung.</div>
+              <button class="btn btn-primary" onclick="saveMessage()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>
+                Simpan Pesan
+              </button>
+            </div>
+            <div id="mt-save-feedback" class="mt-feedback" style="display:none;"></div>
+          </div>
+        </div>
+
+        <!-- Preview Card -->
+        <div class="card mt-preview-card">
+          <div class="section-header">
+            <span>Preview Halaman Maintenance</span>
+            <span class="sub">Tampilan yang dilihat pengguna</span>
+          </div>
+          <div class="mt-preview-frame">
+            <div class="mt-preview-content">
+              <div class="mt-preview-icon">🔧</div>
+              <div class="mt-preview-title">Website Sedang Dalam Perbaikan</div>
+              <div class="mt-preview-msg" id="mt-preview-msg"><%= maintenanceMode.message || 'Website sedang dalam perbaikan. Silakan kembali lagi nanti.' %></div>
+              <div class="mt-preview-sub">— Tim gpieluzaikids</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info Card -->
+        <div class="card mt-info-card">
+          <div class="section-header">
+            <span>Informasi</span>
+          </div>
+          <div class="mt-info-body">
+            <div class="mt-info-item">
+              <div class="mt-info-icon blue">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              </div>
+              <div>
+                <div class="mt-info-title">Halaman yang diblokir</div>
+                <div class="mt-info-desc">Saat maintenance aktif, semua request ke halaman publik (/, /events, /documentation) akan dialihkan ke halaman maintenance. Halaman admin tetap dapat diakses.</div>
+              </div>
+            </div>
+            <div class="mt-info-item">
+              <div class="mt-info-icon green">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+              </div>
+              <div>
+                <div class="mt-info-title">Halaman yang tetap aktif</div>
+                <div class="mt-info-desc">Jalur /admin/*, /dev/*, dan /api/* tetap berfungsi normal. Dev dan admin masih bisa login dan bekerja selama maintenance.</div>
+              </div>
+            </div>
+            <div class="mt-info-item">
+              <div class="mt-info-icon orange">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+              </div>
+              <div>
+                <div class="mt-info-title">Perhatian</div>
+                <div class="mt-info-desc">Matikan maintenance mode setelah selesai. Pengguna tidak bisa mengakses website selama mode ini aktif.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+  async function toggleMaintenance(enabled) {
+    const pill = document.getElementById('mt-status-pill');
+    const icon = document.getElementById('mt-hero-icon');
+    const sub  = document.getElementById('mt-hero-sub');
+    const msg  = document.getElementById('mt-message').value;
+
+    try {
+      const res = await fetch('/api/dev/maintenance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled, message: msg }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Gagal');
+
+      pill.className = 'status-pill ' + (enabled ? 'online' : 'offline');
+      pill.innerHTML = '<span class="dot"></span>' + (enabled ? 'AKTIF' : 'NONAKTIF');
+      icon.className = 'mt-hero-icon ' + (enabled ? 'on' : 'off');
+      sub.textContent = enabled
+        ? 'Pengguna sedang melihat halaman maintenance. Diaktifkan ' + new Date().toLocaleString('id-ID') + '.'
+        : 'Website berjalan normal. Aktifkan untuk menampilkan halaman perawatan.';
+
+      showFeedback(enabled ? '✓ Maintenance mode diaktifkan' : '✓ Maintenance mode dinonaktifkan', 'success');
+    } catch (e) {
+      showFeedback('Gagal: ' + e.message, 'error');
+      // Revert toggle
+      document.getElementById('mt-toggle-input').checked = !enabled;
+    }
+  }
+
+  async function saveMessage() {
+    const msg = document.getElementById('mt-message').value.trim();
+    if (!msg) { showFeedback('Pesan tidak boleh kosong.', 'error'); return; }
+
+    const enabled = document.getElementById('mt-toggle-input').checked;
+    try {
+      const res = await fetch('/api/dev/maintenance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled, message: msg }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Gagal');
+      document.getElementById('mt-preview-msg').textContent = msg;
+      showFeedback('✓ Pesan berhasil disimpan', 'success');
+    } catch (e) {
+      showFeedback('Gagal menyimpan: ' + e.message, 'error');
+    }
+  }
+
+  // Live preview update
+  document.getElementById('mt-message').addEventListener('input', function() {
+    document.getElementById('mt-preview-msg').textContent = this.value || 'Website sedang dalam perbaikan. Silakan kembali lagi nanti.';
+  });
+
+  function showFeedback(msg, type) {
+    const el = document.getElementById('mt-save-feedback');
+    el.textContent = msg;
+    el.className = 'mt-feedback ' + type;
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 3000);
+  }
+  </script>
+
+</body>
+</html>

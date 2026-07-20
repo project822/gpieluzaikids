@@ -9,17 +9,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/dashboard-assets/css/base.css">
   <link rel="stylesheet" href="/dashboard-assets/css/overview.css">
-
-  <!-- Vercel Analytics -->
   <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
   <script defer src="/_vercel/insights/script.js"></script>
   <script defer src="https://unpkg.com/@vercel/speed-insights/dist/index.js"></script>
 </head>
 <body>
-
   <div class="dash-shell">
     <%- include('_sidebar', { active: 'overview' }) %>
-
     <div class="main">
       <header class="topbar">
         <div class="topbar-heading">
@@ -34,9 +30,9 @@
           <a href="/admin/events" class="btn">Admin Panel</a>
         </div>
       </header>
-
       <main class="content">
 
+        <!-- ── TOP STAT GRID ── -->
         <div class="stat-grid">
           <div class="stat-card">
             <div class="stat-label">Visitors (7d)</div>
@@ -56,10 +52,49 @@
           </div>
         </div>
 
-        <div class="overview-grid">
+        <!-- ── SYSTEM STATUS ROW ── -->
+        <div class="ov-status-row">
+          <div class="ov-status-card" id="ov-card-website">
+            <div class="ov-status-dot" id="ov-dot-website"></div>
+            <div class="ov-status-body">
+              <div class="ov-status-label">Website</div>
+              <div class="ov-status-val" id="ov-val-website">Checking...</div>
+            </div>
+            <span class="ov-status-pill" id="ov-pill-website">—</span>
+          </div>
+          <div class="ov-status-card" id="ov-card-db">
+            <div class="ov-status-dot" id="ov-dot-db"></div>
+            <div class="ov-status-body">
+              <div class="ov-status-label">Database</div>
+              <div class="ov-status-val" id="ov-val-db">Checking...</div>
+            </div>
+            <span class="ov-status-pill" id="ov-pill-db">—</span>
+          </div>
+          <div class="ov-status-card">
+            <div class="ov-status-dot ok"></div>
+            <div class="ov-status-body">
+              <div class="ov-status-label">Admin Accounts</div>
+              <div class="ov-status-val"><%= admins ? admins.length : 0 %> registered</div>
+            </div>
+            <a href="/dev/dashboard/admins" class="ov-status-pill ok" style="text-decoration:none;">Manage</a>
+          </div>
+          <div class="ov-status-card" id="ov-card-mt">
+            <div class="ov-status-dot <%= maintenanceMode && maintenanceMode.enabled ? 'warn' : 'ok' %>" id="ov-dot-mt"></div>
+            <div class="ov-status-body">
+              <div class="ov-status-label">Maintenance Mode</div>
+              <div class="ov-status-val" id="ov-val-mt"><%= maintenanceMode && maintenanceMode.enabled ? 'ACTIVE — users blocked' : 'Inactive' %></div>
+            </div>
+            <label class="ov-mini-toggle" title="Toggle Maintenance">
+              <input type="checkbox" id="ov-mt-toggle" <%= maintenanceMode && maintenanceMode.enabled ? 'checked' : '' %> onchange="ovToggleMaintenance(this.checked)">
+              <span class="ov-mini-slider"></span>
+            </label>
+          </div>
+        </div>
 
+        <!-- ── QUICK NAV LINKS ── -->
+        <div class="overview-grid">
           <a href="/dev/dashboard/analytics" class="card overview-link-card">
-            <div class="overview-link-icon" style="background: var(--blue-bg); color: var(--blue);">
+            <div class="overview-link-icon" style="background:var(--blue-bg);color:var(--blue);">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18M7 16l4-4 4 4 4-4"/></svg>
             </div>
             <div>
@@ -67,9 +102,8 @@
               <div class="overview-link-sub">Traffic, page views &amp; bounce rate</div>
             </div>
           </a>
-
           <a href="/dev/dashboard/monitoring" class="card overview-link-card">
-            <div class="overview-link-icon" style="background: var(--orange-bg); color: var(--orange);">
+            <div class="overview-link-icon" style="background:var(--orange-bg);color:var(--orange);">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
             </div>
             <div>
@@ -77,9 +111,8 @@
               <div class="overview-link-sub">Speed Insights &amp; server metrics</div>
             </div>
           </a>
-
           <a href="/dev/dashboard/admins" class="card overview-link-card">
-            <div class="overview-link-icon" style="background: var(--green-bg); color: var(--green);">
+            <div class="overview-link-icon" style="background:var(--green-bg);color:var(--green);">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-3-6.65"/></svg>
             </div>
             <div>
@@ -87,33 +120,249 @@
               <div class="overview-link-sub">Manage admin accounts &amp; access</div>
             </div>
           </a>
-
-        </div>
-
-        <div class="card" style="margin-top:16px;">
-          <div class="section-header">
-            <span>Server Status</span>
-            <span class="sub">Express/Node.js</span>
-          </div>
-          <div class="overview-server-row">
-            <div>
-              <div class="stat-label">Total Requests</div>
-              <div class="overview-server-value"><%= metrics && metrics.totalRequests ? metrics.totalRequests : 0 %></div>
+          <a href="/dev/dashboard/health" class="card overview-link-card">
+            <div class="overview-link-icon" style="background:rgba(239,68,68,0.10);color:#EF4444;">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
             </div>
             <div>
-              <div class="stat-label">Last Request</div>
-              <div class="overview-server-value" style="font-size:14px;">
-                <% if (metrics && metrics.lastRequestAt) { %>
-                  <%= new Date(metrics.lastRequestAt).toLocaleString('id-ID') %>
-                <% } else { %>—<% } %>
+              <div class="overview-link-title">Health Check</div>
+              <div class="overview-link-sub">DB status, uptime &amp; Web Vitals</div>
+            </div>
+          </a>
+          <a href="/dev/dashboard/maintenance" class="card overview-link-card">
+            <div class="overview-link-icon" style="background:var(--orange-bg);color:var(--orange);">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </div>
+            <div>
+              <div class="overview-link-title">Maintenance</div>
+              <div class="overview-link-sub">Toggle user-facing maintenance page</div>
+            </div>
+          </a>
+          <a href="/dev/dashboard/security" class="card overview-link-card">
+            <div class="overview-link-icon" style="background:rgba(124,58,237,0.10);color:#7C3AED;">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div>
+              <div class="overview-link-title">Security</div>
+              <div class="overview-link-sub">Firewall, blocked IPs &amp; bot detection</div>
+            </div>
+          </a>
+        </div>
+
+        <!-- ── REAL-TIME HEALTH CHECK (Speed Insights + Server) ── -->
+        <div class="ov-health-row">
+
+          <!-- Web Vitals compact card -->
+          <div class="card ov-vitals-card">
+            <div class="section-header">
+              <span>Web Vitals — Real-time</span>
+              <span class="sub" id="ov-si-badge">Loading...</span>
+            </div>
+            <div id="ov-si-body">
+              <div class="ov-loading" id="ov-si-loading">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:ov-spin 1.2s linear infinite;flex-shrink:0;"><circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" stroke-linecap="round"/></svg>
+                Loading Web Vitals...
+              </div>
+              <div id="ov-si-nc" class="ov-empty" style="display:none;">
+                ⚡ Speed Insights belum dikonfigurasi. Set VERCEL_TOKEN &amp; VERCEL_PROJECT_ID.
+              </div>
+              <div id="ov-si-data" style="display:none;">
+                <div class="ov-vitals-compact" id="ov-vitals-row"><!-- filled by JS --></div>
+                <div class="ov-score-row">
+                  <div class="ov-score-label">Performance Score</div>
+                  <div class="ov-score-bar-wrap">
+                    <div class="ov-score-bar" id="ov-score-bar" style="width:0%;"></div>
+                  </div>
+                  <div class="ov-score-num" id="ov-score-num">—</div>
+                </div>
               </div>
             </div>
           </div>
+
+          <!-- Server metrics compact card -->
+          <div class="card ov-server-card">
+            <div class="section-header">
+              <span>Server Status</span>
+              <span class="sub">Express / Node.js</span>
+            </div>
+            <div class="ov-server-grid">
+              <div class="ov-srow">
+                <span class="ov-skey">Total Requests</span>
+                <span class="ov-sval" id="ov-s-requests"><%= metrics && metrics.totalRequests ? metrics.totalRequests : 0 %></span>
+              </div>
+              <div class="ov-srow">
+                <span class="ov-skey">Avg Latency</span>
+                <span class="ov-sval" id="ov-s-latency"><%= avgLatencyMs %>ms</span>
+              </div>
+              <div class="ov-srow">
+                <span class="ov-skey">Last Request</span>
+                <span class="ov-sval" id="ov-s-last" style="font-size:12px;">
+                  <% if (metrics && metrics.lastRequestAt) { %>
+                    <%= new Date(metrics.lastRequestAt).toLocaleString('id-ID') %>
+                  <% } else { %>—<% } %>
+                </span>
+              </div>
+              <div class="ov-srow">
+                <span class="ov-skey">DB Status</span>
+                <span class="ov-sval" id="ov-s-db">Checking...</span>
+              </div>
+              <div class="ov-srow">
+                <span class="ov-skey">Uptime</span>
+                <span class="ov-sval" id="ov-s-uptime">—</span>
+              </div>
+              <div class="ov-srow">
+                <span class="ov-skey">Memory Used</span>
+                <span class="ov-sval" id="ov-s-mem">—</span>
+              </div>
+            </div>
+            <div class="ov-server-footer">
+              <a href="/dev/dashboard/health" class="btn" style="font-size:12px;">Full Health Check →</a>
+              <a href="/dev/dashboard/monitoring" class="btn" style="font-size:12px;">Speed Insights →</a>
+            </div>
+          </div>
+
         </div>
 
       </main>
     </div>
   </div>
 
+  <script>
+  function getSiColor(v, m) {
+    if (v == null) return '#94A3B8';
+    const t = {lcp:{good:2500,poor:4000},fcp:{good:1800,poor:3000},ttfb:{good:800,poor:1800},cls:{good:0.1,poor:0.25},inp:{good:200,poor:500}}[m];
+    if (!t) return '#94A3B8';
+    return v <= t.good ? '#16A34A' : v <= t.poor ? '#D97706' : '#DC2626';
+  }
+  function calcPerfScore(paths) {
+    if (!paths || !paths.length) return null;
+    const thresholds = {lcp:{good:2500,poor:4000},fcp:{good:1800,poor:3000},ttfb:{good:800,poor:1800},cls:{good:0.1,poor:0.25},inp:{good:200,poor:500}};
+    const weights = {lcp:30,fcp:15,ttfb:20,cls:15,inp:20};
+    let tw = 0, ts = 0;
+    ['lcp','fcp','ttfb','cls','inp'].forEach(m => {
+      const vals = paths.map(p => p[m] && p[m].median).filter(v => v != null);
+      if (!vals.length) return;
+      const avg = vals.reduce((a,b)=>a+b,0)/vals.length;
+      const t = thresholds[m];
+      let score = avg <= t.good ? 100 : avg <= t.poor ? Math.round(50+50*(1-(avg-t.good)/(t.poor-t.good))) : Math.max(0,Math.round(50*(1-(avg-t.poor)/t.poor)));
+      ts += score * weights[m]; tw += weights[m];
+    });
+    return tw > 0 ? Math.round(ts / tw) : null;
+  }
+  function fmtUptime(s) {
+    if (s < 60) return s + 's';
+    if (s < 3600) return Math.floor(s/60) + 'm';
+    return Math.floor(s/3600) + 'h ' + Math.floor((s%3600)/60) + 'm';
+  }
+  function setOvStatus(id, status, pillText, valText) {
+    const card = document.getElementById('ov-card-' + id);
+    const dot  = document.getElementById('ov-dot-' + id);
+    const pill = document.getElementById('ov-pill-' + id);
+    const val  = document.getElementById('ov-val-' + id);
+    if (card) card.className = 'ov-status-card ' + status;
+    if (dot)  dot.className  = 'ov-status-dot ' + status;
+    if (pill) { pill.textContent = pillText; pill.className = 'ov-status-pill ' + status; }
+    if (val)  val.textContent = valText;
+  }
+
+  async function ovLoadHealth() {
+    try {
+      const t0 = performance.now();
+      const res = await fetch('/api/dev/health');
+      const ping = Math.round(performance.now() - t0);
+      const d = await res.json();
+      setOvStatus('website', d.website === 'ok' ? 'ok' : 'error',
+        d.website === 'ok' ? 'Online' : 'Error',
+        d.website === 'ok' ? ping + 'ms' : 'Degraded');
+      setOvStatus('db', d.db === 'ok' ? 'ok' : 'error',
+        d.db === 'ok' ? 'Connected' : 'Disconnected',
+        d.db === 'ok' ? (d.dbPingMs + 'ms ping') : (d.dbError || 'Failed'));
+      document.getElementById('ov-s-db').textContent     = d.db === 'ok' ? '✓ ' + d.dbPingMs + 'ms' : '✗ Disconnected';
+      document.getElementById('ov-s-db').style.color     = d.db === 'ok' ? 'var(--green)' : 'var(--red)';
+      document.getElementById('ov-s-uptime').textContent = fmtUptime(d.uptimeSeconds || 0);
+      document.getElementById('ov-s-mem').textContent    = d.memHeapUsedMB ? d.memHeapUsedMB + ' MB' : '—';
+      document.getElementById('ov-s-requests').textContent = d.totalRequests != null ? d.totalRequests : '—';
+      document.getElementById('ov-s-latency').textContent  = (d.avgLatencyMs || 0) + 'ms';
+    } catch(e) {
+      setOvStatus('website','error','Error','Check failed');
+      setOvStatus('db','error','Unknown','Check failed');
+    }
+  }
+
+  async function ovLoadVitals() {
+    try {
+      const statusRes = await fetch('/api/dev/speed-insights/status');
+      const status = await statusRes.json();
+      if (!status.configured) {
+        document.getElementById('ov-si-loading').style.display = 'none';
+        document.getElementById('ov-si-nc').style.display = 'block';
+        document.getElementById('ov-si-badge').textContent = '⚠ Not configured';
+        return;
+      }
+      const res  = await fetch('/api/dev/speed-insights?range=7d');
+      const data = await res.json();
+      document.getElementById('ov-si-loading').style.display = 'none';
+      if (data.error || !data.paths || !data.paths.length) {
+        document.getElementById('ov-si-nc').style.display = 'block';
+        document.getElementById('ov-si-nc').textContent = '📊 Belum ada data Web Vitals.';
+        document.getElementById('ov-si-badge').textContent = 'No data';
+        return;
+      }
+      document.getElementById('ov-si-data').style.display = 'block';
+      document.getElementById('ov-si-badge').textContent  = '✓ ' + data.total + ' records';
+      document.getElementById('ov-si-badge').style.color  = 'var(--green)';
+      const metrics = [{key:'lcp',label:'LCP'},{key:'fcp',label:'FCP'},{key:'ttfb',label:'TTFB'},{key:'cls',label:'CLS',f:true},{key:'inp',label:'INP'}];
+      let html = '';
+      metrics.forEach(m => {
+        const vals = data.paths.map(p => p[m.key] && p[m.key].median).filter(v => v != null);
+        if (!vals.length) return;
+        const avg = vals.reduce((a,b)=>a+b,0)/vals.length;
+        const disp = m.f ? avg.toFixed(3) : Math.round(avg) + 'ms';
+        html += `<div class="ov-vital-chip" style="border-color:${getSiColor(avg,m.key)}40;">
+          <span class="ov-vital-label">${m.label}</span>
+          <span class="ov-vital-val" style="color:${getSiColor(avg,m.key)};">${disp}</span>
+        </div>`;
+      });
+      document.getElementById('ov-vitals-row').innerHTML = html;
+      const score = calcPerfScore(data.paths);
+      if (score !== null) {
+        const bar = document.getElementById('ov-score-bar');
+        bar.style.width = score + '%';
+        bar.style.background = score >= 90 ? 'var(--green)' : score >= 50 ? 'var(--orange)' : 'var(--red)';
+        document.getElementById('ov-score-num').textContent = score;
+        document.getElementById('ov-score-num').style.color = score >= 90 ? 'var(--green)' : score >= 50 ? 'var(--orange)' : 'var(--red)';
+      }
+    } catch(e) {
+      document.getElementById('ov-si-loading').style.display = 'none';
+      document.getElementById('ov-si-nc').style.display = 'block';
+      document.getElementById('ov-si-nc').textContent = 'Failed to load Web Vitals: ' + e.message;
+    }
+  }
+
+  async function ovToggleMaintenance(enabled) {
+    const dot  = document.getElementById('ov-dot-mt');
+    const val  = document.getElementById('ov-val-mt');
+    try {
+      const res = await fetch('/api/dev/maintenance', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ enabled }),
+      });
+      const d = await res.json();
+      if (!d.ok) throw new Error(d.error);
+      if (dot) dot.className = 'ov-status-dot ' + (enabled ? 'warn' : 'ok');
+      if (val) val.textContent = enabled ? 'ACTIVE — users blocked' : 'Inactive';
+      const badge = document.getElementById('sidebar-mt-badge');
+      if (badge) badge.style.display = enabled ? 'inline-flex' : 'none';
+    } catch(e) {
+      document.getElementById('ov-mt-toggle').checked = !enabled;
+      alert('Gagal toggle maintenance: ' + e.message);
+    }
+  }
+
+  ovLoadHealth();
+  ovLoadVitals();
+  setInterval(ovLoadHealth, 30000);
+  setInterval(ovLoadVitals, 60000);
+  </script>
 </body>
 </html>

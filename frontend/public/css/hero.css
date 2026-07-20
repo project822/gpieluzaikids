@@ -1,4 +1,4 @@
-/* ── Hero Section ── */
+/* ── Hero Section (Deep Ocean) ── */
 .modern-hero {
   position: relative;
   min-height: calc(100vh - var(--nav-height) - 60px);
@@ -7,7 +7,14 @@
   overflow: hidden;
 }
 
+/* ── Atmospheric Orbs ── */
 .hero-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hero-parallax {
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -25,23 +32,32 @@
   padding: 0;
 }
 
+/* ── Glass Panel Hero Card (Deep Ocean) ── */
 #home .hero-card {
-  background: linear-gradient(180deg, #ffffff 0%, #f4f8ff 100%);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--elevation-md), 0 0 40px rgba(59, 130, 246, 0.08);
   width: 100%;
   max-width: 780px;
   padding: clamp(22px, 4vw, 38px);
-  border-radius: 20px;
+  border-radius: var(--radius-xl);
   display: grid;
   gap: 14px;
   min-height: 260px;
 }
 
 html.theme-dark #home .hero-card {
-  background: linear-gradient(180deg, #1a2a46 0%, #0E2040 100%);
-  border: 0;
-  box-shadow: none;
+  background: rgba(30, 41, 59, 0.4);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+
+html.theme-light #home .hero-card {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
 }
 
 #home .hero-logo-wrap {
@@ -58,18 +74,22 @@ html.theme-dark #home .hero-card {
   text-align: center;
 }
 
+/* ── Logo Title — Display XL ── */
 .logo-title {
   margin: 0;
-  color: var(--section-heading);
+  font-family: var(--font-display);
   font-size: clamp(2rem, 7vw, 4.6rem);
   line-height: 1;
-  letter-spacing: 0;
+  letter-spacing: -0.02em;
   font-weight: 800;
+  color: var(--on-surface);
+  text-shadow: 0 0 40px rgba(59, 130, 246, 0.15);
 }
 
 .lead,
 .section-header p {
-  color: var(--muted);
+  font-family: var(--font-body);
+  color: var(--on-surface-variant);
   line-height: 1.7;
 }
 
@@ -85,6 +105,7 @@ html.theme-dark #home .hero-card {
   justify-content: center;
 }
 
+/* ── Logo Glow ── */
 #home .hero-logo-img {
   border-radius: 50%;
   filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.35));
@@ -96,7 +117,7 @@ html.theme-dark #home .hero-card {
   transform: scale(1.04);
 }
 
-/* Responsive */
+/* ── Responsive ── */
 @media (max-width: 620px) {
   .modern-hero {
     min-height: calc(100vh - var(--nav-height) - 36px);

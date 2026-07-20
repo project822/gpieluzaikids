@@ -1,111 +1,244 @@
-/* ── CSS Custom Properties (Theme) ── */
-/* Default theme = LIGHT (Navy + White + Electric Blue, Cloudly-style) */
-:root {
-  --font-sans: system-ui, -apple-system, Arial, Helvetica, sans-serif;
+/* ── TechNexus Deep Ocean Design Tokens ── */
+/* Inspired by: Deep Navy "Void" + Digital Light "Accent Blue" */
+@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Geist:wght@400;500;600&display=swap');
 
-  /* Brand colors — ONLY these 3 are allowed */
+:root {
+  /* ── Typography ── */
+  --font-display: 'Hanken Grotesk', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-label: 'Geist', monospace, sans-serif;
+  --font-sans: var(--font-body);
+
+  /* ── Brand Colors (Deep Ocean palette) ── */
   --electric-blue: #3B82F6;
   --navy: #0F172A;
   --white: #FFFFFF;
 
-  /* Light theme (default) — clean white surfaces, navy text/accents */
-  --bg: #FFFFFF;
-  --surface: #f1f5f9;
-  --surface-hover: #e2e8f0;
-  --card: #FFFFFF;
-  --card-hover: #f8fafc;
-  --text: #0F172A;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
-  --accent: #3B82F6;
+  /* ── Surface Colors (from DESIGN.md) ── */
+  --surface: #1E293B;
+  --surface-dim: #10131a;
+  --surface-bright: #363941;
+  --surface-container-lowest: #0b0e15;
+  --surface-container-low: #191b23;
+  --surface-container: #1d2027;
+  --surface-container-high: #272a31;
+  --surface-container-highest: #32353c;
+  --on-surface: #FFFFFF;
+  --on-surface-variant: #94A3B8;
+  --inverse-surface: #e1e2ec;
+  --inverse-on-surface: #2e3038;
+  --outline: #334155;
+  --outline-variant: #424754;
+  --surface-tint: #adc6ff;
+
+  /* ── Primary / Brand ── */
+  --primary: #adc6ff;
+  --on-primary: #002e6a;
+  --primary-container: #4d8eff;
+  --on-primary-container: #00285d;
+  --inverse-primary: #005ac2;
+
+  /* ── Secondary ── */
+  --secondary: #bcc7de;
+  --on-secondary: #263143;
+  --secondary-container: #3e495d;
+  --on-secondary-container: #aeb9d0;
+
+  /* ── Tertiary ── */
+  --tertiary: #ffb786;
+  --on-tertiary: #502400;
+  --tertiary-container: #df7412;
+  --on-tertiary-container: #461f00;
+
+  /* ── Error ── */
+  --error: #ffb4ab;
+  --on-error: #690005;
+  --error-container: #93000a;
+  --on-error-container: #ffdad6;
+
+  /* ── Fixed Variants ── */
+  --primary-fixed: #d8e2ff;
+  --primary-fixed-dim: #adc6ff;
+  --on-primary-fixed: #001a42;
+  --on-primary-fixed-variant: #004395;
+  --secondary-fixed: #d8e3fb;
+  --secondary-fixed-dim: #bcc7de;
+  --on-secondary-fixed: #111c2d;
+  --on-secondary-fixed-variant: #3c475a;
+  --tertiary-fixed: #ffdcc6;
+  --tertiary-fixed-dim: #ffb786;
+  --on-tertiary-fixed: #311400;
+  --on-tertiary-fixed-variant: #723600;
+
+  /* ── Background ── */
+  --bg: #0F172A;
+  --on-background: #e1e2ec;
+  --background: #0F172A;
+  --surface-variant: #32353c;
+
+  /* ── Legacy Aliases (backward compat) ── */
+  --accent: var(--electric-blue);
   --accent-hover: #2563eb;
   --danger: #ef4444;
-  --border: rgba(15, 23, 42, 0.08);
-  --border-hover: rgba(15, 23, 42, 0.15);
-  --border-accent: rgba(59, 130, 246, 0.3);
-  --radius: 14px;
-  --radius-sm: 8px;
-  --radius-lg: 20px;
-  --nav-height: 68px;
-  --nav-bg: #FFFFFF;
-  --surface-strong: #e2e8f0;
-  --surface-solid: #FFFFFF;
-  --card-bg-soft: #FFFFFF;
-  --ghost-border: rgba(15, 23, 42, 0.12);
-  --section-heading: #0F172A;
-  --muted: #64748b;
-  --text-color: #0F172A;
-  --bg-gradient: linear-gradient(170deg, #f8faff 0%, #ffffff 35%, #f0f6ff 70%, #e8f0fe 100%);
-  --shadow-soft: 0 2px 8px rgba(15, 23, 42, 0.06);
-  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08);
-  --shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
-  --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.12);
+  --text-color: var(--on-surface);
+  --section-heading: var(--on-surface);
+  --muted: var(--on-surface-variant);
+  --text-muted: var(--on-surface-variant);
+  --text-secondary: var(--on-surface-variant);
+  --surface-hover: var(--surface-container-high);
+  --surface-strong: var(--surface-container-highest);
 
-  /* Sidebar/navy surfaces (used for nav-on-dark-navy accents, e.g. mobile menu, footer) */
-  --navy-surface: #0F172A;
-  --navy-surface-hover: #16213a;
-  --navy-border: rgba(255, 255, 255, 0.08);
-  --navy-text: #FFFFFF;
-  --navy-text-muted: #94a3b8;
-}
+  /* ── Glassmorphism ── */
+  --glass-bg: rgba(30, 41, 59, 0.5);
+  --glass-border: rgba(51, 65, 85, 0.5);
+  --glass-blur: 12px;
 
-/* Dark theme — optional alternate, toggled via html.theme-dark */
-html.theme-dark {
-  --bg: #0F172A;
-  --surface: #1a2332;
-  --surface-hover: #1f2a3d;
-  --card: #131d2e;
-  --card-hover: #192435;
-  --text: #FFFFFF;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --accent: #3B82F6;
-  --accent-hover: #2563eb;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-hover: rgba(255, 255, 255, 0.15);
+  /* ── Glow Effects (Luminescence) ── */
+  --glow-blue: rgba(59, 130, 246, 0.12);
+  --glow-blue-intense: rgba(59, 130, 246, 0.25);
+  --glow-accent: rgba(59, 130, 246, 0.15);
+
+  /* ── Elevation (no shadows — uses glass & glow) ── */
+  --elevation-low: 0 0 0 1px var(--glass-border), 0 0 20px rgba(59, 130, 246, 0.05);
+  --elevation-md: 0 0 0 1px var(--glass-border), 0 0 30px rgba(59, 130, 246, 0.08);
+  --elevation-high: 0 0 0 1px rgba(59, 130, 246, 0.2), 0 0 40px rgba(59, 130, 246, 0.12);
+
+  /* ── Legacy Shadows (mapped to glows) ── */
+  --shadow-soft: var(--elevation-low);
+  --shadow-sm: var(--elevation-low);
+  --shadow: var(--elevation-md);
+  --shadow-lg: var(--elevation-high);
+  --shadow-blue: var(--elevation-high);
+
+  /* ── Borders ── */
+  --border: var(--glass-border);
+  --border-hover: rgba(51, 65, 85, 0.8);
   --border-accent: rgba(59, 130, 246, 0.3);
-  --nav-bg: #0F172A;
-  --surface-strong: #1f2a3d;
-  --surface-solid: #0F172A;
-  --card-bg-soft: #131d2e;
   --ghost-border: rgba(255, 255, 255, 0.12);
-  --section-heading: #FFFFFF;
-  --muted: #94a3b8;
-  --text-color: #FFFFFF;
-  --bg-gradient: linear-gradient(170deg, #0a1628 0%, #0F172A 25%, #152240 55%, #1a2d5a 100%);
-  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.2);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.4);
+
+  /* ── Rounded (Soft-Modern shape language) ── */
+  --radius-sm: 0.125rem;     /* 2px — buttons, small inputs */
+  --radius: 0.375rem;        /* 6px — standard */
+  --radius-md: 0.5rem;       /* 8px — panels, cards */
+  --radius-lg: 0.75rem;      /* 12px — larger containers */
+  --radius-xl: 1rem;         /* 16px — modals, hero cards */
+  --radius-full: 9999px;     /* pill shape — badges, tags only */
+
+  /* ── Navigation ── */
+  --nav-height: 68px;
+  --nav-bg: rgba(15, 23, 42, 0.75);
+
+  /* ── Cards ── */
+  --card: var(--glass-bg);
+  --card-hover: rgba(30, 41, 59, 0.65);
+  --card-bg-soft: var(--glass-bg);
+  --surface-solid: #0F172A;
+
+  /* ── Background Gradient (Deep Ocean void) ── */
+  --bg-gradient: linear-gradient(
+    170deg,
+    #0a1628 0%,
+    #0F172A 20%,
+    #152240 50%,
+    #1a2d5a 80%,
+    #0F172A 100%
+  );
+
+  /* ── Accent Glow ── */
+  --accent-glow: rgba(59, 130, 246, 0.12);
 }
 
-/* Backward-compat: if any existing script still toggles html.theme-light,
-   keep it pointing at the (now-default) light values so nothing breaks. */
+/* ── Light Theme Override ── */
 html.theme-light {
   --bg: #FFFFFF;
   --surface: #f1f5f9;
-  --surface-hover: #e2e8f0;
-  --card: #FFFFFF;
-  --card-hover: #f8fafc;
-  --text: #0F172A;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
+  --surface-dim: #d6dae4;
+  --surface-container-lowest: #f8fafc;
+  --surface-container-low: #eef2f6;
+  --surface-container: #e4e8f0;
+  --surface-container-high: #d8dce6;
+  --surface-container-highest: #ccd0dc;
+  --on-surface: #0F172A;
+  --on-surface-variant: #475569;
+  --outline: #cbd5e1;
+  --outline-variant: #94a3b8;
+  --surface-tint: #3B82F6;
+
+  --primary: #3B82F6;
+  --on-primary: #FFFFFF;
+  --primary-container: #dbeafe;
+  --on-primary-container: #1e40af;
+  --inverse-primary: #93c5fd;
+
+  --secondary: #475569;
+  --on-secondary: #FFFFFF;
+  --secondary-container: #e2e8f0;
+  --on-secondary-container: #334155;
+
+  --tertiary: #ea580c;
+  --on-tertiary: #FFFFFF;
+  --tertiary-container: #fed7aa;
+  --on-tertiary-container: #7c2d12;
+
+  --error: #ef4444;
+  --on-error: #FFFFFF;
+  --error-container: #fee2e2;
+  --on-error-container: #991b1b;
+
   --accent: #3B82F6;
   --accent-hover: #2563eb;
-  --border: rgba(15, 23, 42, 0.08);
-  --border-hover: rgba(15, 23, 42, 0.15);
-  --border-accent: rgba(59, 130, 246, 0.3);
-  --bg-gradient: linear-gradient(170deg, #f8faff 0%, #ffffff 35%, #f0f6ff 70%, #e8f0fe 100%);
-  --nav-bg: #FFFFFF;
-  --surface-strong: #e2e8f0;
-  --surface-solid: #FFFFFF;
-  --card-bg-soft: #FFFFFF;
-  --ghost-border: rgba(15, 23, 42, 0.12);
+  --text-color: #0F172A;
   --section-heading: #0F172A;
   --muted: #64748b;
-  --text-color: #0F172A;
-  --shadow-soft: 0 2px 8px rgba(15, 23, 42, 0.06);
-  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08);
-  --shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
-  --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.12);
+  --text-muted: #64748b;
+  --text-secondary: #475569;
+
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(15, 23, 42, 0.1);
+  --glass-blur: 12px;
+
+  --glow-blue: rgba(59, 130, 246, 0.08);
+  --glow-blue-intense: rgba(59, 130, 246, 0.18);
+  --glow-accent: rgba(59, 130, 246, 0.1);
+
+  --nav-bg: rgba(255, 255, 255, 0.8);
+  --border: rgba(15, 23, 42, 0.1);
+  --border-hover: rgba(15, 23, 42, 0.2);
+  --border-accent: rgba(59, 130, 246, 0.3);
+  --ghost-border: rgba(15, 23, 42, 0.12);
+
+  --card: var(--glass-bg);
+  --card-hover: rgba(255, 255, 255, 0.85);
+  --card-bg-soft: var(--glass-bg);
+  --surface-solid: #FFFFFF;
+
+  --bg-gradient: linear-gradient(
+    170deg,
+    #f8faff 0%,
+    #ffffff 30%,
+    #f0f6ff 65%,
+    #e8f0fe 100%
+  );
+
+  --elevation-low: 0 0 0 1px var(--glass-border), 0 2px 8px rgba(15, 23, 42, 0.04);
+  --elevation-md: 0 0 0 1px var(--glass-border), 0 4px 16px rgba(15, 23, 42, 0.06);
+  --elevation-high: 0 0 0 1px rgba(59, 130, 246, 0.15), 0 8px 30px rgba(59, 130, 246, 0.08);
+
+  --shadow-soft: var(--elevation-low);
+  --shadow-sm: var(--elevation-low);
+  --shadow: var(--elevation-md);
+  --shadow-lg: var(--elevation-high);
+}
+
+/* ── Backward compat: html.theme-dark toggles dark mode (same as default) ── */
+html.theme-dark {
+  /* Dark is already the default — just ensuring consistency */
+  --bg: #0F172A;
+  --surface: #1E293B;
+  --surface-dim: #10131a;
+  --on-surface: #FFFFFF;
+  --on-surface-variant: #94A3B8;
+  --glass-bg: rgba(30, 41, 59, 0.5);
+  --glass-border: rgba(51, 65, 85, 0.5);
+  --nav-bg: rgba(15, 23, 42, 0.75);
 }

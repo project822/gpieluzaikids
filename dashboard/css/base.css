@@ -166,6 +166,31 @@ a { color: inherit; }
 .sidebar-signout svg { width: 15px; height: 15px; }
 .sidebar-signout:hover { background: rgba(220,38,38,0.12); }
 
+.sidebar-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.07);
+  margin: 10px 4px 6px;
+}
+.sidebar-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted-2);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0 12px 4px;
+}
+.sidebar-badge {
+  margin-left: auto;
+  background: var(--orange);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
 /* ── MAIN AREA ── */
 .main {
   margin-left: 250px;

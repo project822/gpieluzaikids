@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Health Check — Dev Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/dashboard-assets/css/base.css">
+  <link rel="stylesheet" href="/dashboard-assets/css/health.css">
+
+  <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body>
+
+  <div class="dash-shell">
+    <%- include('_sidebar', { active: 'health' }) %>
+
+    <div class="main">
+      <header class="topbar">
+        <div class="topbar-heading">
+          <h1>Health Check</h1>
+          <p>Status real-time database, website, dan performa sistem.</p>
+        </div>
+        <div class="topbar-actions">
+          <div class="online-badge" id="hc-last-checked">
+            <span class="online-dot"></span>
+            <span>Checking...</span>
+          </div>
+          <button class="btn" onclick="runHealthCheck()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Refresh
+          </button>
+        </div>
+      </header>
+
+      <main class="content">
+
+        <!-- Status Overview Cards -->
+        <div class="hc-status-grid">
+          <div class="hc-status-card" id="hc-card-website">
+            <div class="hc-status-icon" id="hc-icon-website">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+            </div>
+            <div class="hc-status-info">
+              <div class="hc-status-name">Website</div>
+              <div class="hc-status-val" id="hc-val-website">Checking...</div>
+            </div>
+            <div class="hc-status-badge" id="hc-badge-website">—</div>
+          </div>
+
+          <div class="hc-status-card" id="hc-card-db">
+            <div class="hc-status-icon" id="hc-icon-db">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+            </div>
+            <div class="hc-status-info">
+              <div class="hc-status-name">Database (MongoDB)</div>
+              <div class="hc-status-val" id="hc-val-db">Checking...</div>
+            </div>
+            <div class="hc-status-badge" id="hc-badge-db">—</div>
+          </div>
+
+          <div class="hc-status-card" id="hc-card-latency">
+            <div class="hc-status-icon" id="hc-icon-latency">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </div>
+            <div class="hc-status-info">
+              <div class="hc-status-name">Avg Latency</div>
+              <div class="hc-status-val" id="hc-val-latency">—</div>
+            </div>
+            <div class="hc-status-badge" id="hc-badge-latency">—</div>
+          </div>
+
+          <div class="hc-status-card" id="hc-card-uptime">
+            <div class="hc-status-icon" id="hc-icon-uptime">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            <div class="hc-status-info">
+              <div class="hc-status-name">Process Uptime</div>
+              <div class="hc-status-val" id="hc-val-uptime">—</div>
+            </div>
+            <div class="hc-status-badge" id="hc-badge-uptime">—</div>
+          </div>
+        </div>
+
+        <!-- Performance Metrics Row -->
+        <div class="hc-section-row">
+
+          <div class="card hc-perf-card">
+            <div class="section-header">
+              <span>Web Vitals — User</span>
+              <span class="sub" id="hc-si-status-badge">Loading...</span>
+            </div>
+            <div id="hc-si-body">
+              <div class="hc-loading" id="hc-si-loading">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin-icon"><circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" stroke-linecap="round"/></svg>
+                Memuat Web Vitals...
+              </div>
+              <div id="hc-si-not-configured" class="hc-empty" style="display:none;">
+                <span style="font-size:22px;">⚡</span>
+                Speed Insights belum dikonfigurasi.<br>
+                <small>Set VERCEL_TOKEN &amp; VERCEL_PROJECT_ID untuk mengaktifkan.</small>
+              </div>
+              <div id="hc-si-data" style="display:none;">
+                <div class="hc-vitals-grid" id="hc-vitals-grid">
+                  <!-- filled by JS -->
+                </div>
+                <div class="hc-perf-score-row">
+                  <div class="hc-score-wrap">
+                    <div class="hc-score-label">Performance Score</div>
+                    <div class="hc-score-ring-wrap">
+                      <svg class="hc-score-ring" viewBox="0 0 60 60">
+                        <circle cx="30" cy="30" r="24" fill="none" stroke="var(--border)" stroke-width="5"/>
+                        <circle cx="30" cy="30" r="24" fill="none" stroke-width="5"
+                          stroke-linecap="round"
+                          stroke-dasharray="150.8"
+                          stroke-dashoffset="150.8"
+                          id="hc-score-arc"
+                          style="transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset 0.8s ease, stroke 0.5s ease;"/>
+                        <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
+                          font-size="13" font-weight="800" fill="var(--text)" id="hc-score-text">—</text>
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="hc-score-legend">
+                    <div class="hc-legend-item"><span class="hc-legend-dot good"></span> Good (90–100)</div>
+                    <div class="hc-legend-item"><span class="hc-legend-dot needs"></span> Needs Improvement (50–89)</div>
+                    <div class="hc-legend-item"><span class="hc-legend-dot poor"></span> Poor (&lt;50)</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card hc-system-card">
+            <div class="section-header">
+              <span>System Info</span>
+              <span class="sub">Server / Node.js</span>
+            </div>
+            <div class="hc-sysinfo" id="hc-sysinfo">
+              <div class="hc-loading" id="hc-sys-loading">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin-icon"><circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" stroke-linecap="round"/></svg>
+                Loading...
+              </div>
+              <div id="hc-sys-data" style="display:none;">
+                <div class="hc-sysrow">
+                  <span class="hc-sys-label">Platform</span>
+                  <span class="hc-sys-val" id="sys-platform">—</span>
+                </div>
+                <div class="hc-sysrow">
+                  <span class="hc-sys-label">Node Version</span>
+                  <span class="hc-sys-val" id="sys-node">—</span>
+                </div>
+                <div class="hc-sysrow">
+                  <span class="hc-sys-label">Memory (heap used)</span>
+                  <span class="hc-sys-val" id="sys-mem">—</span>
+                </div>
+                <div class="hc-sysrow">
+                  <span class="hc-sys-label">Memory (heap total)</span>
+                  <span class="hc-sys-val" id="sys-mem-total">—</span>
+                </div>
+                <div class="hc-sysrow">
+                  <span class="hc-sys-label">Total Requests</span>
+                  <span class="hc-sys-val" id="sys-requests">—</span>
+                </div>
+                <div class="hc-sysrow">
+                  <span class="hc-sys-label">Avg Latency</span>
+                  <span class="hc-sys-val" id="sys-latency">—</span>
+                </div>
+                <div class="hc-sysrow">
+                  <span class="hc-sys-label">Maintenance Mode</span>
+                  <span class="hc-sys-val" id="sys-maintenance">—</span>
+                </div>
+                <div class="hc-sysrow">
+                  <span class="hc-sys-label">DB Ping</span>
+                  <span class="hc-sys-val" id="sys-db-ping">—</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Historical Health Timeline -->
+        <div class="card" style="margin-top:16px;">
+          <div class="section-header">
+            <span>Request Latency History</span>
+            <span class="sub" id="hc-history-sub">Last 20 checks</span>
+          </div>
+          <div class="hc-timeline" id="hc-timeline">
+            <div class="hc-loading">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin-icon"><circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" stroke-linecap="round"/></svg>
+              Collecting data...
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+  const latencyHistory = [];
+  const MAX_HISTORY = 20;
+
+  function fmtUptime(seconds) {
+    if (seconds < 60) return seconds + 's';
+    if (seconds < 3600) return Math.floor(seconds / 60) + 'm ' + (seconds % 60) + 's';
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    return h + 'h ' + m + 'm';
+  }
+
+  function setCard(id, status, label, value) {
+    // status: 'ok' | 'warn' | 'error' | 'loading'
+    const card = document.getElementById('hc-card-' + id);
+    const icon = document.getElementById('hc-icon-' + id);
+    const val  = document.getElementById('hc-val-' + id);
+    const badge = document.getElementById('hc-badge-' + id);
+    if (!card) return;
+    card.className = 'hc-status-card ' + status;
+    if (icon) icon.className = 'hc-status-icon ' + status;
+    if (val)  val.textContent = value;
+    if (badge) {
+      badge.textContent = label;
+      badge.className = 'hc-status-badge ' + status;
+    }
+  }
+
+  function getSiColor(value, metric) {
+    if (value === null || value === undefined) return '#94A3B8';
+    const thresholds = {
+      lcp: { good: 2500, poor: 4000 },
+      fcp: { good: 1800, poor: 3000 },
+      ttfb: { good: 800, poor: 1800 },
+      cls: { good: 0.1, poor: 0.25 },
+      inp: { good: 200, poor: 500 },
+    };
+    const t = thresholds[metric];
+    if (!t) return '#94A3B8';
+    if (value <= t.good) return '#16A34A';
+    if (value <= t.poor) return '#D97706';
+    return '#DC2626';
+  }
+
+  function calcPerfScore(paths) {
+    // Simple weighted score from LCP + FCP + TTFB + CLS + INP averages
+    if (!paths || !paths.length) return null;
+    const thresholds = {
+      lcp: { good: 2500, poor: 4000 },
+      fcp: { good: 1800, poor: 3000 },
+      ttfb: { good: 800, poor: 1800 },
+      cls: { good: 0.1, poor: 0.25 },
+      inp: { good: 200, poor: 500 },
+    };
+    const weights = { lcp: 30, fcp: 15, ttfb: 20, cls: 15, inp: 20 };
+    let totalWeight = 0, totalScore = 0;
+    const metrics = ['lcp','fcp','ttfb','cls','inp'];
+    metrics.forEach(m => {
+      const vals = paths.map(p => p[m] && p[m].median).filter(v => v != null);
+      if (!vals.length) return;
+      const avg = vals.reduce((a,b) => a+b, 0) / vals.length;
+      const t = thresholds[m];
+      let score;
+      if (avg <= t.good) score = 100;
+      else if (avg <= t.poor) score = Math.round(50 + 50 * (1 - (avg - t.good) / (t.poor - t.good)));
+      else score = Math.max(0, Math.round(50 * (1 - (avg - t.poor) / t.poor)));
+      totalScore += score * weights[m];
+      totalWeight += weights[m];
+    });
+    return totalWeight > 0 ? Math.round(totalScore / totalWeight) : null;
+  }
+
+  function renderScore(score) {
+    const arc = document.getElementById('hc-score-arc');
+    const text = document.getElementById('hc-score-text');
+    if (!arc || !text) return;
+    if (score === null) { text.textContent = '—'; return; }
+    const circumference = 150.8;
+    const offset = circumference - (score / 100) * circumference;
+    arc.style.strokeDashoffset = offset;
+    arc.style.stroke = score >= 90 ? '#16A34A' : score >= 50 ? '#D97706' : '#DC2626';
+    text.textContent = score;
+  }
+
+  function renderTimeline() {
+    const el = document.getElementById('hc-timeline');
+    if (!latencyHistory.length) {
+      el.innerHTML = '<div class="hc-loading">Belum ada data latency. Auto-refresh dalam 30 detik.</div>';
+      return;
+    }
+    const max = Math.max(...latencyHistory.map(h => h.v), 1);
+    let html = '<div class="hc-tl-bars">';
+    latencyHistory.forEach(h => {
+      const pct = Math.round((h.v / max) * 100);
+      const color = h.v <= 200 ? 'var(--green)' : h.v <= 800 ? 'var(--orange)' : 'var(--red)';
+      html += `<div class="hc-tl-bar-wrap" title="${h.t}: ${h.v}ms">
+        <div class="hc-tl-bar" style="height:${Math.max(pct,4)}%;background:${color};"></div>
+        <div class="hc-tl-label">${h.v}ms</div>
+      </div>`;
+    });
+    html += '</div>';
+    el.innerHTML = html;
+    document.getElementById('hc-history-sub').textContent = 'Last ' + latencyHistory.length + ' checks';
+  }
+
+  async function runHealthCheck() {
+    try {
+      // Ping health API
+      const t0 = performance.now();
+      const res = await fetch('/api/dev/health');
+      const ping = Math.round(performance.now() - t0);
+      const data = await res.json();
+
+      // Website
+      if (data.website === 'ok') {
+        setCard('website', 'ok', 'Online', ping + 'ms response');
+      } else {
+        setCard('website', 'error', 'Degraded', 'Error detected');
+      }
+
+      // DB
+      if (data.db === 'ok') {
+        setCard('db', 'ok', 'Connected', data.dbPingMs + 'ms ping');
+      } else {
+        setCard('db', 'error', 'Disconnected', data.dbError || 'Connection failed');
+      }
+
+      // Latency
+      const lat = data.avgLatencyMs || 0;
+      const latStatus = lat === 0 ? 'loading' : lat < 200 ? 'ok' : lat < 800 ? 'warn' : 'error';
+      const latLabel = lat === 0 ? '—' : lat < 200 ? 'Fast' : lat < 800 ? 'Moderate' : 'Slow';
+      setCard('latency', latStatus, latLabel, lat + 'ms avg');
+
+      // Uptime
+      const up = data.uptimeSeconds || 0;
+      setCard('uptime', 'ok', 'Running', fmtUptime(up));
+
+      // System info
+      document.getElementById('hc-sys-loading').style.display = 'none';
+      document.getElementById('hc-sys-data').style.display = 'block';
+      document.getElementById('sys-platform').textContent   = data.platform || '—';
+      document.getElementById('sys-node').textContent       = data.nodeVersion || '—';
+      document.getElementById('sys-mem').textContent        = data.memHeapUsedMB ? data.memHeapUsedMB + ' MB' : '—';
+      document.getElementById('sys-mem-total').textContent  = data.memHeapTotalMB ? data.memHeapTotalMB + ' MB' : '—';
+      document.getElementById('sys-requests').textContent   = data.totalRequests != null ? data.totalRequests : '—';
+      document.getElementById('sys-latency').textContent    = lat + 'ms';
+      document.getElementById('sys-maintenance').textContent = data.maintenanceMode ? '🔴 ON' : '🟢 OFF';
+      document.getElementById('sys-db-ping').textContent    = data.db === 'ok' ? (data.dbPingMs + 'ms') : '❌ Failed';
+
+      // Track latency history
+      const now = new Date();
+      const label = String(now.getHours()).padStart(2,'0') + ':' +
+                    String(now.getMinutes()).padStart(2,'0') + ':' +
+                    String(now.getSeconds()).padStart(2,'0');
+      latencyHistory.push({ t: label, v: ping });
+      if (latencyHistory.length > MAX_HISTORY) latencyHistory.shift();
+      renderTimeline();
+
+      // Last checked
+      document.getElementById('hc-last-checked').innerHTML =
+        '<span class="online-dot"></span><span>Updated ' + label + '</span>';
+
+    } catch (e) {
+      setCard('website', 'error', 'Error', e.message);
+      console.error('[health] check failed', e);
+    }
+  }
+
+  async function loadSpeedInsights() {
+    try {
+      const statusRes = await fetch('/api/dev/speed-insights/status');
+      const status = await statusRes.json();
+
+      if (!status.configured) {
+        document.getElementById('hc-si-loading').style.display = 'none';
+        document.getElementById('hc-si-not-configured').style.display = 'flex';
+        document.getElementById('hc-si-status-badge').textContent = '⚠ Not configured';
+        return;
+      }
+
+      const res = await fetch('/api/dev/speed-insights?range=7d');
+      const data = await res.json();
+
+      document.getElementById('hc-si-loading').style.display = 'none';
+      if (data.error || !data.paths || !data.paths.length) {
+        document.getElementById('hc-si-not-configured').style.display = 'flex';
+        document.getElementById('hc-si-not-configured').innerHTML = '<span style="font-size:22px;">📊</span>Belum ada data Web Vitals.<br><small>Kunjungi website untuk mulai mengumpulkan data.</small>';
+        document.getElementById('hc-si-status-badge').textContent = 'No data';
+        return;
+      }
+
+      document.getElementById('hc-si-data').style.display = 'block';
+      document.getElementById('hc-si-status-badge').textContent = '✓ ' + data.total + ' records (7d)';
+      document.getElementById('hc-si-status-badge').style.color = 'var(--green)';
+
+      // Build vitals grid (summary across all paths)
+      const paths = data.paths;
+      const metrics = [
+        { key: 'lcp',  label: 'LCP',  unit: 'ms' },
+        { key: 'fcp',  label: 'FCP',  unit: 'ms' },
+        { key: 'ttfb', label: 'TTFB', unit: 'ms' },
+        { key: 'cls',  label: 'CLS',  unit: '',   isFloat: true },
+        { key: 'inp',  label: 'INP',  unit: 'ms' },
+      ];
+
+      let gridHtml = '';
+      metrics.forEach(m => {
+        const vals = paths.map(p => p[m.key] && p[m.key].median).filter(v => v != null);
+        if (!vals.length) return;
+        const avg = vals.reduce((a,b) => a+b, 0) / vals.length;
+        const display = m.isFloat ? avg.toFixed(3) : Math.round(avg);
+        const color = getSiColor(avg, m.key);
+        gridHtml += `<div class="hc-vital-item" style="border-color:${color}20;">
+          <div class="hc-vital-label">${m.label}</div>
+          <div class="hc-vital-val" style="color:${color};">${display}${m.unit}</div>
+          <div class="hc-vital-sub">${getMetricRating(m.key, avg)}</div>
+        </div>`;
+      });
+      document.getElementById('hc-vitals-grid').innerHTML = gridHtml;
+
+      // Score ring
+      const score = calcPerfScore(paths);
+      renderScore(score);
+
+    } catch (e) {
+      document.getElementById('hc-si-loading').style.display = 'none';
+      document.getElementById('hc-si-not-configured').style.display = 'flex';
+      document.getElementById('hc-si-not-configured').textContent = 'Failed to load Web Vitals: ' + e.message;
+      console.warn('[health] speed insights error', e);
+    }
+  }
+
+  function getMetricRating(metric, value) {
+    if (value == null) return '—';
+    const t = { lcp:{good:2500,poor:4000}, fcp:{good:1800,poor:3000}, ttfb:{good:800,poor:1800}, cls:{good:0.1,poor:0.25}, inp:{good:200,poor:500} }[metric];
+    if (!t) return '—';
+    if (value <= t.good) return 'Good';
+    if (value <= t.poor) return 'Needs Improvement';
+    return 'Poor';
+  }
+
+  // Init
+  runHealthCheck();
+  loadSpeedInsights();
+  setInterval(runHealthCheck, 30000);
+  setInterval(loadSpeedInsights, 60000);
+  </script>
+
+</body>
+</html>

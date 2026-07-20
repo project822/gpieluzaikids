@@ -1,14 +1,19 @@
 <%- include('header', { title: 'Home', events: typeof events !== 'undefined' ? events : null }) %>
 
 <section class="hero modern-hero reveal" id="home">
-<div class="hero-overlay">
+  <!-- Deep Ocean: Atmospheric Background Orbs -->
+  <div class="hero-overlay">
     <div
       class="layer hero-parallax"
-      style="background: radial-gradient(circle at 20% 30%, rgba(14, 165, 164, 0.12), transparent 12%); opacity: 0.9;"
+      style="background: radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.12), transparent 12%); opacity: 0.9;"
     ></div>
     <div
       class="layer hero-parallax"
-      style="background: radial-gradient(circle at 80% 70%, rgba(37, 99, 235, 0.12), transparent 12%); opacity: 0.85;"
+      style="background: radial-gradient(circle at 80% 70%, rgba(59, 130, 246, 0.08), transparent 12%); opacity: 0.85;"
+    ></div>
+    <div
+      class="layer hero-parallax"
+      style="background: radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.04), transparent 20%); opacity: 0.6;"
     ></div>
   </div>
 
@@ -34,11 +39,20 @@
       </div>
     </div>
   </div>
+
+  <!-- Deep Ocean: Scroll Indicator -->
+  <div class="scroll-indicator" aria-hidden="true">
+    <i class="fas fa-chevron-down"></i>
+    <i class="fas fa-chevron-down" style="font-size: 1rem; opacity: 0.5;"></i>
+  </div>
 </section>
 
 
 <section id="events" class="section events-section reveal">
   <div class="section-header">
+    <div class="badge" style="display: inline-flex; margin-bottom: 12px;">
+      <span class="badge-dot"></span> Event Mendatang
+    </div>
     <h2>Upcoming Events</h2>
   </div>
 
@@ -229,9 +243,9 @@
 <div id="event-modal" class="modal" aria-hidden="true">
   <div class="modal-dialog">
     <button class="modal-close" aria-label="Tutup" type="button">&times;</button>
-    <div class="modal-body">
+    <div class="modal-body" id="modal-body">
       <img id="modal-poster" src="" alt="Poster event" loading="lazy" decoding="async">
-      <div>
+      <div class="modal-body-content">
         <h3 id="modal-title"></h3>
         <p id="modal-time"></p>
         <p id="modal-location"></p>

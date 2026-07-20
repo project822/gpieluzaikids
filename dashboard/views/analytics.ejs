@@ -154,7 +154,7 @@
 
     window.refreshData = async function() {
       try {
-        const res = await fetch('/dev/api/stats?range=' + currentRange);
+        const res = await fetch('/api/dev/stats?range=' + currentRange);
         if (!res.ok) return;
         const json = await res.json();
         const pv = json.pvStats;

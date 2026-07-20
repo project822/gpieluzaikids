@@ -229,7 +229,7 @@
   // Live-refresh server metrics alongside speed insights
   async function refreshServerMetrics() {
     try {
-      const res = await fetch('/dev/api/stats');
+      const res = await fetch('/api/dev/stats');
       if (!res.ok) return;
       const json = await res.json();
       const m = json.metrics;

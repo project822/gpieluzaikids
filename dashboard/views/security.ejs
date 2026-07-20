@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Security — Dev Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/dashboard-assets/css/base.css">
+  <link rel="stylesheet" href="/dashboard-assets/css/security.css">
+
+  <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body>
+
+  <div class="dash-shell">
+    <%- include('_sidebar', { active: 'security' }) %>
+
+    <div class="main">
+      <header class="topbar">
+        <div class="topbar-heading">
+          <h1>Security</h1>
+          <p>Firewall, IP monitoring, dan deteksi bot.</p>
+        </div>
+        <div class="topbar-actions">
+          <div class="online-badge" id="sec-last-updated">
+            <span class="online-dot"></span>
+            <span>Live</span>
+          </div>
+          <button class="btn" onclick="refreshSecurity()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Refresh
+          </button>
+        </div>
+      </header>
+
+      <main class="content">
+
+        <!-- Stat Grid -->
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-label">Events (24h)</div>
+            <div class="stat-value" id="sec-events24h">
+              <%= secStats.events24h || 0 %>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Rate Limited</div>
+            <div class="stat-value" id="sec-rate-limited">
+              <%= secStats.rateLimited || 0 %>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Bot Detected</div>
+            <div class="stat-value" id="sec-bot">
+              <%= secStats.botDetected || 0 %>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Blocked IPs</div>
+            <div class="stat-value" id="sec-blocked-count">
+              <%= blockedIps ? blockedIps.length : 0 %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Firewall & Security Headers -->
+        <div class="sec-row">
+          <div class="card sec-firewall-card">
+            <div class="section-header">
+              <span>Firewall Status</span>
+              <span class="sub">Security headers &amp; protections</span>
+            </div>
+            <div class="sec-firewall-list">
+              <div class="sec-fw-item ok">
+                <div class="sec-fw-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                </div>
+                <div class="sec-fw-info">
+                  <div class="sec-fw-name">X-Content-Type-Options</div>
+                  <div class="sec-fw-val">nosniff</div>
+                </div>
+                <span class="status-pill online"><span class="dot"></span>Active</span>
+              </div>
+              <div class="sec-fw-item ok">
+                <div class="sec-fw-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+                </div>
+                <div class="sec-fw-info">
+                  <div class="sec-fw-name">X-Frame-Options</div>
+                  <div class="sec-fw-val">DENY</div>
+                </div>
+                <span class="status-pill online"><span class="dot"></span>Active</span>
+              </div>
+              <div class="sec-fw-item ok">
+                <div class="sec-fw-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <div class="sec-fw-info">
+                  <div class="sec-fw-name">X-XSS-Protection</div>
+                  <div class="sec-fw-val">1; mode=block</div>
+                </div>
+                <span class="status-pill online"><span class="dot"></span>Active</span>
+              </div>
+              <div class="sec-fw-item ok">
+                <div class="sec-fw-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101"/><path d="M10.172 13.828a4 4 0 015.656 0l4-4a4 4 0 01-5.656-5.656l-1.102 1.101"/></svg>
+                </div>
+                <div class="sec-fw-info">
+                  <div class="sec-fw-name">Referrer-Policy</div>
+                  <div class="sec-fw-val">strict-origin-when-cross-origin</div>
+                </div>
+                <span class="status-pill online"><span class="dot"></span>Active</span>
+              </div>
+              <div class="sec-fw-item ok">
+                <div class="sec-fw-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                </div>
+                <div class="sec-fw-info">
+                  <div class="sec-fw-name">Rate Limiting (Login)</div>
+                  <div class="sec-fw-val">5 attempts / 15 min — 10 min block</div>
+                </div>
+                <span class="status-pill online"><span class="dot"></span>Active</span>
+              </div>
+              <div class="sec-fw-item ok">
+                <div class="sec-fw-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                </div>
+                <div class="sec-fw-info">
+                  <div class="sec-fw-name">Session Store</div>
+                  <div class="sec-fw-val">MongoDB (persistent)</div>
+                </div>
+                <span class="status-pill online"><span class="dot"></span>Active</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Blocked IPs -->
+          <div class="card sec-blocked-card">
+            <div class="section-header">
+              <span>Blocked IPs</span>
+              <span class="sub" id="sec-blocked-total"><%= blockedIps ? blockedIps.length : 0 %> entries</span>
+            </div>
+            <div class="sec-block-add">
+              <input type="text" id="sec-ip-input" class="sec-ip-field" placeholder="Masukkan IP address...">
+              <button class="btn btn-danger" onclick="blockIp()">Block IP</button>
+            </div>
+            <div id="sec-block-feedback" class="sec-feedback" style="display:none;"></div>
+            <div id="sec-blocked-list">
+              <% if (blockedIps && blockedIps.length) { %>
+                <% blockedIps.forEach(ip => { %>
+                  <div class="sec-ip-row" id="sec-ip-<%= ip.replace(/\./g,'_').replace(/:/g,'_') %>">
+                    <span class="sec-ip-val"><%= ip %></span>
+                    <button class="sec-unblock-btn" onclick="unblockIp('<%= ip %>')">Unblock</button>
+                  </div>
+                <% }) %>
+              <% } else { %>
+                <div class="sec-empty" id="sec-blocked-empty">Belum ada IP yang diblokir.</div>
+              <% } %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top IPs (from security stats) -->
+        <div class="card" style="margin-top:16px;">
+          <div class="section-header">
+            <span>Top IPs — Security Events (7d)</span>
+            <span class="sub">IP dengan aktivitas mencurigakan terbanyak</span>
+          </div>
+          <div id="sec-top-ips">
+            <% if (secStats.topIps && secStats.topIps.length) { %>
+              <table class="sec-table">
+                <thead>
+                  <tr>
+                    <th>IP Address</th>
+                    <th>Events</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="sec-top-ips-body">
+                  <% secStats.topIps.forEach((row, i) => { %>
+                    <tr>
+                      <td class="sec-ip-cell"><%= row._id %></td>
+                      <td><span class="sec-count-badge <%= row.count > 20 ? 'high' : row.count > 5 ? 'mid' : 'low' %>"><%= row.count %></span></td>
+                      <td>
+                        <button class="sec-unblock-btn" onclick="blockIpDirect('<%= row._id %>')">Block</button>
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            <% } else { %>
+              <div class="sec-empty" style="padding:32px 20px;">Belum ada data security events dalam 7 hari terakhir.</div>
+            <% } %>
+          </div>
+        </div>
+
+        <!-- Recent Security Logs -->
+        <div class="card" style="margin-top:16px;">
+          <div class="section-header">
+            <span>Recent Security Logs</span>
+            <span class="sub" id="sec-logs-count"><%= secLogs ? secLogs.length : 0 %> entries</span>
+          </div>
+          <div id="sec-logs-wrap">
+            <% if (secLogs && secLogs.length) { %>
+              <table class="sec-table" id="sec-logs-table">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Type</th>
+                    <th>IP</th>
+                    <th>Path</th>
+                    <th>Detail</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% secLogs.slice(0, 50).forEach(log => {
+                       const ts = new Date(log.timestamp);
+                       const timeStr = String(ts.getHours()).padStart(2,'0') + ':' +
+                                       String(ts.getMinutes()).padStart(2,'0') + ':' +
+                                       String(ts.getSeconds()).padStart(2,'0') + ' ' +
+                                       String(ts.getDate()).padStart(2,'0') + '/' +
+                                       String(ts.getMonth()+1).padStart(2,'0');
+                  %>
+                    <tr>
+                      <td class="sec-ts-cell"><%= timeStr %></td>
+                      <td><span class="sec-type-badge <%= log.type %>"><%= log.type %></span></td>
+                      <td class="sec-ip-cell"><%= log.ip %></td>
+                      <td class="sec-path-cell" title="<%= log.path %>"><%= log.path %></td>
+                      <td class="sec-detail-cell"><%= log.detail || '—' %></td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            <% } else { %>
+              <div class="sec-empty" style="padding:32px 20px;">Belum ada security log. Log akan muncul saat ada aktivitas mencurigakan.</div>
+            <% } %>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+  async function blockIp() {
+    const ip = document.getElementById('sec-ip-input').value.trim();
+    if (!ip) { showBlockFeedback('Masukkan IP address terlebih dahulu.', 'error'); return; }
+    await blockIpDirect(ip);
+    document.getElementById('sec-ip-input').value = '';
+  }
+
+  async function blockIpDirect(ip) {
+    try {
+      const res = await fetch('/api/dev/security/block-ip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ip }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Gagal');
+
+      const safeId = ip.replace(/\./g,'_').replace(/:/g,'_');
+      const list = document.getElementById('sec-blocked-list');
+      const empty = document.getElementById('sec-blocked-empty');
+      if (empty) empty.remove();
+
+      if (!document.getElementById('sec-ip-' + safeId)) {
+        const row = document.createElement('div');
+        row.className = 'sec-ip-row';
+        row.id = 'sec-ip-' + safeId;
+        row.innerHTML = `<span class="sec-ip-val">${ip}</span><button class="sec-unblock-btn" onclick="unblockIp('${ip}')">Unblock</button>`;
+        list.appendChild(row);
+      }
+
+      const cnt = document.getElementById('sec-blocked-count');
+      if (cnt) cnt.textContent = (parseInt(cnt.textContent) || 0) + 1;
+      const tot = document.getElementById('sec-blocked-total');
+      if (tot) tot.textContent = (parseInt(tot.textContent) || 0) + 1 + ' entries';
+
+      showBlockFeedback('✓ IP ' + ip + ' berhasil diblokir', 'success');
+    } catch (e) {
+      showBlockFeedback('Gagal: ' + e.message, 'error');
+    }
+  }
+
+  async function unblockIp(ip) {
+    try {
+      const res = await fetch('/api/dev/security/unblock-ip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ip }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Gagal');
+
+      const safeId = ip.replace(/\./g,'_').replace(/:/g,'_');
+      const row = document.getElementById('sec-ip-' + safeId);
+      if (row) row.remove();
+
+      const cnt = document.getElementById('sec-blocked-count');
+      if (cnt) cnt.textContent = Math.max(0, (parseInt(cnt.textContent) || 1) - 1);
+      const tot = document.getElementById('sec-blocked-total');
+      if (tot) {
+        const n = Math.max(0, (parseInt(tot.textContent) || 1) - 1);
+        tot.textContent = n + ' entries';
+      }
+
+      const list = document.getElementById('sec-blocked-list');
+      if (list && !list.children.length) {
+        list.innerHTML = '<div class="sec-empty" id="sec-blocked-empty">Belum ada IP yang diblokir.</div>';
+      }
+      showBlockFeedback('✓ IP ' + ip + ' berhasil di-unblock', 'success');
+    } catch (e) {
+      showBlockFeedback('Gagal: ' + e.message, 'error');
+    }
+  }
+
+  async function refreshSecurity() {
+    try {
+      const res = await fetch('/api/dev/security/stats');
+      const data = await res.json();
+      document.getElementById('sec-events24h').textContent    = data.events24h || 0;
+      document.getElementById('sec-rate-limited').textContent = data.rateLimited || 0;
+      document.getElementById('sec-bot').textContent          = data.botDetected || 0;
+      document.getElementById('sec-blocked-count').textContent = data.blockedIpCount || 0;
+
+      const now = new Date();
+      const t = String(now.getHours()).padStart(2,'0') + ':' +
+                String(now.getMinutes()).padStart(2,'0') + ':' +
+                String(now.getSeconds()).padStart(2,'0');
+      document.getElementById('sec-last-updated').innerHTML =
+        '<span class="online-dot"></span><span>Updated ' + t + '</span>';
+    } catch (e) {
+      console.warn('[security] refresh failed', e);
+    }
+  }
+
+  function showBlockFeedback(msg, type) {
+    const el = document.getElementById('sec-block-feedback');
+    el.textContent = msg;
+    el.className = 'sec-feedback ' + type;
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 3500);
+  }
+
+  setInterval(refreshSecurity, 30000);
+  </script>
+
+</body>
+</html>
