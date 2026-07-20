@@ -195,9 +195,20 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: MAX_POSTER_SIZE_BYTES },
   fileFilter: (req, file, cb) => {
-    if (!file.mimetype || !file.mimetype.startsWith("image/")) {
-      return cb(new Error("File harus berupa gambar (jpg, png, webp, dst)."));
+    // Hanya izinkan format gambar yang spesifik: JPEG, PNG, WebP
+    const allowedMimes = ["image/jpeg", "image/png", "image/webp"];
+    const allowedExts = /\.(jpe?g|png|webp)$/i;
+    
+    if (!file.mimetype || !allowedMimes.includes(file.mimetype)) {
+      return cb(new Error("Format file tidak didukung. Hanya JPG, PNG, dan WebP yang diperbolehkan."));
     }
+    
+    // Cek juga ekstensi file sebagai lapisan validasi tambahan
+    const originalName = file.originalname || "";
+    if (!allowedExts.test(originalName)) {
+      return cb(new Error("Ekstensi file tidak didukung. Hanya .jpg, .jpeg, .png, dan .webp yang diperbolehkan."));
+    }
+    
     cb(null, true);
   },
 });

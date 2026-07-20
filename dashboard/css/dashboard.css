@@ -173,6 +173,17 @@
   .db-banner { flex-direction: column; }
   .db-banner-item { min-width: 100%; }
 }
-@media (max-width: 520px) {
+@media (max-width: 640px) {
+  .db-banner-item { padding: 10px 12px; min-width: 100%; }
+  .db-banner-label { font-size: 10px; }
+  .db-banner-val { font-size: 11px; }
+  .db-quick-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .db-quick-card { padding: 12px 8px; font-size: 11px; }
+  .db-quick-card svg { width: 16px; height: 16px; }
+  .db-two-col { grid-template-columns: 1fr; gap: 10px; }
+  .db-admin-name { font-size: 12px; }
+  .db-si-row { font-size: 11.5px; padding: 6px 0; }
+}
+@media (max-width: 400px) {
   .db-quick-grid { grid-template-columns: repeat(2, 1fr); }
 }

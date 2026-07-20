@@ -203,6 +203,10 @@
           <td style="color: var(--muted);">${lastOnline}</td>
           <td>
             <div class="admin-actions-cell">
+              <button class="admin-action-btn force-logout" onclick="openForceLogoutModal('${a.username}')" title="Logout dari semua perangkat">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h10m0 0l-3-3m3 3l-3 3M4 5v14"/></svg>
+                Logout All Devices
+              </button>
               <button class="admin-action-btn reset" onclick="openResetPasswordModal('${a.username}')">Reset Password</button>
               <button class="admin-action-btn delete" onclick="deleteAdmin('${a.username}')">Delete</button>
             </div>
