@@ -215,5 +215,54 @@
     }
   }
 
-  setInterval(refreshAdminTable, 15000);
+  // ── FORCE LOGOUT (single admin) ──
+  let forceLogoutTarget = '';
+
+  window.openForceLogoutModal = function(username) {
+    forceLogoutTarget = username;
+    if (confirm('Yakin ingin memutus sesi admin "' + username + '"? Admin akan di-logout dari semua perangkat.')) {
+      submitForceLogout(username);
+    }
+  };
+
+  window.submitForceLogout = async function(username) {
+    try {
+      const res = await fetch('/dev/api/admins/force-logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        refreshAdminTable();
+      } else {
+        alert(data.error || 'Gagal memutus sesi admin');
+      }
+    } catch (e) {
+      alert('Network error');
+    }
+  };
+
+  // ── FORCE LOGOUT ALL ──
+  window.forceLogoutAll = async function() {
+    if (!confirm('Yakin ingin memutus sesi SEMUA admin? Semua admin akan di-logout dari semua perangkat dan harus login ulang.')) return;
+    try {
+      const res = await fetch('/dev/api/admins/force-logout-all', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await res.json();
+      if (data.ok) {
+        alert('Semua admin telah di-logout. ' + (data.sessionsDeleted || 0) + ' sesi dihapus.');
+        refreshAdminTable();
+      } else {
+        alert(data.error || 'Gagal memutus sesi admin');
+      }
+    } catch (e) {
+      alert('Network error');
+    }
+  };
+
+  // More frequent refresh: every 5 seconds for real-time status
+  setInterval(refreshAdminTable, 5000);
 </script>

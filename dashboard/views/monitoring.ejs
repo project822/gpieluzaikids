@@ -62,6 +62,10 @@
             <span class="sub">
               <span id="si-records-count" style="display:none;"></span>
               <span id="si-status-badge"></span>
+              <button class="btn" onclick="openSiConfigModal()" style="margin-left:8px;font-size:11px;padding:4px 10px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                Config
+              </button>
               <a href="https://vercel.com/dashboard" target="_blank" rel="noopener" style="margin-left:10px;color:var(--blue);text-decoration:none;font-weight:700;">Buka di Vercel ↗</a>
             </span>
           </div>
@@ -243,6 +247,120 @@
     }
   }
   setInterval(refreshServerMetrics, 30000);
+
+  // ── SPEED INSIGHTS CONFIG MODAL ──
+  let siConfigOverlay = null;
+  let siConfigModalHtml = `
+  <div class="modal-overlay" id="si-config-modal">
+    <div class="modal">
+      <div class="modal-title">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Speed Insights Configuration
+      </div>
+      <div style="margin-bottom:14px;font-size:12.5px;color:var(--muted);line-height:1.6;">
+        Masukkan token Vercel dan Project ID untuk mengaktifkan Speed Insights.<br>
+        <strong style="color:var(--text);">Token akan tersimpan di database</strong> dan tidak perlu di-set sebagai environment variable.
+      </div>
+      <div class="modal-error" id="si-config-error"></div>
+      <div class="modal-success" id="si-config-success"></div>
+      <div class="modal-field">
+        <label for="si-vercel-token">Vercel Token</label>
+        <input id="si-vercel-token" type="password" placeholder="Paste Vercel access token" autocomplete="off">
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Buat di <a href="https://vercel.com/account/tokens" target="_blank" rel="noopener" style="color:var(--blue);">vercel.com/account/tokens ↗</a></div>
+      </div>
+      <div class="modal-field">
+        <label for="si-project-id">Project ID</label>
+        <input id="si-project-id" type="text" placeholder="prj_xxxxxxxxxxxx" autocomplete="off">
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Dapat dari <strong>Vercel Dashboard → Project → Settings → General → Project ID</strong></div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn" onclick="closeSiConfigModal()">Cancel</button>
+        <button class="modal-btn primary" onclick="submitSiConfig()">Save Configuration</button>
+      </div>
+    </div>
+  </div>`;
+
+  function injectSiModal() {
+    if (!document.getElementById('si-config-modal')) {
+      const div = document.createElement('div');
+      div.innerHTML = siConfigModalHtml;
+      document.body.appendChild(div.firstElementChild);
+      const overlay = document.getElementById('si-config-modal');
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeSiConfigModal();
+      });
+    }
+  }
+
+  window.openSiConfigModal = async function() {
+    injectSiModal();
+    document.getElementById('si-config-modal').classList.add('active');
+    document.getElementById('si-config-error').classList.remove('show');
+    document.getElementById('si-config-error').textContent = '';
+    document.getElementById('si-config-success').classList.remove('show');
+    document.getElementById('si-config-success').textContent = '';
+
+    // Load existing config
+    try {
+      const res = await fetch('/api/dev/speed-insights/config');
+      const data = await res.json();
+      document.getElementById('si-project-id').value = data.vercelProjectId || '';
+      if (data.hasToken) {
+        document.getElementById('si-vercel-token').placeholder = '•••••••• (already configured)';
+      }
+    } catch (_) {}
+  };
+
+  window.closeSiConfigModal = function() {
+    const modal = document.getElementById('si-config-modal');
+    if (modal) {
+      modal.classList.remove('active');
+      document.getElementById('si-vercel-token').value = '';
+      document.getElementById('si-project-id').value = '';
+    }
+  };
+
+  window.submitSiConfig = async function() {
+    const token = document.getElementById('si-vercel-token').value.trim();
+    const projectId = document.getElementById('si-project-id').value.trim();
+    const errorEl = document.getElementById('si-config-error');
+    const successEl = document.getElementById('si-config-success');
+    errorEl.classList.remove('show');
+    successEl.classList.remove('show');
+
+    // Allow empty token (if already configured) but require projectId
+    if (!token && !projectId) {
+      errorEl.textContent = 'Setidaknya Project ID harus diisi';
+      errorEl.classList.add('show');
+      return;
+    }
+
+    try {
+      const payload = {};
+      if (token) payload.vercelToken = token;
+      if (projectId) payload.vercelProjectId = projectId;
+
+      const res = await fetch('/api/dev/speed-insights/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.ok) {
+        successEl.textContent = 'Konfigurasi Speed Insights berhasil disimpan!';
+        successEl.classList.add('show');
+        document.getElementById('si-vercel-token').value = '';
+        closeSiConfigModal();
+        loadSpeedInsights();
+      } else {
+        errorEl.textContent = data.error || 'Gagal menyimpan konfigurasi';
+        errorEl.classList.add('show');
+      }
+    } catch (e) {
+      errorEl.textContent = 'Network error';
+      errorEl.classList.add('show');
+    }
+  };
   </script>
 
 </body>

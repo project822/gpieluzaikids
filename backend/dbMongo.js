@@ -485,6 +485,90 @@ async function unblockIp(ip) {
   );
 }
 
+// ───────────── Force Admin Logout ─────────────
+// Menghapus session admin tertentu dari collection sessions (connect-mongo)
+// serta mematikan sessionActive di adminStatus. Ini effect-nya mirip dengan
+// "kick" pengguna — sesi yang sekarang akan jadi invalid, sehingga request
+// berikutnya dari admin tsb akan ditolak oleh ensureAuth, redirect ke login.
+
+async function forceLogoutAdmin(username) {
+  const d = await connect();
+  // Hapus session dari collection sessions (connect-mongo)
+  // Session doc disimpan dengan key: session:<sid>
+  // Kita perlu cari session yang session JSON-nya mengandung username ini
+  const sessionsCol = d.collection("sessions");
+  const allSessions = await sessionsCol.find({}).toArray();
+  let deleted = 0;
+  for (const s of allSessions) {
+    try {
+      const data = typeof s.session === "string" ? JSON.parse(s.session) : s.session;
+      if (data && data.user && data.user.username === username) {
+        await sessionsCol.deleteOne({ _id: s._id });
+        deleted++;
+      }
+      // Also check devUser
+      if (data && data.devUser && data.devUser.username === username) {
+        await sessionsCol.deleteOne({ _id: s._id });
+        deleted++;
+      }
+    } catch (_) {
+      // skip sessions that can't be parsed
+    }
+  }
+  // Mark admin as offline
+  await d.collection("adminStatus").updateOne(
+    { username },
+    { $set: { sessionActive: false, updatedAt: new Date().toISOString() } },
+  );
+  return deleted;
+}
+
+async function forceLogoutAllAdmins() {
+  const d = await connect();
+  // Hapus semua session yang memiliki user (admin) dataset
+  const sessionsCol = d.collection("sessions");
+  const allSessions = await sessionsCol.find({}).toArray();
+  let deleted = 0;
+  for (const s of allSessions) {
+    try {
+      const data = typeof s.session === "string" ? JSON.parse(s.session) : s.session;
+      if (data && (data.user || data.devUser)) {
+        await sessionsCol.deleteOne({ _id: s._id });
+        deleted++;
+      }
+    } catch (_) {}
+  }
+  // Mark all admins offline
+  await d.collection("adminStatus").updateMany(
+    {},
+    { $set: { sessionActive: false, updatedAt: new Date().toISOString() } },
+  );
+  return deleted;
+}
+
+// ───────────── Speed Insights Token Config ─────────────
+
+async function getSpeedInsightsConfig() {
+  const d = await connect();
+  const doc = await d.collection("settings").findOne({ _id: "speedInsightsConfig" });
+  return doc || { vercelToken: "", vercelProjectId: "", updatedAt: null };
+}
+
+async function saveSpeedInsightsConfig({ vercelToken, vercelProjectId }) {
+  const d = await connect();
+  await d.collection("settings").updateOne(
+    { _id: "speedInsightsConfig" },
+    {
+      $set: {
+        vercelToken: vercelToken || "",
+        vercelProjectId: vercelProjectId || "",
+        updatedAt: new Date().toISOString(),
+      },
+    },
+    { upsert: true },
+  );
+}
+
 module.exports = {
   connect,
   getClient,
@@ -514,4 +598,8 @@ module.exports = {
   getBlockedIps,
   blockIp,
   unblockIp,
+  forceLogoutAdmin,
+  forceLogoutAllAdmins,
+  getSpeedInsightsConfig,
+  saveSpeedInsightsConfig,
 };

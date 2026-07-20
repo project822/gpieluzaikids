@@ -698,6 +698,30 @@ app.get(
   }),
 );
 
+// ============== DEV API: Force Logout a specific admin ==============
+app.post(
+  "/dev/api/admins/force-logout",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
+    const { username } = req.body || {};
+    if (!username) {
+      return res.status(400).json({ error: "Username wajib diisi" });
+    }
+    const deleted = await db.forceLogoutAdmin(username);
+    return res.json({ ok: true, username, sessionsDeleted: deleted });
+  }),
+);
+
+// ============== DEV API: Force Logout ALL admins ==============
+app.post(
+  "/dev/api/admins/force-logout-all",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
+    const total = await db.forceLogoutAllAdmins();
+    return res.json({ ok: true, sessionsDeleted: total });
+  }),
+);
+
 // Events management
 app.get(
   "/admin/events",
@@ -856,17 +880,72 @@ app.get(
   }),
 );
 
-app.get("/api/dev/speed-insights/status", ensureDevAuth, (req, res) => {
-  const token = process.env.VERCEL_TOKEN || "";
-  const projectId = process.env.VERCEL_PROJECT_ID || "";
+app.get("/api/dev/speed-insights/status", ensureDevAuth, asyncHandler(async (req, res) => {
+  // Check environment variables first, then fallback to DB config
+  const envToken = process.env.VERCEL_TOKEN || "";
+  const envProjectId = process.env.VERCEL_PROJECT_ID || "";
+  
+  // Try to get stored config from DB
+  let dbConfig = { vercelToken: "", vercelProjectId: "" };
+  try {
+    dbConfig = await db.getSpeedInsightsConfig();
+  } catch (_) {}
+  
+  const token = envToken || dbConfig.vercelToken;
+  const projectId = envProjectId || dbConfig.vercelProjectId;
+  
   return res.json({
     configured: !!(token && projectId),
     hasToken: !!token,
     hasProjectId: !!projectId,
+    source: envToken ? "env" : (dbConfig.vercelToken ? "db" : "none"),
   });
-});
+}));
+
+// ============== SPEED INSIGHTS CONFIG API (save tokens to DB) ==============
+app.post(
+  "/api/dev/speed-insights/config",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
+    const { vercelToken, vercelProjectId } = req.body || {};
+    await db.saveSpeedInsightsConfig({
+      vercelToken: vercelToken || "",
+      vercelProjectId: vercelProjectId || "",
+    });
+    return res.json({ ok: true });
+  }),
+);
+
+app.get(
+  "/api/dev/speed-insights/config",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
+    const config = await db.getSpeedInsightsConfig();
+    // Never expose full token - show only masked version
+    const maskedToken = config.vercelToken
+      ? config.vercelToken.substring(0, 4) + "••••" + config.vercelToken.substring(config.vercelToken.length - 4)
+      : "";
+    return res.json({
+      vercelToken: config.vercelToken ? maskedToken : "",
+      hasToken: !!config.vercelToken,
+      vercelProjectId: config.vercelProjectId,
+      updatedAt: config.updatedAt,
+    });
+  }),
+);
 
 // ============== DEV DASHBOARD: NEW PAGES ==============
+
+// ============== DASHBOARD LANDING PAGE ==============
+// Halaman utama dashboard — ringkasan sistem dengan status banner,
+// statistik real-time, online admins, dan quick actions.
+app.get(
+  "/dev/dashboard/landing",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
+    return res.render("dashboard", {});
+  }),
+);
 
 // Health Check page
 app.get(

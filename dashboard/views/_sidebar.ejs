@@ -1,6 +1,6 @@
 <!-- ============================================================
      SIDEBAR — included by every dashboard page.
-     Expects local var `active` = 'overview' | 'analytics' | 'monitoring' | 'admins'
+     Expects local var `active` = 'dashboard' | 'overview' | 'analytics' | 'monitoring' | 'admins'
                                   | 'health' | 'maintenance' | 'security'
      ============================================================ -->
 <aside class="sidebar">
@@ -14,6 +14,13 @@
   </a>
 
   <nav class="sidebar-nav">
+
+    <a class="sidebar-link <%= active === 'dashboard' ? 'active' : '' %>" href="/dev/dashboard/landing">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+      </svg>
+      Dashboard
+    </a>
 
     <a class="sidebar-link <%= active === 'overview' ? 'active' : '' %>" href="/dev/dashboard">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
