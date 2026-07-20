@@ -70,8 +70,17 @@
             <div class="events-poster-col">
               <% if (event.poster) { %>
                 <% if (idx === 0) { %>
-                  <!-- Slide pertama = kemungkinan besar LCP element: load eager, JANGAN lazy -->
-                  <div class="events-poster" style="aspect-ratio: 9 / 16; background-image: url('<%= event.poster %>');"></div>
+                  <!-- Slide pertama = LCP element: pakai <img> asli (bukan CSS
+                       background-image) + fetchpriority=high supaya browser
+                       pasti mendeteksi & memprioritaskan ini sebagai LCP. -->
+                  <div class="events-poster" style="aspect-ratio: 9 / 16; padding: 0; overflow: hidden;">
+                    <img
+                      src="<%= event.poster %>"
+                      alt="Poster <%= event.title %>"
+                      fetchpriority="high"
+                      decoding="async"
+                      style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                  </div>
                 <% } else { %>
                   <!-- Slide selanjutnya: lazy via IntersectionObserver (lihat script di bawah) -->
                   <div class="events-poster events-poster-lazy" style="aspect-ratio: 9 / 16;" data-bg="<%= event.poster %>"></div>
@@ -257,102 +266,12 @@
 </div>
 
 <script>
-// ── Function to open event detail modal ──
-window.openEventDetail = async function(eventId) {
-  const modal = document.getElementById('event-modal');
-  const posterImg = document.getElementById('modal-poster');
-  const titleEl = document.getElementById('modal-title');
-  const timeEl = document.getElementById('modal-time');
-  const locationEl = document.getElementById('modal-location');
-  const descEl = document.getElementById('modal-desc');
-  const actionsEl = document.getElementById('modal-actions');
-
-  // Reset modal
-  posterImg.style.display = 'none';
-  posterImg.src = '';
-  titleEl.textContent = 'Loading...';
-  timeEl.textContent = '';
-  locationEl.textContent = '';
-  descEl.textContent = '';
-  actionsEl.innerHTML = '';
-
-  try {
-    const res = await fetch('/api/events/' + eventId);
-    if (!res.ok) throw new Error('Event not found');
-    const event = await res.json();
-
-    titleEl.textContent = event.title || '';
-
-    // Format date if it's YYYY-MM-DD
-    let dayStr = event.day || '';
-    const m1 = String(dayStr).match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (m1) {
-      const d = new Date(Number(m1[1]), Number(m1[2]) - 1, Number(m1[3]));
-      if (!Number.isNaN(d.getTime())) {
-        const dd = String(d.getDate()).padStart(2, '0');
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const yyyy = d.getFullYear();
-        dayStr = dd + '/' + mm + '/' + yyyy;
-      }
-    }
-
-    let timeHtml = '';
-    if (dayStr) timeHtml += '<strong>Tanggal:</strong> ' + dayStr;
-    if (event.time) timeHtml += (timeHtml ? ' &middot; ' : '') + '<strong>Jam:</strong> ' + event.time;
-    timeEl.innerHTML = timeHtml || '';
-
-    locationEl.innerHTML = event.location ? '<strong>Lokasi:</strong> ' + event.location : '';
-
-    descEl.textContent = event.description || '';
-
-    if (event.poster) {
-      posterImg.src = event.poster;
-      posterImg.style.display = 'block';
-    }
-
-    if (event.googleForm) {
-      actionsEl.innerHTML = '<a class="btn primary" href="' + event.googleForm + '" target="_blank" rel="noopener"><i class="fas fa-external-link-alt"></i> Daftar</a>';
-    }
-
-    modal.setAttribute('aria-hidden', 'false');
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-  } catch (e) {
-    titleEl.textContent = 'Gagal memuat detail event';
-    console.warn('[event-modal]', e);
-  }
-};
-
-// Close modal
-document.addEventListener('DOMContentLoaded', function() {
-  const modal = document.getElementById('event-modal');
-  if (!modal) return;
-  
-  const closeBtn = modal.querySelector('.modal-close');
-  if (closeBtn) {
-    closeBtn.addEventListener('click', function() {
-      modal.setAttribute('aria-hidden', 'true');
-      modal.classList.remove('active');
-      document.body.style.overflow = '';
-    });
-  }
-  
-  modal.addEventListener('click', function(e) {
-    if (e.target === modal) {
-      modal.setAttribute('aria-hidden', 'true');
-      modal.classList.remove('active');
-      document.body.style.overflow = '';
-    }
-  });
-
-  // Bind all view-details buttons
-  document.querySelectorAll('.view-details').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      const id = btn.getAttribute('data-id');
-      if (id) window.openEventDetail(id);
-    });
-  });
-});
+// Modal detail event: seluruh logic (fetch, isi konten, buka/tutup)
+// ditangani SATU tempat saja yaitu main.js (bagian "7) Event modal").
+// Dulu ada script duplikat di sini yang bind ke tombol .view-details
+// yang sama → setiap klik memicu 2 fetch + 2 penulisan DOM sekaligus,
+// menyebabkan race condition (poster kadang tak muncul, teks acak).
+// JANGAN tambahkan handler modal lain di file ini.
 
 (function () {
   // Lazy-load poster event (selain slide pertama) pakai IntersectionObserver.

@@ -265,3 +265,9 @@ input:focus + svg,
   text-align: center;
   z-index: 1;
 }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 400px) {
+  .card { padding: 28px 22px 24px; border-radius: 14px; }
+  .logo-area { margin-bottom: 24px; }
+}

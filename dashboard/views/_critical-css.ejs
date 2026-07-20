@@ -1,60 +1,90 @@
 <style>
 /* ── Critical: layout shell & sidebar ── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--navy:#0F172A;--navy-2:#16213A;--navy-hover:#1E293B;--white:#FFF;--bg:#F1F5F9;--surface:#FFF;--border:#E2E8F0;--border-2:#EDF1F7;--text:#0F172A;--muted:#64748B;--muted-2:#94A3B8;--blue:#3B82F6;--blue-dark:#2563EB;--blue-bg:rgba(59,130,246,0.10);--green:#16A34A;--green-bg:rgba(22,163,74,0.10);--red:#DC2626;--red-bg:rgba(220,38,38,0.10);--orange:#D97706;--orange-bg:rgba(217,119,6,0.10);--radius:12px;--shadow-sm:0 1px 2px rgba(15,23,42,0.04);--shadow-md:0 4px 16px rgba(15,23,42,0.06)}
+:root{--navy:#0F172A;--navy-2:#16213A;--navy-hover:#1E293B;--white:#FFF;--bg:#F1F5F9;--surface:#FFF;--border:#E2E8F0;--border-2:#EDF1F7;--text:#0F172A;--muted:#64748B;--muted-2:#94A3B8;--blue:#3B82F6;--blue-dark:#2563EB;--blue-bg:rgba(59,130,246,0.10);--green:#16A34A;--green-bg:rgba(22,163,74,0.10);--red:#DC2626;--red-bg:rgba(220,38,38,0.10);--orange:#D97706;--orange-bg:rgba(217,119,6,0.10);--radius:12px;--shadow-sm:0 1px 2px rgba(15,23,42,0.04);--shadow-md:0 4px 16px rgba(15,23,42,0.06);--sidebar-w:250px}
 html,body{height:100%}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.55}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.55;-webkit-text-size-adjust:100%}
 a{color:inherit}
-.dash-shell{display:flex;min-height:100vh}
-.sidebar{width:250px;flex-shrink:0;background:var(--navy);color:#E2E8F0;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;padding:20px 14px}
-.main{margin-left:250px;flex:1;min-width:0}
+.dash-shell{display:flex;min-height:100vh;min-height:100dvh}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--navy);color:#E2E8F0;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;padding:20px 14px}
+.main{margin-left:var(--sidebar-w);flex:1;min-width:0}
 .topbar{position:sticky;top:0;z-index:90;background:var(--surface);border-bottom:1px solid var(--border);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
 .content{padding:24px 28px 48px;max-width:1280px}
 .btn,.select-btn{font-family:inherit}
 .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm)}
-@media(max-width:900px){
-  .sidebar{position:static;width:100%;flex-direction:row;align-items:center;overflow-x:auto;padding:12px 14px;height:auto}
-  .main{margin-left:0}.dash-shell{flex-direction:column}
-  .stat-grid{grid-template-columns:1fr 1fr}
-}
-@media(max-width:520px){
-  .stat-grid{grid-template-columns:1fr}.content{padding:18px 16px 40px}.topbar{padding:14px 16px}
-}
-/* FOUT mitigation: system font stack fallback, Inter loads async */
 
-/* ── Mobile responsive additions ── */
-@media(max-width:640px){
-  .sidebar{position:fixed;transform:translateX(-100%);transition:transform 0.25s cubic-bezier(0.2,0.9,0.2,1);z-index:200;width:260px;height:100vh;overflow-y:auto}
-  .sidebar.open{transform:translateX(0)}
-  .main{margin-left:0}
-  .topbar{padding:12px 14px;flex-wrap:nowrap;overflow-x:auto;gap:6px}
-  .topbar-heading h1{font-size:15px;white-space:nowrap}
-  .topbar-heading p{display:none}
-  .content{padding:14px 12px 40px}
-  .stat-grid{grid-template-columns:1fr 1fr;gap:8px}
-  .stat-card{padding:12px 14px}
-  .stat-value{font-size:20px}
-  .stat-label{font-size:10.5px}
-  .sidebar-logo-text span{display:none}
-}
-@media(max-width:400px){
-  .stat-grid{grid-template-columns:1fr}
-  .topbar-actions .online-badge{font-size:11px;padding:5px 8px}
-  .topbar-actions .btn{font-size:11px;padding:6px 10px}
-}
+/* ── Utility: horizontal-scrolling table wrapper (mobile) ──
+   Pakai <div class="table-scroll">...<table>...</table></div> supaya
+   tabel lebar tidak mendorong seluruh halaman melebar / ke-squish di HP. */
+.table-scroll{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.table-scroll > table{width:100%}
 
-/* ── Hamburger button ── */
+/* ── Hamburger button (dipakai di semua halaman dashboard) ── */
 .hamburger{display:none}
-@media(max-width:640px){
-  .hamburger{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:none;background:transparent;color:var(--text);cursor:pointer;padding:0;flex-shrink:0;border-radius:6px}
-  .hamburger:hover{background:var(--bg)}
-  .hamburger svg{width:20px;height:20px}
-}
-/* ── Sidebar overlay ── */
+.hamburger:hover{background:var(--bg)}
+.hamburger svg{width:20px;height:20px}
+
+/* ── Sidebar overlay (mobile) ── */
 .sidebar-overlay{display:none}
-@media(max-width:640px){
-  .sidebar-overlay{display:block;position:fixed;inset:0;background:rgba(15,23,42,0.5);z-index:199;opacity:0;pointer-events:none;transition:opacity 0.25s}
-  .sidebar-overlay.show{opacity:1;pointer-events:auto}
+
+/* ============================================================
+   SATU breakpoint konsisten untuk shell: di bawah 960px sidebar
+   SELALU jadi off-canvas drawer yang dibuka lewat hamburger —
+   tidak ada lagi mode "bar horizontal" perantara yang bikin
+   bingung arah navigasinya di tablet/HP landscape.
+   ============================================================ */
+@media (max-width: 960px) {
+  .sidebar{
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0.2,0.9,0.2,1);
+    width: min(280px, 84vw);
+    height: 100vh;
+    height: 100dvh;
+    overflow-y: auto;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+  .sidebar.open{ transform: translateX(0); }
+  .main{ margin-left: 0; }
+  .hamburger{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:36px;height:36px;border:none;background:transparent;color:var(--text);
+    cursor:pointer;padding:0;flex-shrink:0;border-radius:8px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .sidebar-overlay{
+    display:block;position:fixed;inset:0;background:rgba(15,23,42,0.5);
+    z-index:199;opacity:0;pointer-events:none;transition:opacity 0.25s;
+  }
+  .sidebar-overlay.show{ opacity:1; pointer-events:auto; }
+
+  .topbar{ padding:14px 16px; gap:10px; }
+  .topbar-heading{ display:flex; align-items:center; gap:10px; min-width:0; }
+  .topbar-heading h1{ font-size:16px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .topbar-heading p{ display:none; }
+  .topbar-actions{ flex-wrap:wrap; gap:8px; }
+  .content{ padding:16px 14px 40px; }
+  .stat-grid{ grid-template-columns:1fr 1fr; gap:10px; }
+}
+
+@media (max-width: 520px) {
+  .stat-grid{ grid-template-columns:1fr; }
+  .content{ padding:14px 12px 40px; }
+  .topbar{ padding:12px 14px; }
+  .topbar-actions .btn,.topbar-actions .online-badge{ font-size:11.5px; padding:6px 10px; }
+}
+
+/* ── Generic modal safety net for mobile (works alongside each
+   page's own modal.css; only kicks in on small screens) ── */
+@media (max-width: 640px) {
+  .modal-overlay{ padding:12px; align-items:flex-end !important; }
+  .modal-overlay .modal{
+    width:100% !important;
+    max-width:100% !important;
+    max-height:88vh;
+    overflow-y:auto;
+  }
+  .modal-actions{ flex-direction:column-reverse; gap:8px; }
+  .modal-actions .modal-btn{ width:100%; }
 }
 </style>

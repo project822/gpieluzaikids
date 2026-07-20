@@ -10,6 +10,10 @@
 html {
   min-height: 100%;
   scroll-behavior: smooth;
+  /* Fallback warna solid: mencegah "flash" putih saat overscroll/rubber-band
+     di mobile Safari & Chrome-Android, karena warna ini yang terlihat
+     sebelum body ter-render / saat bounce melewati batas dokumen. */
+  background-color: var(--bg);
 }
 
 body {
@@ -17,7 +21,16 @@ body {
   font-family: var(--font-body);
   color: var(--on-surface);
   background: var(--bg-gradient);
-  background-attachment: fixed;
+  /* `background-attachment: fixed` dulu dipakai supaya gradient tidak
+     ikut ter-scroll, TAPI ini penyebab utama scroll jank: browser mobile
+     harus repaint background di setiap frame scroll, dan ini bentrok
+     parah dengan puluhan elemen backdrop-filter (glass) di halaman ini
+     (setiap satu harus menghitung ulang blur-nya tiap frame). Gradiennya
+     didesain memanjang mengikuti tinggi dokumen jadi visualnya tetap
+     mulus tanpa attachment:fixed. */
+  background-attachment: scroll;
+  /* Mencegah "bounce" scroll memicu efek/scroll tambahan yang terasa berat */
+  overscroll-behavior-y: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

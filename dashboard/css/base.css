@@ -466,26 +466,15 @@ a { color: inherit; }
 .modal-success { background: var(--green-bg); border: 1px solid rgba(22,163,74,0.25); color: var(--green); }
 .modal-success.show { display: block; }
 
-/* ── RESPONSIVE ── */
-@media (max-width: 900px) {
-  .sidebar {
-    position: static;
-    width: 100%;
-    flex-direction: row;
-    align-items: center;
-    overflow-x: auto;
-    padding: 12px 14px;
-    height: auto;
-  }
-  .sidebar-logo { padding: 0 10px 0 0; }
-  .sidebar-nav { flex-direction: row; }
-  .sidebar-footer { display: none; }
-  .dash-shell { flex-direction: column; }
-  .main { margin-left: 0; }
-  .stat-grid { grid-template-columns: 1fr 1fr; }
-}
+/* ── RESPONSIVE ──
+   Catatan: perilaku sidebar/drawer di mobile (posisi, transform,
+   hamburger, overlay) SEKARANG SEPENUHNYA diatur oleh _critical-css.ejs
+   (satu sumber kebenaran, konsisten di semua halaman). Jangan tambahkan
+   lagi override posisi .sidebar/.main di sini — karena base.css dimuat
+   setelah _critical-css.ejs di <head>, aturan apa pun di sini untuk
+   selector yang sama akan MENANG di cascade dan membatalkan drawer.
+   Yang tersisa di bawah ini cuma penyesuaian kepadatan konten yang
+   tidak menyentuh posisi sidebar. */
 @media (max-width: 520px) {
   .stat-grid { grid-template-columns: 1fr; }
-  .content { padding: 18px 16px 40px; }
-  .topbar { padding: 14px 16px; }
 }

@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <%- include('_critical-css') %>
   <link rel="stylesheet" href="/dashboard-assets/css/base.css">
   <link rel="stylesheet" href="/dashboard-assets/css/health.css">
 
@@ -21,6 +22,9 @@
     <div class="main">
       <header class="topbar">
         <div class="topbar-heading">
+          <button class="hamburger" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
           <h1>Health Check</h1>
           <p>Status real-time database, website, dan performa sistem.</p>
         </div>

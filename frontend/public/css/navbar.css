@@ -8,6 +8,12 @@
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   transition: background 260ms ease, border-color 260ms ease;
+  /* Paksa elemen ini jadi compositing layer sendiri: mencegah browser
+     mengulang perhitungan blur terhadap seluruh halaman di setiap frame
+     scroll (ini elemen sticky yang paling sering "terlihat" pindah relatif
+     terhadap konten, jadi paling mahal kalau tidak di-layer-kan). */
+  transform: translateZ(0);
+  will-change: background;
 }
 
 .nav.shrink {

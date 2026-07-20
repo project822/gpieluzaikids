@@ -191,13 +191,28 @@
         const modalDesc = document.getElementById("modal-desc");
         const modalActions = document.getElementById("modal-actions");
 
-        function openModal() { modal.setAttribute("aria-hidden", "false"); }
-        function closeModal() { modal.setAttribute("aria-hidden", "true"); }
+        function openModal() {
+          modal.setAttribute("aria-hidden", "false");
+          document.body.style.overflow = "hidden";
+        }
+        function closeModal() {
+          modal.setAttribute("aria-hidden", "true");
+          document.body.style.overflow = "";
+        }
 
         document.querySelectorAll(".view-details").forEach((btn) => {
           btn.addEventListener("click", async () => {
             const id = btn.dataset.id;
             if (!id) return;
+
+            if (modalTitle) modalTitle.textContent = "Loading...";
+            if (modalTime) modalTime.textContent = "";
+            if (modalLocation) modalLocation.textContent = "";
+            if (modalDesc) modalDesc.textContent = "";
+            if (modalActions) modalActions.innerHTML = "";
+            if (modalPoster) { modalPoster.style.display = "none"; modalPoster.src = ""; }
+            openModal();
+
             try {
               const res = await fetch(`/api/events/${id}`);
               if (!res.ok) throw new Error("not found");
@@ -246,6 +261,7 @@
               }
               openModal();
             } catch (err) {
+              if (modalTitle) modalTitle.textContent = "Gagal memuat detail event";
               console.error("[modal]", err);
             }
           });

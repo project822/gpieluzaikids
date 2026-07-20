@@ -51,7 +51,8 @@
             <span>Admin Accounts</span>
             <span class="sub"><%= admins ? admins.length : 0 %> total</span>
           </div>
-          <table class="admin-table">
+          <div class="table-scroll" style="overflow-x:auto;">
+            <table class="admin-table">
             <thead>
               <tr>
                 <th>Username</th>
@@ -97,6 +98,7 @@
               <% } %>
             </tbody>
           </table>
+          </div>
         </div>
 
       </main>
