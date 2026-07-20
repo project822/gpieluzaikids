@@ -74,11 +74,11 @@ html.theme-light .nav.shrink {
   gap: 6px;
   min-height: 38px;
   padding: 8px 12px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
   color: var(--on-surface-variant);
   font-family: var(--font-body);
   font-weight: 500;
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   white-space: nowrap;
   transition: background 200ms ease, color 200ms ease;
   position: relative;
@@ -121,7 +121,7 @@ html.theme-light .nav.shrink {
   height: 42px;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
   border: 1px solid var(--glass-border);
   color: var(--on-surface);
   background: var(--glass-bg);
@@ -162,7 +162,7 @@ html.theme-light .nav.shrink {
   min-height: 38px;
   margin-left: 8px;
   padding: 7px 12px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
   font-family: var(--font-body);
   font-size: 0.88rem;
   font-weight: 600;
@@ -189,7 +189,7 @@ html.theme-light .nav.shrink {
   gap: 6px;
   padding: 0 10px;
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
   min-height: 38px;
   background: var(--glass-bg);
   backdrop-filter: blur(8px);
@@ -219,7 +219,7 @@ html.theme-light .nav.shrink {
   gap: 6px;
   min-height: 38px;
   padding: 8px 12px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
   border: none;
   color: var(--on-surface-variant);
   background: transparent;
@@ -247,7 +247,7 @@ html.theme-light .nav.shrink {
   width: 320px;
   max-width: 90vw;
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: var(--glass-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -422,7 +422,7 @@ html.theme-light .nav.shrink {
     flex-direction: column;
     align-items: stretch;
     border: 1px solid var(--glass-border);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     background: var(--glass-bg);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
@@ -441,7 +441,7 @@ html.theme-light .nav.shrink {
   .nav-links a {
     justify-content: center;
     padding: 12px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius);
   }
 
   .nav-links a.active::after {

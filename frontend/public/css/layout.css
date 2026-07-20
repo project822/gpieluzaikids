@@ -32,10 +32,6 @@
   padding: 24px;
 }
 
-.address-card .btn.primary {
-  border-radius: var(--radius-sm);
-}
-
 /* ── Modal (Deep Ocean Glass) ── */
 .modal {
   position: fixed;
@@ -62,7 +58,7 @@
   width: min(940px, 100%);
   overflow: hidden;
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   background: var(--glass-bg);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
@@ -206,7 +202,7 @@ html.theme-light .footer {
 .social-icon {
   width: 44px;
   height: 44px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -430,7 +426,6 @@ html.theme-light .footer {
 }
 
 .events-detail-actions .btn {
-  border-radius: var(--radius-sm);
   min-height: 44px;
   padding: 10px 22px;
 }

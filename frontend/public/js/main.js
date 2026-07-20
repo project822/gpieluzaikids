@@ -9,35 +9,28 @@
   }
 
   onReady(() => {
+    // ── Shared scroll helper ──
+    var smoothScrollTo = function (targetEl) {
+      if (!targetEl) return;
+      var navH = (function () {
+        var v = getComputedStyle(document.documentElement).getPropertyValue("--nav-height");
+        var n = parseFloat(v);
+        return isFinite(n) ? n : 74;
+      })();
+      var top = targetEl.getBoundingClientRect().top + window.scrollY - navH - 12;
+      window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+    };
+
     // 1) Smooth scroll for internal anchors (with sticky-nav offset)
     try {
-      const navH = () => {
-        const v = getComputedStyle(document.documentElement).getPropertyValue("--nav-height");
-        const n = Number(String(v).replace(/[^0-9.]/g, ""));
-        return Number.isFinite(n) ? n : 74;
-      };
-
-      const scrollToHash = (hash) => {
-        if (!hash || hash === "#") return;
-        const target = document.querySelector(hash);
-        if (!target) return;
-        const rect = target.getBoundingClientRect();
-        const absoluteY = window.scrollY + rect.top;
-        const offset = navH() + 12;
-        window.scrollTo({
-          top: Math.max(0, absoluteY - offset),
-          behavior: "smooth",
-        });
-      };
-
-      document.querySelectorAll('a[href^="#"]').forEach((a) => {
-        a.addEventListener("click", (e) => {
-          const href = a.getAttribute("href");
+      document.querySelectorAll('a[href^="#"]').forEach(function (a) {
+        a.addEventListener("click", function (e) {
+          var href = a.getAttribute("href");
           if (!href || href === "#") return;
-          const target = document.querySelector(href);
+          var target = document.querySelector(href);
           if (!target) return;
           e.preventDefault();
-          scrollToHash(href);
+          smoothScrollTo(target);
         });
       });
     } catch (err) {
@@ -114,7 +107,7 @@
               const handler = function() {
                 notifPopup.classList.remove("open");
                 const target = document.querySelector("#events");
-                if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+                if (target) smoothScrollTo(target);
                 this.removeEventListener("click", handler);
               };
               wrap.addEventListener("click", handler);

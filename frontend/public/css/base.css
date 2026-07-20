@@ -204,8 +204,8 @@ body.page-is-ready {
   font-size: 14px;
   font-weight: 500;
   line-height: 20px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  text-transform: none;
 }
 
 /* ── Section Vertical Padding ── */

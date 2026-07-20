@@ -117,12 +117,12 @@
   --ghost-border: rgba(255, 255, 255, 0.12);
 
   /* ── Rounded (Soft-Modern shape language) ── */
-  --radius-sm: 0.125rem;     /* 2px — buttons, small inputs */
-  --radius: 0.375rem;        /* 6px — standard */
-  --radius-md: 0.5rem;       /* 8px — panels, cards */
-  --radius-lg: 0.75rem;      /* 12px — larger containers */
-  --radius-xl: 1rem;         /* 16px — modals, hero cards */
-  --radius-full: 9999px;     /* pill shape — badges, tags only */
+  --radius-sm: 0.5rem;       /* 8px — buttons (naik dari 2px) */
+  --radius: 0.625rem;        /* 10px — standard */
+  --radius-md: 0.875rem;     /* 14px — panels, cards */
+  --radius-lg: 1.125rem;     /* 18px — larger containers */
+  --radius-xl: 1.5rem;       /* 24px — modals, hero cards */
+  --radius-full: 9999px;     /* pill — badges, dots */
 
   /* ── Navigation ── */
   --nav-height: 68px;
