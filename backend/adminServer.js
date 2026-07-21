@@ -75,21 +75,6 @@ app.use(
   express.static(DASHBOARD_DIR),
 );
 
-// Mobile dashboard — static files (HTML, CSS, JS) served as-is
-// Folder mobile-dashboard/ sejajar dengan dashboard/ & frontend/.
-const MOBILE_DASHBOARD_DIR = path.join(__dirname, "..", "mobile-dashboard");
-app.use(
-  "/mobile-dashboard",
-  express.static(MOBILE_DASHBOARD_DIR, {
-    maxAge: "1h",
-    immutable: false,
-    setHeaders: (res, filePath) => {
-      if (filePath.endsWith(".css") || filePath.endsWith(".js")) {
-        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-      }
-    },
-  }),
-);
 
 app.use(
   session({
@@ -167,22 +152,6 @@ function computeAvgLatencyMs(metrics) {
 // ============== DEV DASHBOARD PAGES ==============
 // Setiap halaman sidebar (Overview, Analytics, Monitoring, Admins) py view & route sendiri.
 
-app.get("/dev/dashboard", ensureDevAuth, (req, res) => {
-  const timeRange = req.query.range || "7d";
-  const metrics = db.getMetrics();
-  const admins = db.getAdmins() || [];
-  const avgLatencyMs = computeAvgLatencyMs(metrics);
-  const pvStats = db.getPageViewStats(timeRange);
-
-  return res.render("overview", {
-    metrics,
-    avgLatencyMs,
-    admins,
-    pvStats,
-    timeRange,
-  });
-});
-
 app.get("/dev/dashboard/analytics", ensureDevAuth, (req, res) => {
   const timeRange = req.query.range || "7d";
   const metrics = db.getMetrics();
@@ -222,14 +191,36 @@ app.get("/dev/logout", (req, res) => {
   });
 });
 
-// Mobile dashboard route (touch-optimized, bottom tab navigation)
-// Serves the static HTML file after dev auth check.
-app.get("/dev/mobile", ensureDevAuth, (req, res) => {
-  const mobileIndex = path.join(MOBILE_DASHBOARD_DIR, "index.html");
-  if (fs.existsSync(mobileIndex)) {
-    return res.sendFile(mobileIndex);
+// ============== DEVICE DETECTION HELPER ==============
+function isMobileDevice(userAgent) {
+  if (!userAgent) return false;
+  const mobilePatterns = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|webOS|Windows Phone/i;
+  return mobilePatterns.test(userAgent);
+}
+
+// ============== DEV DASHBOARD — mobile-aware route ==============
+// Detects device and renders the appropriate view:
+//   - Mobile (< 768px): mobile.ejs (bottom tab navigation)
+//   - Desktop: overview.ejs (sidebar layout)
+app.get("/dev/dashboard", ensureDevAuth, (req, res) => {
+  const timeRange = req.query.range || "7d";
+  const metrics = db.getMetrics();
+  const admins = db.getAdmins() || [];
+  const avgLatencyMs = computeAvgLatencyMs(metrics);
+  const pvStats = db.getPageViewStats(timeRange);
+
+  const viewData = { metrics, avgLatencyMs, admins, pvStats, timeRange };
+
+  // Check for ?mobile=1 query param (explicit toggle) or mobile user-agent
+  const forceMobile = req.query.mobile === "1";
+  const forceDesktop = req.query.mobile === "0";
+  const isMobile = forceMobile || (!forceDesktop && isMobileDevice(req.headers["user-agent"]));
+
+  if (isMobile) {
+    return res.render("mobile", viewData);
   }
-  return res.status(404).send("Mobile dashboard not found.");
+
+  return res.render("overview", viewData);
 });
 
 // Redirect aliases for dashboard monitoring
