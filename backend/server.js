@@ -1,3 +1,11 @@
+// Load .env file first (jika ada) untuk development lokal
+require("dotenv").config();
+
+// Gunakan Google DNS untuk resolve hostname MongoDB Atlas (karena DNS internal
+// sering memblokir query SRV ke mongodb.net). Hanya berlaku untuk proses Node ini.
+const dns = require("dns");
+dns.setServers(["8.8.8.8", "8.8.4.4"]);
+
 const compression = require("compression");
 const express = require("express");
 const path = require("path");
@@ -138,41 +146,46 @@ app.use(
 // API karena request-nya di-redirect ke halaman login (bukan JSON).
 // Solusinya: simpan session di MongoDB (sudah dipakai project ini) supaya
 // semua instance baca dari sumber yang sama.
+// Fallback: kalau MONGO_URI belum di-set, pakai MemoryStore supaya server
+// tetap bisa jalan untuk development/testing.
+
+let sessionStore;
 if (!process.env.MONGO_URI) {
   console.error(
-    "[Session] FATAL: MONGO_URI belum di-set, session store tidak bisa connect ke MongoDB. " +
-      "Login/session akan tidak stabil sampai MONGO_URI diperbaiki.",
+    "[Session] WARN: MONGO_URI belum di-set. Fallback ke MemoryStore. Login tidak akan " +
+      "persisten di Vercel serverless. Set MONGO_URI untuk production.",
   );
+  sessionStore = new session.MemoryStore();
+} else {
+  if (typeof MongoStore.create !== "function") {
+    console.error(
+      "[Session] FATAL: MongoStore.create bukan function. Bentuk module connect-mongo " +
+        "tidak sesuai dugaan. Keys yang tersedia:",
+      Object.keys(connectMongoModule),
+    );
+    throw new Error(
+      "connect-mongo module tidak sesuai dugaan (MongoStore.create bukan function). " +
+        "Cek versi 'connect-mongo' yang ter-install (harus v4+) dan lihat log di atas untuk detail.",
+    );
+  }
+
+  try {
+    sessionStore = MongoStore.create({
+      clientPromise: db.getClient(),
+      dbName: process.env.MONGO_DB_NAME || "gereja",
+      collectionName: "sessions",
+      ttl: 14 * 24 * 60 * 60, // 14 hari (detik)
+    });
+
+    sessionStore.on("error", (err) => {
+      console.error("[SessionStore] Error:", err.message);
+    });
+  } catch (err) {
+    console.error("[Session] Gagal membuat MongoStore:", err.message);
+    console.error("[Session] Fallback ke MemoryStore.");
+    sessionStore = new session.MemoryStore();
+  }
 }
-
-if (typeof MongoStore.create !== "function") {
-  console.error(
-    "[Session] FATAL: MongoStore.create bukan function. Bentuk module connect-mongo " +
-      "tidak sesuai dugaan. Keys yang tersedia:",
-    Object.keys(connectMongoModule),
-  );
-  throw new Error(
-    "connect-mongo module tidak sesuai dugaan (MongoStore.create bukan function). " +
-      "Cek versi 'connect-mongo' yang ter-install (harus v4+) dan lihat log di atas untuk detail.",
-  );
-}
-
-const sessionStore = MongoStore.create({
-  // Pakai ulang koneksi MongoDB yang sama dengan sisa aplikasi (bukan
-  // bikin koneksi baru terpisah lewat mongoUrl) -> lebih hemat & lebih
-  // stabil, terutama saat cold start di serverless (Vercel).
-  clientPromise: db.getClient(),
-  dbName: process.env.MONGO_DB_NAME || "gereja",
-  collectionName: "sessions",
-  ttl: 14 * 24 * 60 * 60, // 14 hari (detik)
-});
-
-// Supaya kalau session gagal disimpan/dibaca (mis. koneksi Mongo bermasalah),
-// itu KELIHATAN di log -> bukan gagal diam-diam yang bikin user "ke-bounce"
-// balik ke halaman login tanpa pesan error apapun.
-sessionStore.on("error", (err) => {
-  console.error("[SessionStore] Error:", err.message);
-});
 
 app.use(
   session({
@@ -246,11 +259,36 @@ function uploadPoster(req, res, next) {
 // Crop ke rasio 4:5 (cover, fokus otomatis ke area paling "menarik" biar tidak
 // asal potong tengah), resize ke ukuran moderat, lalu convert ke WebP.
 async function processPosterImage(buffer) {
-  return sharp(buffer)
-    .rotate() // auto-orient sesuai EXIF (foto dari HP kadang kesimpen miring)
-    .resize(POSTER_WIDTH, POSTER_HEIGHT, { fit: "cover", position: "attention" })
-    .webp({ quality: 80 })
-    .toBuffer();
+  try {
+    return await sharp(buffer)
+      .rotate() // auto-orient sesuai EXIF (foto dari HP kadang kesimpen miring)
+      .resize(POSTER_WIDTH, POSTER_HEIGHT, { fit: "cover", position: "attention" })
+      .webp({ quality: 80 })
+      .toBuffer();
+  } catch (attentionErr) {
+    // Fallback: jika attention crop gagal (misal libvips versi lawas / gambar tertentu),
+    // pakai center crop sebagai cadangan yang lebih stabil.
+    try {
+      return await sharp(buffer)
+        .rotate()
+        .resize(POSTER_WIDTH, POSTER_HEIGHT, { fit: "cover", position: "center" })
+        .webp({ quality: 80 })
+        .toBuffer();
+    } catch (centerErr) {
+      // Jika masih gagal, coba tanpa resize sama sekali — cukup konversi ke WebP
+      try {
+        return await sharp(buffer)
+          .rotate()
+          .webp({ quality: 80 })
+          .toBuffer();
+      } catch (finalErr) {
+        throw new Error(
+          "Sharp gagal memproses gambar: " + finalErr.message +
+          " (attention: " + attentionErr.message + ")"
+        );
+      }
+    }
+  }
 }
 
 async function savePosterFile(buffer) {
@@ -772,8 +810,9 @@ app.post(
         poster = await savePosterFile(processed);
       } catch (err) {
         console.error("[Poster] Gagal memproses gambar:", err.message);
-        const message = "Gagal memproses gambar poster. Pastikan file adalah gambar yang valid.";
-        return res.redirect(`/admin/events/new?error=${encodeURIComponent(message)}`);
+        console.error("[Poster] Stack:", err.stack);
+        const message = "Gagal memproses gambar poster. Detail: " + encodeURIComponent(err.message);
+        return res.redirect(`/admin/events/new?error=${message}`);
       }
     }
 
@@ -816,8 +855,9 @@ app.post(
         patch.poster = await savePosterFile(processed);
       } catch (err) {
         console.error("[Poster] Gagal memproses gambar:", err.message);
-        const message = "Gagal memproses gambar poster. Pastikan file adalah gambar yang valid.";
-        return res.redirect(`/admin/events/${req.params.id}/edit?error=${encodeURIComponent(message)}`);
+        console.error("[Poster] Stack:", err.stack);
+        const message = "Gagal memproses gambar poster. Detail: " + encodeURIComponent(err.message);
+        return res.redirect(`/admin/events/${req.params.id}/edit?error=${message}`);
       }
     }
 
@@ -956,7 +996,91 @@ app.get(
   }),
 );
 
-// ============== DEV DASHBOARD: NEW PAGES ==============
+// ============== DEV DASHBOARD: MOBILE V2 ==============
+// Halaman mobile dengan 5 tab: Home, Overview, System, Monitoring, Account
+app.get(
+  "/dev/dashboard-mobile",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
+    const user = req.session.devUser ? req.session.devUser.username : "Dev";
+    return res.render("dashboard-mobile", { user });
+  }),
+);
+
+// ============== GOOGLE PAGE SPEED INSIGHTS API ==============
+// Proxy ke Google PageSpeed Insights API dengan proteksi API key dari DB
+app.get(
+  "/api/dev/pagespeed",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
+    const url = req.query.url || "https://gpieluzaikids.vercel.app";
+    const strategy = req.query.strategy || "mobile";
+    const locale = req.query.locale || "id-ID";
+
+    // Cari API key: environment variable > DB config
+    let apiKey = process.env.GOOGLE_PAGESPEED_API_KEY || "";
+    if (!apiKey) {
+      try {
+        const config = await db.getPageSpeedConfig();
+        apiKey = config.apiKey || "";
+      } catch (_) {}
+    }
+
+    if (!apiKey) {
+      return res.json({ error: "Google PageSpeed API key belum dikonfigurasi. Set GOOGLE_PAGESPEED_API_KEY di environment variable atau di halaman konfigurasi." });
+    }
+
+    try {
+      const https = require("https");
+      const psiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&key=${encodeURIComponent(apiKey)}&strategy=${encodeURIComponent(strategy)}&locale=${encodeURIComponent(locale)}`;
+
+      const response = await new Promise((resolve, reject) => {
+        https.get(psiUrl, (res) => {
+          let data = "";
+          res.on("data", (chunk) => data += chunk);
+          res.on("end", () => {
+            try { resolve(JSON.parse(data)); }
+            catch { reject(new Error("Failed to parse PSI response")); }
+          });
+        }).on("error", reject);
+      });
+
+      return res.json(response);
+    } catch (err) {
+      return res.json({ error: err.message || "Gagal mengambil data PageSpeed Insights" });
+    }
+  }),
+);
+
+// Get PageSpeed config status
+app.get(
+  "/api/dev/pagespeed/config",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
+    const envKey = process.env.GOOGLE_PAGESPEED_API_KEY || "";
+    let dbConfig = { apiKey: "" };
+    try {
+      dbConfig = await db.getPageSpeedConfig();
+    } catch (_) {}
+
+    const hasApiKey = !!(envKey || dbConfig.apiKey);
+    return res.json({
+      configured: hasApiKey,
+      source: envKey ? "env" : (dbConfig.apiKey ? "db" : "none"),
+    });
+  }),
+);
+
+// Save PageSpeed API key to DB
+app.post(
+  "/api/dev/pagespeed/config",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
+    const { apiKey } = req.body || {};
+    await db.savePageSpeedConfig({ apiKey: apiKey || "" });
+    return res.json({ ok: true });
+  }),
+);
 
 // ============== DASHBOARD LANDING PAGE ==============
 // Halaman utama dashboard — ringkasan sistem dengan status banner,

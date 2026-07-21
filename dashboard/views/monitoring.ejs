@@ -129,6 +129,89 @@
           </div>
         </div>
 
+        <!-- ═══════════════ GOOGLE PAGE SPEED INSIGHTS ═══════════════ -->
+        <div class="card" id="psi-card" style="margin-top:20px;">
+          <div class="section-header">
+            <span>Google PageSpeed Insights <span style="font-weight:500;font-size:11.5px;color:var(--muted);">— Lighthouse Lab Data</span></span>
+            <span class="sub">
+              <span id="psi-status-badge"></span>
+              <select class="select-btn" id="psi-strategy" onchange="loadPageSpeed()" style="margin-left:6px;font-size:11px;padding:4px 8px;">
+                <option value="mobile">📱 Mobile</option>
+                <option value="desktop">💻 Desktop</option>
+              </select>
+              <button class="btn" onclick="openPsiConfigModal()" style="margin-left:6px;font-size:11px;padding:4px 10px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                Config
+              </button>
+            </span>
+          </div>
+          <div id="psi-body" style="min-height:160px;">
+            <div id="psi-loading" style="display:flex;padding:40px 20px;text-align:center;color:var(--muted);font-size:13px;flex-direction:column;align-items:center;gap:10px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;animation:spin 1s linear infinite;">
+                <circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" stroke-linecap="round"/>
+              </svg>
+              Memuat Google PageSpeed Insights...
+            </div>
+            <div id="psi-not-configured" style="display:none;padding:40px 20px;text-align:center;color:var(--muted);font-size:13px;">
+              <div style="margin-bottom:10px;font-size:24px;">🚀</div>
+              Google PageSpeed Insights belum dikonfigurasi.<br>
+              <small style="opacity:0.7;">Set GOOGLE_PAGESPEED_API_KEY di environment variable atau di form konfigurasi di bawah.</small>
+            </div>
+            <div id="psi-error" style="display:none;padding:40px 20px;text-align:center;color:var(--red);font-size:13px;"></div>
+            <div id="psi-data" style="display:none;">
+              <div class="psi-desktop-layout">
+                <!-- Score Circle -->
+                <div class="psi-score-wrap">
+                  <div class="psi-score-circle" id="psi-circle">
+                    <div class="psi-score-circle-inner">
+                      <span id="psi-score">--</span>
+                    </div>
+                  </div>
+                </div>
+                <!-- Metrics Grid -->
+                <div class="psi-metrics-grid" id="psi-metrics-grid">
+                  <div class="psi-metric-card">
+                    <div class="psi-metric-label">First Contentful Paint</div>
+                    <div class="psi-metric-val" id="psi-fcp">--</div>
+                    <div class="psi-metric-sub" id="psi-fcp-rating"></div>
+                  </div>
+                  <div class="psi-metric-card">
+                    <div class="psi-metric-label">Speed Index</div>
+                    <div class="psi-metric-val" id="psi-si">--</div>
+                    <div class="psi-metric-sub" id="psi-si-rating"></div>
+                  </div>
+                  <div class="psi-metric-card">
+                    <div class="psi-metric-label">Largest Contentful Paint</div>
+                    <div class="psi-metric-val" id="psi-lcp">--</div>
+                    <div class="psi-metric-sub" id="psi-lcp-rating"></div>
+                  </div>
+                  <div class="psi-metric-card">
+                    <div class="psi-metric-label">Time to Interactive</div>
+                    <div class="psi-metric-val" id="psi-tti">--</div>
+                    <div class="psi-metric-sub" id="psi-tti-rating"></div>
+                  </div>
+                  <div class="psi-metric-card">
+                    <div class="psi-metric-label">Total Blocking Time</div>
+                    <div class="psi-metric-val" id="psi-tbt">--</div>
+                    <div class="psi-metric-sub" id="psi-tbt-rating"></div>
+                  </div>
+                  <div class="psi-metric-card">
+                    <div class="psi-metric-label">Cumulative Layout Shift</div>
+                    <div class="psi-metric-val" id="psi-cls">--</div>
+                    <div class="psi-metric-sub" id="psi-cls-rating"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="psi-footer">
+                <span id="psi-refresh-info">Auto-refresh setiap 24 jam</span>
+                <a href="https://pagespeed.web.dev/" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none;font-weight:700;font-size:12px;">
+                  Buka di PageSpeed Insights ↗
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </main>
     </div>
   </div>
@@ -366,6 +449,258 @@
       errorEl.classList.add('show');
     }
   };
+  </script>
+
+  <!-- ═══════════════ GOOGLE PAGE SPEED INSIGHTS ═══════════════ -->
+  <script>
+  // ── PageSpeed Insights ──
+  const PSI_CACHE_KEY = '_psi_cache';
+  const PSI_CACHE_TTL = 86400000; // 24 jam
+
+  async function loadPageSpeed() {
+    try {
+      const configRes = await fetch('/api/dev/pagespeed/config');
+      const config = await configRes.json();
+
+      if (!config.configured) {
+        document.getElementById('psi-loading').style.display = 'none';
+        document.getElementById('psi-not-configured').style.display = 'block';
+        document.getElementById('psi-status-badge').textContent = '⚠ Not configured';
+        return;
+      }
+
+      document.getElementById('psi-status-badge').textContent = '✓ API Key active';
+      document.getElementById('psi-status-badge').style.color = '#16A34A';
+
+      const strategy = document.getElementById('psi-strategy').value || 'mobile';
+
+      // Check cache
+      const cached = localStorage.getItem(PSI_CACHE_KEY);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (parsed.strategy === strategy && parsed.data && (Date.now() - parsed.ts < PSI_CACHE_TTL)) {
+            document.getElementById('psi-loading').style.display = 'none';
+            document.getElementById('psi-data').style.display = 'block';
+            displayPSI(parsed.data);
+            document.getElementById('psi-refresh-info').textContent = 'Terakhir diperbarui: ' + new Date(parsed.ts).toLocaleString('id-ID');
+            return;
+          }
+        } catch (_) {}
+      }
+
+      // Fetch fresh data
+      document.getElementById('psi-loading').style.display = 'flex';
+      document.getElementById('psi-not-configured').style.display = 'none';
+      document.getElementById('psi-data').style.display = 'none';
+      document.getElementById('psi-error').style.display = 'none';
+
+      const url = encodeURIComponent('https://gpieluzaikids.vercel.app');
+      const res = await fetch('/api/dev/pagespeed?url=' + url + '&strategy=' + strategy);
+      const data = await res.json();
+
+      document.getElementById('psi-loading').style.display = 'none';
+
+      if (data.error || data.lighthouseError) {
+        document.getElementById('psi-error').textContent = '⚠ ' + (data.error || data.lighthouseError);
+        document.getElementById('psi-error').style.display = 'block';
+        return;
+      }
+
+      // Cache it
+      try {
+        localStorage.setItem(PSI_CACHE_KEY, JSON.stringify({ ts: Date.now(), strategy, data }));
+      } catch (_) {}
+
+      document.getElementById('psi-data').style.display = 'block';
+      displayPSI(data);
+      document.getElementById('psi-refresh-info').textContent = 'Auto-refresh setiap 24 jam';
+
+    } catch (e) {
+      document.getElementById('psi-loading').style.display = 'none';
+      document.getElementById('psi-error').textContent = 'Gagal memuat PageSpeed: ' + e.message;
+      document.getElementById('psi-error').style.display = 'block';
+      console.warn('[monitoring] pagespeed error', e);
+    }
+  }
+
+  function displayPSI(data) {
+    const ld = data.lighthouseResult || data;
+    const cat = ld.categories || {};
+    const perf = cat.performance || {};
+    const score = perf.score != null ? Math.round(perf.score * 100) : null;
+    const audits = ld.audits || {};
+
+    // ── Score Circle ──
+    const circle = document.getElementById('psi-circle');
+    if (score !== null) {
+      document.getElementById('psi-score').textContent = score;
+      const cls = score >= 90 ? 'good' : score >= 50 ? 'needs-improvement' : 'poor';
+      circle.className = 'psi-score-circle ' + cls;
+      circle.style.setProperty('--pct', score + '%');
+    }
+
+    // ── Metrics ──
+    const metrics = [
+      { id: 'first-contentful-paint',   el: 'psi-fcp',  unit: 'ms', rating: 'psi-fcp-rating' },
+      { id: 'speed-index',              el: 'psi-si',   unit: 'ms', rating: 'psi-si-rating' },
+      { id: 'largest-contentful-paint', el: 'psi-lcp',  unit: 'ms', rating: 'psi-lcp-rating' },
+      { id: 'interactive',              el: 'psi-tti',  unit: 'ms', rating: 'psi-tti-rating' },
+      { id: 'total-blocking-time',      el: 'psi-tbt',  unit: 'ms', rating: 'psi-tbt-rating' },
+      { id: 'cumulative-layout-shift',  el: 'psi-cls',  unit: 'cls', rating: 'psi-cls-rating' },
+    ];
+
+    const ratingLabels = {
+      'good': '✅ Good',
+      'needs-improvement': '⚠️ Needs Improvement',
+      'poor': '❌ Poor',
+    };
+
+    metrics.forEach(m => {
+      const a = audits[m.id];
+      const el = document.getElementById(m.el);
+      const ratingEl = document.getElementById(m.rating);
+      if (!a || a.score === null || a.score === undefined) {
+        el.textContent = '---';
+        if (ratingEl) ratingEl.textContent = '';
+        return;
+      }
+
+      let val = a.numericValue;
+      let displayVal;
+      let scoreClass;
+
+      if (m.unit === 'cls') {
+        displayVal = val != null ? val.toFixed(3) : (a.displayValue || '---');
+      } else if (m.unit === 'ms') {
+        displayVal = val != null ? Math.round(val) + 'ms' : (a.displayValue || '---');
+      } else {
+        displayVal = a.displayValue || (val != null ? val.toFixed(2) : '---');
+      }
+
+      el.textContent = displayVal;
+
+      // Rating class
+      if (a.score >= 0.9) {
+        scoreClass = 'good';
+      } else if (a.score >= 0.5) {
+        scoreClass = 'needs-improvement';
+      } else {
+        scoreClass = 'poor';
+      }
+      el.className = 'psi-metric-val ' + scoreClass;
+
+      if (ratingEl) {
+        ratingEl.textContent = ratingLabels[scoreClass] || '';
+        ratingEl.className = 'psi-metric-sub ' + scoreClass;
+      }
+    });
+  }
+
+  // ── PSI Config Modal ──
+  let psiModalHtml = `
+  <div class="modal-overlay" id="psi-config-modal">
+    <div class="modal">
+      <div class="modal-title">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+        Google PageSpeed Config
+      </div>
+      <div style="margin-bottom:14px;font-size:12.5px;color:var(--muted);line-height:1.6;">
+        Masukkan <strong>Google PageSpeed Insights API Key</strong> untuk mengaktifkan analisis performa website.<br>
+        Dapatkan API key di <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener" style="color:var(--blue);">Google Cloud Console ↗</a>
+      </div>
+      <div class="modal-error" id="psi-config-error"></div>
+      <div class="modal-success" id="psi-config-success"></div>
+      <div class="modal-field">
+        <label for="psi-api-key">Google PageSpeed API Key</label>
+        <input id="psi-api-key" type="password" placeholder="AIzaSy..." autocomplete="off">
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Aktifkan <strong>PageSpeed Insights API</strong> di Google Cloud Console lalu buat API key.</div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn" onclick="closePsiConfigModal()">Cancel</button>
+        <button class="modal-btn primary" onclick="submitPsiConfig()">Save Key</button>
+      </div>
+    </div>
+  </div>`;
+
+  function injectPsiModal() {
+    if (!document.getElementById('psi-config-modal')) {
+      const div = document.createElement('div');
+      div.innerHTML = psiModalHtml;
+      document.body.appendChild(div.firstElementChild);
+      const overlay = document.getElementById('psi-config-modal');
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closePsiConfigModal();
+      });
+    }
+  }
+
+  window.openPsiConfigModal = async function() {
+    injectPsiModal();
+    document.getElementById('psi-config-modal').classList.add('active');
+    document.getElementById('psi-config-error').classList.remove('show');
+    document.getElementById('psi-config-error').textContent = '';
+    document.getElementById('psi-config-success').classList.remove('show');
+    document.getElementById('psi-config-success').textContent = '';
+
+    // Check if already configured
+    try {
+      const res = await fetch('/api/dev/pagespeed/config');
+      const data = await res.json();
+      if (data.configured) {
+        document.getElementById('psi-api-key').placeholder = '•••••••• (already configured)';
+      }
+    } catch (_) {}
+  };
+
+  window.closePsiConfigModal = function() {
+    const modal = document.getElementById('psi-config-modal');
+    if (modal) {
+      modal.classList.remove('active');
+      document.getElementById('psi-api-key').value = '';
+    }
+  };
+
+  window.submitPsiConfig = async function() {
+    const apiKey = document.getElementById('psi-api-key').value.trim();
+    const errorEl = document.getElementById('psi-config-error');
+    const successEl = document.getElementById('psi-config-success');
+    errorEl.classList.remove('show');
+    successEl.classList.remove('show');
+
+    if (!apiKey) {
+      errorEl.textContent = 'API key tidak boleh kosong';
+      errorEl.classList.add('show');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/dev/pagespeed/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKey })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        successEl.textContent = 'API Key berhasil disimpan!';
+        successEl.classList.add('show');
+        document.getElementById('psi-api-key').value = '';
+        setTimeout(() => {
+          closePsiConfigModal();
+          loadPageSpeed();
+        }, 800);
+      } else {
+        errorEl.textContent = data.error || 'Gagal menyimpan konfigurasi';
+        errorEl.classList.add('show');
+      }
+    } catch (e) {
+      errorEl.textContent = 'Network error: ' + e.message;
+      errorEl.classList.add('show');
+    }
+  };
+
+  // ── Init PageSpeed ──
+  loadPageSpeed();
   </script>
 
 </body>

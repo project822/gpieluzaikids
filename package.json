@@ -7,9 +7,8 @@
     "node": "20.x"
   },
   "scripts": {
-    "check": "node --check backend/server.js && node --check backend/adminServer.js && node --check backend/db.js",
     "start": "node backend/server.js",
-    "start:admin": "node backend/adminServer.js",
+    "test": "node --check backend/server.js",
     "test:landing": "node scripts/checkLanding.js"
   },
   "dependencies": {
@@ -18,6 +17,7 @@
     "bcrypt": "^5.1.0",
     "compression": "^1.8.1",
     "connect-mongo": "^6.0.0",
+    "dotenv": "^17.4.2",
     "ejs": "^3.1.9",
     "express": "^4.18.2",
     "express-session": "^1.17.3",

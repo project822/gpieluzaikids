@@ -569,6 +569,28 @@ async function saveSpeedInsightsConfig({ vercelToken, vercelProjectId }) {
   );
 }
 
+// ───────────── Google PageSpeed Insights Config ─────────────
+
+async function getPageSpeedConfig() {
+  const d = await connect();
+  const doc = await d.collection("settings").findOne({ _id: "pagespeedConfig" });
+  return doc || { apiKey: "", updatedAt: null };
+}
+
+async function savePageSpeedConfig({ apiKey }) {
+  const d = await connect();
+  await d.collection("settings").updateOne(
+    { _id: "pagespeedConfig" },
+    {
+      $set: {
+        apiKey: apiKey || "",
+        updatedAt: new Date().toISOString(),
+      },
+    },
+    { upsert: true },
+  );
+}
+
 module.exports = {
   connect,
   getClient,
@@ -602,4 +624,6 @@ module.exports = {
   forceLogoutAllAdmins,
   getSpeedInsightsConfig,
   saveSpeedInsightsConfig,
+  getPageSpeedConfig,
+  savePageSpeedConfig,
 };

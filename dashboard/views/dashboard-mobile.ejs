@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>Dev Console · Mobile</title>
+  <link rel="stylesheet" href="/dashboard-assets/css/dashboard-mobile.css">
+</head>
+<body>
+
+  <!-- ═══ HEADER ═══ -->
+  <header class="app-header">
+    <div class="app-header-inner">
+      <div class="app-brand">
+        <span class="app-brand-icon">G</span>
+        <div class="app-brand-text">
+          <strong>Dev Console</strong>
+          <span>gpieluzaikids.vercel.app</span>
+        </div>
+      </div>
+      <div class="app-header-actions">
+        <button class="app-btn" onclick="mobRefresh()" aria-label="Refresh">
+          <svg id="ri" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        </button>
+        <a href="/dev/logout" class="app-btn" aria-label="Sign Out">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══ CONTENT ═══ -->
+  <main class="app-content" id="app-content">
+
+    <!-- ═══════════════ TAB: HOME ═══════════════ -->
+    <section class="app-tab active" id="t-home">
+
+      <!-- Welcome -->
+      <div class="welcome-banner">
+        <div class="welcome-title">Selamat Datang, <%= user %> 👋</div>
+        <div class="welcome-subtitle">gpieluzaikids · Developer Console</div>
+      </div>
+
+      <!-- Website & DB Status -->
+      <div class="status-banner" id="hm-status-banner">
+        <span class="status-banner-dot" id="hm-status-dot"></span>
+        <span id="hm-status-text">Memuat status...</span>
+      </div>
+
+      <!-- Account Stats -->
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-card-label">Total Akun</div>
+          <div class="stat-card-value" id="hm-total-accounts">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Online</div>
+          <div class="stat-card-value" id="hm-online-accounts">0</div>
+        </div>
+      </div>
+
+      <!-- System Status Grid -->
+      <div class="section-title">System Status</div>
+      <div class="status-grid">
+        <div class="status-item" id="sc-website">
+          <span class="status-item-dot" id="sd-website"></span>
+          <div class="status-item-body">
+            <div class="status-item-name">Website</div>
+            <div class="status-item-value" id="sv-website">Checking...</div>
+          </div>
+          <span class="status-item-badge" id="sb-website">---</span>
+        </div>
+        <div class="status-item" id="sc-db">
+          <span class="status-item-dot" id="sd-db"></span>
+          <div class="status-item-body">
+            <div class="status-item-name">Database</div>
+            <div class="status-item-value" id="sv-db">Checking...</div>
+          </div>
+          <span class="status-item-badge" id="sb-db">---</span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ═══════════════ TAB: OVERVIEW ═══════════════ -->
+    <section class="app-tab" id="t-overview">
+
+      <div class="section-title">Vercel Analytics</div>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-card-label">Visitors <span class="stat-card-badge">7d</span></div><div class="stat-card-value" id="ov-visitors">0</div></div>
+        <div class="stat-card"><div class="stat-card-label">Page Views</div><div class="stat-card-value" id="ov-pageviews">0</div></div>
+        <div class="stat-card"><div class="stat-card-label">Avg Latency</div><div class="stat-card-value" id="ov-latency">0<span class="unit">ms</span></div></div>
+        <div class="stat-card"><div class="stat-card-label">Online Now</div><div class="stat-card-value" id="ov-online">0</div></div>
+      </div>
+
+      <div class="section-title">Web Vitals</div>
+
+      <div class="app-card" id="ov-vitals">
+        <div class="app-card-loading" id="ov-vl">Loading Web Vitals...</div>
+        <div class="app-card-empty" id="ov-ve" style="display:none;">⚠ Speed Insights belum dikonfigurasi</div>
+        <div id="ov-vd" style="display:none;">
+          <div class="vitals-row" id="ov-vr"></div>
+          <div class="score-section">
+            <div class="score-header"><span>Performance Score</span><span class="score-number" id="ov-sc">--</span></div>
+            <div class="score-track"><div class="score-fill" id="ov-sf" style="width:0%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">Per-Path Analysis</div>
+      <div class="app-card" id="ov-paths">
+        <div class="app-card-loading" id="ov-pl">Loading...</div>
+        <div class="app-card-empty" id="ov-pe" style="display:none;">Belum ada data</div>
+        <div id="ov-pd" style="display:none;">
+          <table class="analysis-table">
+            <thead>
+              <tr><th>Path</th><th>LCP</th><th>FCP</th><th>Score</th></tr>
+            </thead>
+            <tbody id="ov-pt"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ═══════════════ TAB: SYSTEM ═══════════════ -->
+    <section class="app-tab" id="t-system">
+
+      <div class="section-title">Maintenance Mode</div>
+
+      <div class="maintenance-card">
+        <div class="maintenance-header">
+          <div class="maintenance-label">
+            <div class="maintenance-label-icon">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </div>
+            <div class="maintenance-label-text">
+              <strong>Maintenance Mode</strong>
+              <span>Aktifkan untuk menampilkan halaman pemeliharaan</span>
+            </div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="mt-toggle" onchange="mobToggleMt(this.checked)"><span class="toggle-track"></span></label>
+        </div>
+        <div class="maintenance-body">
+          <div class="maintenance-form-group">
+            <label>Pesan Kustom</label>
+            <textarea id="mt-message" rows="3" placeholder="Website sedang dalam perbaikan. Silakan kembali lagi nanti."></textarea>
+          </div>
+          <div class="maintenance-status-badge" id="mt-status-badge">Inactive</div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ═══════════════ TAB: MONITORING ═══════════════ -->
+    <section class="app-tab" id="t-monitoring">
+
+      <div class="section-title">Google PageSpeed Insights</div>
+
+      <div class="app-card">
+        <div class="app-card-loading" id="psi-loading">Loading PageSpeed data...</div>
+        <div class="app-card-empty" id="psi-empty" style="display:none;">⚠ PageSpeed API key belum dikonfigurasi</div>
+        <div id="psi-content" style="display:none;">
+          <div class="psi-section">
+            <div class="psi-score-circle" id="psi-circle">
+              <div class="psi-score-circle-inner">
+                <span id="psi-score">--</span>
+              </div>
+            </div>
+            <div class="psi-metrics" id="psi-metrics-grid">
+              <div class="psi-metric-item">
+                <div class="psi-metric-item-label">First Contentful Paint</div>
+                <div class="psi-metric-item-value" id="psi-fcp">--</div>
+              </div>
+              <div class="psi-metric-item">
+                <div class="psi-metric-item-label">Speed Index</div>
+                <div class="psi-metric-item-value" id="psi-si">--</div>
+              </div>
+              <div class="psi-metric-item">
+                <div class="psi-metric-item-label">Largest Contentful Paint</div>
+                <div class="psi-metric-item-value" id="psi-lcp">--</div>
+              </div>
+              <div class="psi-metric-item">
+                <div class="psi-metric-item-label">Time to Interactive</div>
+                <div class="psi-metric-item-value" id="psi-tti">--</div>
+              </div>
+              <div class="psi-metric-item">
+                <div class="psi-metric-item-label">Total Blocking Time</div>
+                <div class="psi-metric-item-value" id="psi-tbt">--</div>
+              </div>
+              <div class="psi-metric-item">
+                <div class="psi-metric-item-label">Cumulative Layout Shift</div>
+                <div class="psi-metric-item-value" id="psi-cls">--</div>
+              </div>
+            </div>
+            <div class="psi-refresh-info" id="psi-refresh">Auto-refresh setiap 24 jam</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">Server Metrics</div>
+
+      <div class="app-card">
+        <div class="metrics-list">
+          <div class="metric-row"><span class="metric-key">Uptime</span><span class="metric-value" id="mon-uptime">---</span></div>
+          <div class="metric-row"><span class="metric-key">Memory</span><span class="metric-value" id="mon-mem">---</span></div>
+          <div class="metric-row"><span class="metric-key">Node</span><span class="metric-value" id="mon-node">---</span></div>
+          <div class="metric-row"><span class="metric-key">Platform</span><span class="metric-value" id="mon-plat">---</span></div>
+          <div class="metric-row"><span class="metric-key">DB Ping</span><span class="metric-value" id="mon-dbping">---</span></div>
+          <div class="metric-row"><span class="metric-key">Requests</span><span class="metric-value" id="mon-req">0</span></div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ═══════════════ TAB: ACCOUNT ═══════════════ -->
+    <section class="app-tab" id="t-account">
+
+      <div class="section-title">Admin Accounts</div>
+      <div class="app-card" id="ac-list"><div class="app-card-loading">Loading accounts...</div></div>
+
+      <div class="section-title">Quick Actions</div>
+      <div class="app-card" id="ac-quick-actions">
+        <div style="padding:12px 16px;">
+          <button class="btn-primary" onclick="mobLogoutAll()" style="margin-bottom:8px;">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            Log Out All Devices
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ═══ BOTTOM TAB BAR (5 items) ═══ -->
+  <nav class="app-tabbar">
+    <button class="app-tabbar-item active" data-tab="home" onclick="mobTab('home')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0h6"/></svg>
+      <span>Home</span>
+    </button>
+    <button class="app-tabbar-item" data-tab="overview" onclick="mobTab('overview')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18M7 16l4-4 4 4 4-4"/></svg>
+      <span>Overview</span>
+    </button>
+    <button class="app-tabbar-item" data-tab="system" onclick="mobTab('system')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      <span>System</span>
+    </button>
+    <button class="app-tabbar-item" data-tab="monitoring" onclick="mobTab('monitoring')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      <span>Monitor</span>
+    </button>
+    <button class="app-tabbar-item" data-tab="account" onclick="mobTab('account')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-3-6.65"/></svg>
+      <span>Account</span>
+    </button>
+  </nav>
+
+  <!-- ═══ RESET PASSWORD MODAL ═══ -->
+  <div class="modal-overlay" id="rp-modal">
+    <div class="modal-sheet">
+      <div class="modal-sheet-header">
+        <h3>Reset Password</h3>
+        <button class="modal-sheet-close" onclick="mobCloseModal('rp-modal')">&times;</button>
+      </div>
+      <div class="modal-sheet-body">
+        <div class="modal-message" id="rp-err"></div>
+        <div class="modal-message" id="rp-ok"></div>
+        <div class="form-field">
+          <label>Username</label>
+          <input type="text" id="rp-user" readonly style="opacity:0.6;">
+        </div>
+        <div class="form-field">
+          <label>Password Baru</label>
+          <input type="password" id="rp-pass" placeholder="Masukkan password baru">
+        </div>
+        <button class="btn-primary" onclick="mobResetPass()">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          Update Password
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TOAST ═══ -->
+  <div class="app-toast" id="toast"></div>
+
+  <!-- ═══ JAVASCRIPT ═══ -->
+  <script>
+  var _ = document.getElementById.bind(document);
+
+  function fmtU(s) {
+    if (s == null) return '---';
+    if (s < 60) return Math.round(s) + 's';
+    if (s < 3600) return Math.floor(s/60) + 'm ' + Math.round(s%60) + 's';
+    return Math.floor(s/3600) + 'h ' + Math.floor((s%3600)/60) + 'm';
+  }
+
+  function siC(v,m) {
+    if (v==null) return '#94a3b8';
+    var t={lcp:{g:2500,p:4000},fcp:{g:1800,p:3000},ttfb:{g:800,p:1800},cls:{g:0.1,p:0.25},inp:{g:200,p:500}}[m];
+    return t ? (v<=t.g?'#22c55e':v<=t.p?'#f59e0b':'#ef4444') : '#94a3b8';
+  }
+
+  function calcSc(p) {
+    if (!p||!p.length) return null;
+    var th={lcp:{g:2500,p:4000},fcp:{g:1800,p:3000},ttfb:{g:800,p:1800},cls:{g:0.1,p:0.25},inp:{g:200,p:500}};
+    var w={lcp:30,fcp:15,ttfb:20,cls:15,inp:20},tw=0,ts=0;
+    ['lcp','fcp','ttfb','cls','inp'].forEach(function(m){
+      var v=p.map(function(x){return x[m]&&x[m].median}).filter(function(x){return x!=null});
+      if (!v.length) return;
+      var a=v.reduce(function(a,b){return a+b},0)/v.length,t=th[m];
+      var sc=a<=t.g?100:a<=t.p?Math.round(50+50*(1-(a-t.g)/(t.p-t.g))):Math.max(0,Math.round(50*(1-(a-t.p)/t.p)));
+      ts+=sc*w[m];tw+=w[m];
+    });
+    return tw>0?Math.round(ts/tw):null;
+  }
+
+  function shV(p,pr) {
+    var m=[{k:'lcp',l:'LCP'},{k:'fcp',l:'FCP'},{k:'ttfb',l:'TTFB'},{k:'cls',l:'CLS',f:true},{k:'inp',l:'INP'}];
+    var h='';
+    m.forEach(function(x){
+      var v=p.map(function(y){return y[x.k]&&y[x.k].median}).filter(function(y){return y!=null});
+      if (!v.length) return;
+      var a=v.reduce(function(a,b){return a+b},0)/v.length, d=x.f?a.toFixed(3):Math.round(a)+'ms';
+      h+='<div class="vital-chip" style="border-color:'+siC(a,x.k)+'40;"><span class="vital-chip-label">'+x.l+'</span><span class="vital-chip-value" style="color:'+siC(a,x.k)+';">'+d+'</span></div>';
+    });
+    _(pr+'-vr').innerHTML=h;
+    var sc=calcSc(p);
+    if (sc!==null) {
+      var f=_(pr+'-sf'); f.style.width=sc+'%';
+      f.style.background=sc>=90?'#22c55e':sc>=50?'#f59e0b':'#ef4444';
+      _(pr+'-sc').textContent=sc;_(pr+'-sc').style.color=sc>=90?'#22c55e':sc>=50?'#f59e0b':'#ef4444';
+    }
+  }
+
+  function toast(m) {
+    var t=_('toast'); t.textContent=m; t.classList.add('show');
+    clearTimeout(t._h); t._h=setTimeout(function(){t.classList.remove('show')},2500);
+  }
+
+  function mobTab(n) {
+    document.querySelectorAll('.app-tab').forEach(function(t){t.classList.remove('active')});
+    document.querySelectorAll('.app-tabbar-item').forEach(function(b){b.classList.remove('active')});
+    _('t-'+n).classList.add('active');
+    document.querySelector('.app-tabbar-item[data-tab="'+n+'"]').classList.add('active');
+  }
+
+  function mobCloseModal(id) {
+    _(id).classList.remove('active');
+  }
+  document.addEventListener('click',function(e){
+    if(e.target.classList.contains('modal-overlay')){e.target.classList.remove('active');}
+  });
+
+  /* ════════ REFRESH ════════ */
+  async function mobRefresh() {
+    var ri=_('ri'); if(ri)ri.classList.add('app-btn-spin');
+    setTimeout(function(){if(ri)ri.classList.remove('app-btn-spin')},500);
+    try {
+      var h=await(await fetch('/api/dev/health')).json();
+
+      // — HOME —
+      var allOk = h.website==='ok' && h.db==='ok';
+      var dot=_('hm-status-dot'); if(dot)dot.className='status-banner-dot';
+      var bann=_('hm-status-banner');
+      if(bann){
+        bann.className='status-banner';
+        if(allOk){
+          bann.classList.add('status-banner');
+          dot.style.background='var(--green)';
+          dot.style.boxShadow='0 0 8px rgba(34,197,94,0.5)';
+        }else{
+          dot.style.background='var(--orange)';
+          dot.style.boxShadow='0 0 8px rgba(245,158,11,0.5)';
+        }
+      }
+      var st=_('hm-status-text');
+      if(st)st.textContent=allOk?'Semua sistem berfungsi normal ⚡' : 'Ada masalah pada sistem ⚠';
+
+      // Website status
+      var sdw=_('sd-website'); if(sdw)sdw.className='status-item-dot '+(h.website==='ok'?'online':'error');
+      var sbw=_('sb-website'); if(sbw){sbw.textContent=h.website==='ok'?'Online':'Error';sbw.className='status-item-badge '+(h.website==='ok'?'online':'error');}
+      var svw=_('sv-website'); if(svw)svw.textContent=h.website==='ok'?'Online':'Degraded';
+
+      // DB status
+      var sdd=_('sd-db'); if(sdd)sdd.className='status-item-dot '+(h.db==='ok'?'online':'error');
+      var sbd=_('sb-db'); if(sbd){sbd.textContent=h.db==='ok'?'Connected':'Error';sbd.className='status-item-badge '+(h.db==='ok'?'online':'error');}
+      var svd=_('sv-db'); if(svd)svd.textContent=h.db==='ok'?h.dbPingMs+'ms':(h.dbError||'Disconnected');
+
+      // Server metrics (monitoring tab)
+      _('mon-uptime').textContent=fmtU(h.uptimeSeconds||0);
+      _('mon-mem').textContent=(h.memHeapUsedMB||0)+' MB';
+      _('mon-node').textContent=h.nodeVersion||'---';
+      _('mon-plat').textContent=h.platform||'---';
+      _('mon-dbping').textContent=(h.dbPingMs||0)+'ms';
+      _('mon-req').textContent=h.totalRequests||0;
+
+      // — STATS —
+      var s=await(await fetch('/api/dev/stats')).json(),pv=s.pvStats||{};
+      _('ov-visitors').textContent=pv.visitors||0;
+      _('ov-pageviews').textContent=pv.pageviews||0;
+      _('ov-latency').innerHTML=(s.metrics?(s.metrics.avgLatencyMs||0):0)+'<span class="unit">ms</span>';
+      _('ov-online').textContent=pv.online||0;
+
+      // — ACCOUNTS —
+      var a=await(await fetch('/dev/api/admins/statuses')).json();
+      var sts=a.adminStatuses||{},adms=a.admins||[];
+      var ol=adms.filter(function(x){return sts[x.username]&&sts[x.username].online===true});
+      _('hm-total-accounts').textContent=adms.length;
+      _('hm-online-accounts').textContent=ol.length;
+
+      _('ac-list').innerHTML=!adms.length?'<div class="app-card-empty">No admins</div>':
+        adms.map(function(x){
+          var s=sts[x.username]||{},io=s.online===true,inl=x.username.charAt(0).toUpperCase();
+          var lastOn=s.lastOnline?new Date(s.lastOnline).toLocaleString('id-ID'):'---';
+          return '<div class="account-item">'+
+            '<div class="account-item-left">'+
+              '<div class="account-item-avatar">'+inl+'</div>'+
+              '<div class="account-item-info">'+
+                '<span class="account-item-name">'+x.username+'</span>'+
+                '<span class="account-item-status">'+
+                  '<span style="width:6px;height:6px;border-radius:50%;background:'+(io?'#22c55e':'#64748b')+';display:inline-block;"></span> '+
+                  (io?'Online':'Offline')+
+                '</span>'+
+                '<span style="font-size:10px;color:#64748b;margin-top:1px;">Last: '+lastOn+'</span>'+
+              '</div>'+
+            '</div>'+
+            '<div class="account-item-actions">'+
+              '<button class="account-action-btn" onclick="mobShowReset(\''+x.username+'\')" title="Reset Password">'+
+                '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>'+
+              '</button>'+
+              '<button class="account-action-btn danger" onclick="mobForceLogout(\''+x.username+'\')" title="Logout Device">'+
+                '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>'+
+              '</button>'+
+            '</div>'+
+          '</div>';
+        }).join('');
+
+      // — SPEED INSIGHTS (Overview tab) —
+      var siS=await(await fetch('/api/dev/speed-insights/status')).json();
+      if(siS.configured){
+        var siD=await(await fetch('/api/dev/speed-insights?range=7d')).json();
+        if(siD.error||!siD.paths||!siD.paths.length){
+          _('ov-vl').style.display='none';_('ov-ve').style.display='block';
+          _('ov-pl').style.display='none';_('ov-pe').style.display='block';
+        }else{
+          _('ov-vl').style.display='none';_('ov-vd').style.display='block';
+          _('ov-pl').style.display='none';_('ov-pd').style.display='block';
+          shV(siD.paths,'ov');
+          // Path analysis table
+          var rows='';
+          siD.paths.slice(0,10).forEach(function(p){
+            var lcp=p.lcp&&p.lcp.median?Math.round(p.lcp.median)+'ms':'---';
+            var fcp=p.fcp&&p.fcp.median?Math.round(p.fcp.median)+'ms':'---';
+            var sc=p.lcp&&p.lcp.median?calcSc([p]):null;
+            var sclass=sc>=90?'good':sc>=50?'needs-improvement':'poor';
+            var sdisplay=sc!==null?sc:'---';
+            rows+='<tr><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+p.path+'</td><td>'+lcp+'</td><td>'+fcp+'</td><td><span class="analysis-score '+sclass+'">'+sdisplay+'</span></td></tr>';
+          });
+          _('ov-pt').innerHTML=rows;
+        }
+      }else{
+        _('ov-vl').style.display='none';_('ov-ve').style.display='block';
+        _('ov-pl').style.display='none';_('ov-pe').style.display='block';
+      }
+
+      // — MAINTENANCE —
+      var mt=await(await fetch('/api/dev/maintenance/status')).json();
+      _('mt-toggle').checked=mt.enabled===true;
+      _('mt-message').value=mt.message||'';
+      var mtb=_('mt-status-badge');
+      if(mtb){
+        mtb.textContent=mt.enabled?'Active':'Inactive';
+        mtb.className='maintenance-status-badge '+(mt.enabled?'active':'inactive');
+      }
+
+      // — PAGE SPEED INSIGHTS (Monitoring tab) — cache 24 jam di localStorage
+      var psiKey=await(await fetch('/api/dev/pagespeed/config')).json();
+      if(psiKey.configured){
+        (function(){ 
+          var CACHE_KEY = '_psi_cache';
+          var cacheItem = localStorage.getItem(CACHE_KEY);
+          var cache = cacheItem ? JSON.parse(cacheItem) : null;
+          var now = Date.now();
+          var TWENTY_FOUR_HOURS = 86400000;
+          if (cache && cache.data && (now - cache.ts < TWENTY_FOUR_HOURS)) {
+            _('psi-loading').style.display='none';
+            _('psi-empty').style.display='none';
+            _('psi-content').style.display='block';
+            displayPSI(cache.data);
+            _('psi-refresh').textContent='Terakhir diperbarui: '+new Date(cache.ts).toLocaleString('id-ID')+' (auto-refresh 24 jam)';
+            return;
+          }
+          _('psi-loading').style.display='block';
+          _('psi-empty').style.display='none';
+          _('psi-content').style.display='none';
+          try{
+            fetch('/api/dev/pagespeed?url=https://gpieluzaikids.vercel.app&strategy=mobile').then(function(r){return r.json()}).then(function(psi){
+              _('psi-loading').style.display='none';
+              if(psi.error||psi.lighthouseError){
+                _('psi-empty').style.display='block';
+                _('psi-empty').textContent='⚠ '+(psi.error||psi.lighthouseError);
+              }else{
+                localStorage.setItem(CACHE_KEY, JSON.stringify({ts:Date.now(), data:psi}));
+                _('psi-content').style.display='block';
+                displayPSI(psi);
+                _('psi-refresh').textContent='Auto-refresh setiap 24 jam';
+              }
+            }).catch(function(e){
+              _('psi-loading').style.display='none';
+              _('psi-empty').style.display='block';
+              _('psi-empty').textContent='⚠ Gagal memuat PageSpeed data';
+              console.warn('[PSI]',e);
+            });
+          }catch(e){
+            _('psi-loading').style.display='none';
+            _('psi-empty').style.display='block';
+            _('psi-empty').textContent='⚠ Gagal memuat PageSpeed data';
+          }
+        })();
+      }else{
+        _('psi-loading').style.display='none';
+        _('psi-empty').style.display='block';
+      }
+
+    }catch(e){console.warn('[mobile-v2]',e);}
+  }
+
+  /* ════════ GOOGLE PAGE SPEED INSIGHTS ════════ */
+  function displayPSI(data) {
+    var ld = data.lighthouseResult || data;
+    var cat = ld.categories || {};
+    var perf = cat.performance || {};
+    var score = perf.score != null ? Math.round(perf.score * 100) : null;
+    var audits = ld.audits || {};
+
+    // Score circle
+    var circle = _('psi-circle');
+    if(score !== null){
+      _('psi-score').textContent = score;
+      var cls = score >= 90 ? 'good' : score >= 50 ? 'needs-improvement' : 'poor';
+      circle.className = 'psi-score-circle ' + cls;
+      circle.style.setProperty('--pct', score + '%');
+    }
+
+    function fmtMetric(id, unit, div) {
+      var a = audits[id];
+      if(!a || a.score === null || a.score === undefined) { _(div).textContent = '---'; return; }
+      var val = a.numericValue;
+      if(val === undefined || val === null) { _(div).textContent = a.displayValue || '---'; return; }
+      if(unit === 's') _(div).textContent = (val/1000).toFixed(1) + 's';
+      else if(unit === 'ms') _(div).textContent = Math.round(val) + 'ms';
+      else if(unit === 'score') {
+        var sc = Math.round(val);
+        _(div).textContent = sc;
+        _(div).className = 'psi-metric-item-value ' + (sc >= 90 ? 'good' : sc >= 50 ? 'needs-improvement' : 'poor');
+        return;
+      }
+      else _(div).textContent = val.toFixed(2);
+
+      // Color
+      var s = a.score;
+      if(s >= 0.9) _(div).className = 'psi-metric-item-value good';
+      else if(s >= 0.5) _(div).className = 'psi-metric-item-value needs-improvement';
+      else _(div).className = 'psi-metric-item-value poor';
+    }
+
+    fmtMetric('first-contentful-paint', 'ms', 'psi-fcp');
+    fmtMetric('speed-index', 'ms', 'psi-si');
+    fmtMetric('largest-contentful-paint', 'ms', 'psi-lcp');
+    fmtMetric('interactive', 'ms', 'psi-tti');
+    fmtMetric('total-blocking-time', 'ms', 'psi-tbt');
+    fmtMetric('cumulative-layout-shift', 'score', 'psi-cls');
+  }
+
+  /* ════════ MAINTENANCE TOGGLE ════════ */
+  async function mobToggleMt(e){
+    try{
+      var msg = _('mt-message').value.trim();
+      var r=await fetch('/api/dev/maintenance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:e, message:msg || undefined})});
+      var d=await r.json();if(!d.ok)throw new Error(d.error);
+      toast(e?'Maintenance ON':'Maintenance OFF');
+      var mtb=_('mt-status-badge');
+      if(mtb){
+        mtb.textContent=e?'Active':'Inactive';
+        mtb.className='maintenance-status-badge '+(e?'active':'inactive');
+      }
+    }catch(x){_('mt-toggle').checked=!e;toast('Error: '+x.message);}
+  }
+
+  /* ════════ RESET PASSWORD ════════ */
+  var _resetUser = '';
+
+  function mobShowReset(user) {
+    _resetUser = user;
+    _('rp-user').value = user;
+    _('rp-pass').value = '';
+    _('rp-err').className = 'modal-message';
+    _('rp-ok').className = 'modal-message';
+    _('rp-modal').classList.add('active');
+  }
+
+  async function mobResetPass() {
+    var err=_('rp-err'),ok=_('rp-ok');
+    err.className='modal-message';ok.className='modal-message';
+    var pass=_('rp-pass').value;
+    if(!pass || pass.length < 4){err.textContent='Password minimal 4 karakter';err.classList.add('error');return;}
+    try{
+      var r=await fetch('/dev/api/admins/reset-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:_resetUser,newPassword:pass})});
+      var d=await r.json();
+      if(d.error){err.textContent=d.error;err.classList.add('error');}
+      else{ok.textContent='Password "'+_resetUser+'" berhasil direset!';ok.classList.add('success');toast('Password direset');setTimeout(function(){_('rp-modal').classList.remove('active')},1500);}
+    }catch(x){err.textContent='Error: '+x.message;err.classList.add('error');}
+  }
+
+  /* ════════ FORCE LOGOUT ════════ */
+  async function mobForceLogout(user) {
+    if(!confirm('Logout all sessions for "'+user+'"?')) return;
+    try{
+      var r=await fetch('/dev/api/admins/force-logout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:user})});
+      var d=await r.json();
+      if(d.ok){toast('Logged out: '+user);mobRefresh();}
+      else throw new Error(d.error);
+    }catch(x){toast('Error: '+x.message);}
+  }
+
+  /* ════════ LOGOUT ALL ════════ */
+  async function mobLogoutAll() {
+    if(!confirm('Logout ALL admin devices? This will force everyone to re-login.')) return;
+    try{
+      var r=await fetch('/dev/api/admins/force-logout-all',{method:'POST',headers:{'Content-Type':'application/json'}});
+      var d=await r.json();
+      if(d.ok){toast('All devices logged out ('+d.sessionsDeleted+' sessions)');mobRefresh();}
+      else throw new Error(d.error);
+    }catch(x){toast('Error: '+x.message);}
+  }
+
+  /* ════════ INIT ════════ */
+  mobRefresh();
+  setInterval(mobRefresh,30000);
+  </script>
+
+</body>
+</html>

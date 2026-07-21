@@ -1,12 +1,42 @@
+# Dependencies
 node_modules/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 *.log
 *.err
-.env
+
+# Database (legacy file-based)
 database/db.json
 database/backups/
+
+# Uploaded images (recreated by server)
 frontend/public/uploads/
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Misc temporary/test files
+psi_direct.json
+nul
+scripts/write-mobile-css.js
+
+Markdown
 Architecture.md 
 README.md 
