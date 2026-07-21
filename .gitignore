@@ -5,12 +5,8 @@ yarn-error.log*
 *.log
 *.err
 .env
-
-# Database (berisi password hash admin - JANGAN di-commit!)
 database/db.json
-
-# Backup database
 database/backups/
-
-# Hasil upload user/admin
 frontend/public/uploads/
+Architecture.md 
+README.md 

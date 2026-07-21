@@ -20,9 +20,12 @@ a{color:inherit}
 .table-scroll{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .table-scroll > table{width:100%}
 
-/* ── Hamburger button (dipakai di semua halaman dashboard) ── */
+/* ── Hamburger button (dipakai di semua halaman dashboard) ──
+   Di mobile posisinya mengambang di tengah-bawah layar (floating
+   action button), lepas dari topbar. Karena position:fixed, taruh
+   markup-nya di mana saja di DOM tidak masalah — dia tidak makan
+   ruang di flex .topbar-heading. */
 .hamburger{display:none}
-.hamburger:hover{background:var(--bg)}
 .hamburger svg{width:20px;height:20px}
 
 /* ── Sidebar overlay (mobile) ── */
@@ -46,24 +49,39 @@ a{color:inherit}
   }
   .sidebar.open{ transform: translateX(0); }
   .main{ margin-left: 0; }
+
   .hamburger{
-    display:inline-flex;align-items:center;justify-content:center;
-    width:36px;height:36px;border:none;background:transparent;color:var(--text);
-    cursor:pointer;padding:0;flex-shrink:0;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    position:fixed;
+    left:50%;
+    bottom: calc(20px + env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    width:56px;height:56px;
+    border-radius:50%;
+    border:none;
+    background:var(--navy);
+    color:#fff;
+    box-shadow: 0 6px 20px rgba(15,23,42,0.35), 0 2px 6px rgba(15,23,42,0.2);
+    cursor:pointer;
+    padding:0;
+    z-index:250;
     -webkit-tap-highlight-color: transparent;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
+  .hamburger svg{ width:22px;height:22px; }
+  .hamburger:active{ transform: translateX(-50%) scale(0.92); }
   .sidebar-overlay{
     display:block;position:fixed;inset:0;background:rgba(15,23,42,0.5);
     z-index:199;opacity:0;pointer-events:none;transition:opacity 0.25s;
   }
   .sidebar-overlay.show{ opacity:1; pointer-events:auto; }
 
-  .topbar{ padding:14px 16px; gap:10px; }
-  .topbar-heading{ display:flex; align-items:center; gap:10px; min-width:0; }
-  .topbar-heading h1{ font-size:16px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .topbar{ padding:14px 16px; gap:10px; flex-direction:column; align-items:stretch; }
+  .topbar-heading{ display:flex; align-items:center; gap:10px; min-width:0; width:100%; }
+  .topbar-heading h1{ flex:1; min-width:0; font-size:16px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .topbar-heading p{ display:none; }
-  .topbar-actions{ flex-wrap:wrap; gap:8px; }
-  .content{ padding:16px 14px 40px; }
+  .topbar-actions{ width:100%; flex-wrap:wrap; gap:8px; }
+  .content{ padding:16px 14px 40px; padding-bottom: 96px; }
   .stat-grid{ grid-template-columns:1fr 1fr; gap:10px; }
 }
 
