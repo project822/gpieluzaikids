@@ -266,13 +266,31 @@
               if (modalActions) {
                 modalActions.innerHTML = "";
                 if (data.googleForm) {
-                  const a = document.createElement("a");
-                  a.href = data.googleForm;
-                  a.target = "_blank";
-                  a.rel = "noopener noreferrer";
-                  a.className = "btn primary";
-                  a.textContent = "Daftar ke Google Form";
-                  modalActions.appendChild(a);
+                  // Cek H-3: jika event dalam 3 hari atau sudah lewat, tutup registrasi
+                  var isRegClosed = false;
+                  if (data.day) {
+                    var evDate = new Date(data.day + 'T23:59:59');
+                    var now = new Date();
+                    var diffDays = Math.ceil((evDate - now) / (1000 * 60 * 60 * 24));
+                    if (diffDays <= 3) isRegClosed = true;
+                  }
+                  if (!isRegClosed) {
+                    var a = document.createElement("a");
+                    a.href = data.googleForm;
+                    a.target = "_blank";
+                    a.rel = "noopener noreferrer";
+                    a.className = "btn primary";
+                    a.textContent = "Daftar ke Google Form";
+                    modalActions.appendChild(a);
+                  } else {
+                    var span = document.createElement("span");
+                    span.className = "btn ghost";
+                    span.style.cssText = "cursor: default; opacity: 0.7;";
+                    span.setAttribute("aria-disabled", "true");
+                    span.setAttribute("title", "Pendaftaran ditutup (H-3)");
+                    span.innerHTML = '<i class="fas fa-ban"></i> Pendaftaran Ditutup';
+                    modalActions.appendChild(span);
+                  }
                 }
               }
               openModal();

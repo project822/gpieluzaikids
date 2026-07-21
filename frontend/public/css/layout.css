@@ -84,7 +84,7 @@
 .modal-body img {
   width: 100%;
   max-width: 220px;
-  aspect-ratio: 9 / 16;
+  aspect-ratio: 4 / 5;
   object-fit: cover;
   border-radius: var(--radius-md);
   background: var(--surface-dim);
@@ -346,7 +346,7 @@ html.theme-light .footer {
 .events-poster {
   width: 100%;
   max-width: 220px;
-  aspect-ratio: 9 / 16;
+  aspect-ratio: 4 / 5;
   background-size: cover;
   background-position: center;
   border-radius: var(--radius-md);

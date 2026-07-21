@@ -193,14 +193,14 @@ app.use(
   }),
 );
 
-// Multer for file uploads
-// Pakai memoryStorage: file masuk sebagai buffer di req.file.buffer,
-// supaya bisa diproses (crop 9:16 + resize + convert WebP) via sharp
-// SEBELUM ditulis ke disk. Ini menghindari nyimpen file mentah yang
-// besar/berat, sekaligus jadi tempat kita validasi ukuran & tipe file.
-const MAX_POSTER_SIZE_BYTES = 4 * 1024 * 1024; // 4MB
-const POSTER_WIDTH = 720;
-const POSTER_HEIGHT = 1280; // rasio 9:16, ukuran moderat (tidak perlu lebih besar untuk web)
+  // Multer for file uploads
+  // Pakai memoryStorage: file masuk sebagai buffer di req.file.buffer,
+  // supaya bisa diproses (crop 4:5 + resize + convert WebP) via sharp
+  // SEBELUM ditulis ke disk. Ini menghindari nyimpen file mentah yang
+  // besar/berat, sekaligus jadi tempat kita validasi ukuran & tipe file.
+  const MAX_POSTER_SIZE_BYTES = 4 * 1024 * 1024; // 4MB
+  const POSTER_WIDTH = 720;
+  const POSTER_HEIGHT = 900; // rasio 4:5, ukuran moderat (tidak perlu lebih besar untuk web)
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -243,7 +243,7 @@ function uploadPoster(req, res, next) {
   });
 }
 
-// Crop ke rasio 9:16 (cover, fokus otomatis ke area paling "menarik" biar tidak
+// Crop ke rasio 4:5 (cover, fokus otomatis ke area paling "menarik" biar tidak
 // asal potong tengah), resize ke ukuran moderat, lalu convert ke WebP.
 async function processPosterImage(buffer) {
   return sharp(buffer)

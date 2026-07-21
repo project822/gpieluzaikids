@@ -66,14 +66,14 @@
         <div class="events-slide" data-id="<%= event.id %>" data-index="<%= idx %>">
           <div class="events-slide-layout">
 
-            <!-- Poster 9:16 -->
+            <!-- Poster 4:5 -->
             <div class="events-poster-col">
               <% if (event.poster) { %>
                 <% if (idx === 0) { %>
                   <!-- Slide pertama = LCP element: pakai <img> asli (bukan CSS
                        background-image) + fetchpriority=high supaya browser
                        pasti mendeteksi & memprioritaskan ini sebagai LCP. -->
-                  <div class="events-poster" style="aspect-ratio: 9 / 16; padding: 0; overflow: hidden;">
+                  <div class="events-poster" style="aspect-ratio: 4 / 5; padding: 0; overflow: hidden;">
                     <img
                       src="<%= event.poster %>"
                       alt="Poster <%= event.title %>"
@@ -83,10 +83,10 @@
                   </div>
                 <% } else { %>
                   <!-- Slide selanjutnya: lazy via IntersectionObserver (lihat script di bawah) -->
-                  <div class="events-poster events-poster-lazy" style="aspect-ratio: 9 / 16;" data-bg="<%= event.poster %>"></div>
+                  <div class="events-poster events-poster-lazy" style="aspect-ratio: 4 / 5;" data-bg="<%= event.poster %>"></div>
                 <% } %>
               <% } else { %>
-                <div class="events-poster placeholder" style="aspect-ratio: 9 / 16;"></div>
+                <div class="events-poster placeholder" style="aspect-ratio: 4 / 5;"></div>
               <% } %>
             </div>
 
@@ -133,12 +133,24 @@
                 <% } %>
 
                 <div class="events-detail-actions">
-                  <% if (event.googleForm) { %>
+                  <% 
+                    // Cek apakah event sudah lewat atau dalam H-3
+                    var isRegistrationClosed = false;
+                    if (event.day) {
+                      var eventDate = new Date(event.day + 'T23:59:59');
+                      var now = new Date();
+                      var diffDays = Math.ceil((eventDate - now) / (1000 * 60 * 60 * 24));
+                      if (diffDays <= 3) isRegistrationClosed = true;
+                    }
+                  %>
+                  <% if (event.googleForm && !isRegistrationClosed) { %>
                     <a class="btn primary" href="<%= event.googleForm %>" target="_blank" rel="noopener">
                       <i class="fas fa-external-link-alt"></i> Daftar
                     </a>
                   <% } else { %>
-                    <span class="btn ghost" style="cursor: default; opacity: 0.7;" aria-disabled="true">Daftar</span>
+                    <span class="btn ghost" style="cursor: default; opacity: 0.7;" aria-disabled="true" title="<%= isRegistrationClosed ? 'Pendaftaran ditutup (H-3)' : 'Belum tersedia' %>">
+                      <i class="fas fa-ban"></i> <%= isRegistrationClosed ? 'Ditutup' : 'Daftar' %>
+                    </span>
                   <% } %>
                   <button class="btn ghost view-details" data-id="<%= event.id %>" type="button">
                     <i class="fas fa-info-circle"></i> Detail
