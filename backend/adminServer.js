@@ -75,6 +75,22 @@ app.use(
   express.static(DASHBOARD_DIR),
 );
 
+// Mobile dashboard — static files (HTML, CSS, JS) served as-is
+// Folder mobile-dashboard/ sejajar dengan dashboard/ & frontend/.
+const MOBILE_DASHBOARD_DIR = path.join(__dirname, "..", "mobile-dashboard");
+app.use(
+  "/mobile-dashboard",
+  express.static(MOBILE_DASHBOARD_DIR, {
+    maxAge: "1h",
+    immutable: false,
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith(".css") || filePath.endsWith(".js")) {
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      }
+    },
+  }),
+);
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "dev-secret-change-this-admin",
@@ -204,6 +220,16 @@ app.get("/dev/logout", (req, res) => {
   req.session.destroy(() => {
     res.redirect("/dev/login");
   });
+});
+
+// Mobile dashboard route (touch-optimized, bottom tab navigation)
+// Serves the static HTML file after dev auth check.
+app.get("/dev/mobile", ensureDevAuth, (req, res) => {
+  const mobileIndex = path.join(MOBILE_DASHBOARD_DIR, "index.html");
+  if (fs.existsSync(mobileIndex)) {
+    return res.sendFile(mobileIndex);
+  }
+  return res.status(404).send("Mobile dashboard not found.");
 });
 
 // Redirect aliases for dashboard monitoring

@@ -44,7 +44,18 @@ const projectRoot = process.cwd();
 
 const PUBLIC_VIEWS_DIR = path.join(projectRoot, "frontend", "views");
 const ADMIN_VIEWS_DIR = path.join(projectRoot, "admin");
-const PUBLIC_ASSETS_DIR = path.join(projectRoot, "frontend", "public");
+
+// Fallback jika path tidak ditemukan di process.cwd() (sama seperti fallback
+// untuk viewsDir di bawah -- process.cwd() kadang tidak menunjuk ke project
+// root yang sebenarnya di lingkungan serverless Vercel, jadi kita cek juga
+// relatif ke __dirname sebagai cadangan).
+let PUBLIC_ASSETS_DIR = path.join(projectRoot, "frontend", "public");
+if (!fs.existsSync(PUBLIC_ASSETS_DIR)) {
+  const altAssets = path.join(__dirname, "..", "frontend", "public");
+  if (fs.existsSync(altAssets)) {
+    PUBLIC_ASSETS_DIR = altAssets;
+  }
+}
 const UPLOADS_DIR = path.join(PUBLIC_ASSETS_DIR, "uploads");
 
 // Fallback jika path tidak ditemukan di process.cwd()
