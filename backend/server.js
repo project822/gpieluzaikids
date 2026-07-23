@@ -265,7 +265,7 @@ app.use(
 // - Dashboard APIs: sudah terproteksi ensureDevAuth + sameSite:lax cookie
 const CSRF_EXEMPT_PATHS = [
   "/admin/login", "/dev/login", "/login", "/dev/dashboard-mobile",
-  "/api/dev/", "/dev/api/", "/api/events/",
+  "/api/dev", "/dev/api", "/api/events",
   "/admin/events", "/admin/admins/new"
 ];
 

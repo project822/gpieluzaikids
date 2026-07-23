@@ -128,14 +128,17 @@
                 // Cari event pertama yang dalam jendela notifikasi (H-14 s.d H-3)
                 // Notifikasi muncul H-14 sebelum event, menghilang otomatis di H-3
                 // (sinkron dengan pembatasan pendaftaran)
+                // FIX: normalisasi ke awal hari (T00:00:00) agar selisih hari konsisten
+                // tanpa terpengaruh jam pembuatan event atau waktu akses.
                 let notifEvent = null;
                 let notifDaysLeft = 0;
                 if (typeof events !== 'undefined' && events && events.length) {
                   const now = new Date();
+                  now.setHours(0, 0, 0, 0); // reset ke awal hari ini
                   for (const ev of events) {
                     if (ev.day) {
-                      const evDate = new Date(ev.day + 'T23:59:59');
-                      const diff = Math.ceil((evDate - now) / (1000 * 60 * 60 * 24));
+                      const evDate = new Date(ev.day + 'T00:00:00');
+                      const diff = Math.round((evDate - now) / (1000 * 60 * 60 * 24));
                       if (diff > 3 && diff <= 14) {
                         notifEvent = ev;
                         notifDaysLeft = diff;
