@@ -2,27 +2,46 @@
  * Vercel Speed Insights API client
  * Fetches real-time Web Vitals data from Vercel Speed Insights.
  * 
- * Environment variables required:
- *   VERCEL_TOKEN     - Vercel API access token (from vercel.com/settings/tokens)
- *   VERCEL_TEAM_ID   - Vercel team ID (optional for personal projects)
- *   VERCEL_PROJECT_ID - Vercel project ID
+ * Credentials diperiksa secara dinamis (bisa dari env vars atau DB),
+ * bukan hanya dari environment variable saat module di-load.
+ * Urutan prioritas: parameter > environment variable
  */
 
 const https = require("https");
 
 const VERCEL_API_BASE = "api.vercel.com";
-const TOKEN = process.env.VERCEL_TOKEN || "";
-const TEAM_ID = process.env.VERCEL_TEAM_ID || "";
-const PROJECT_ID = process.env.VERCEL_PROJECT_ID || "";
+
+/**
+ * Baca credentials dari environment variable sebagai default.
+ */
+function getEnvCredentials() {
+  return {
+    token: process.env.VERCEL_TOKEN || "",
+    teamId: process.env.VERCEL_TEAM_ID || "",
+    projectId: process.env.VERCEL_PROJECT_ID || "",
+  };
+}
+
+/**
+ * Gabungkan credentials: parameter > env var.
+ */
+function resolveCredentials(overrides = {}) {
+  const env = getEnvCredentials();
+  return {
+    token: overrides.token || env.token,
+    teamId: overrides.teamId || env.teamId,
+    projectId: overrides.projectId || env.projectId,
+  };
+}
 
 /**
  * Make a GET request to the Vercel REST API.
  */
-function vercelApiGet(path) {
+function vercelApiGet(path, creds) {
   return new Promise((resolve, reject) => {
     const query = [];
-    if (TEAM_ID) query.push(`teamId=${encodeURIComponent(TEAM_ID)}`);
-    if (PROJECT_ID) query.push(`projectId=${encodeURIComponent(PROJECT_ID)}`);
+    if (creds.teamId) query.push(`teamId=${encodeURIComponent(creds.teamId)}`);
+    if (creds.projectId) query.push(`projectId=${encodeURIComponent(creds.projectId)}`);
 
     const qs = query.length ? `?${query.join("&")}` : "";
     const url = path + qs;
@@ -32,7 +51,7 @@ function vercelApiGet(path) {
       path: url,
       method: "GET",
       headers: {
-        Authorization: `Bearer ${TOKEN}`,
+        Authorization: `Bearer ${creds.token}`,
         "Content-Type": "application/json",
       },
     };
@@ -61,9 +80,11 @@ function vercelApiGet(path) {
  * @param {string} [opts.from] - ISO timestamp (default: 24h ago)
  * @param {string} [opts.to]   - ISO timestamp (default: now)
  * @param {number} [opts.limit] - max records (default: 50)
+ * @param {object} [creds] - Optional credentials (token, teamId, projectId)
  */
-async function getSpeedRecords({ from, to, limit = 50 } = {}) {
-  if (!TOKEN) {
+async function getSpeedRecords({ from, to, limit = 50 } = {}, creds) {
+  const resolved = resolveCredentials(creds);
+  if (!resolved.token) {
     return { error: "VERCEL_TOKEN not configured" };
   }
 
@@ -72,7 +93,7 @@ async function getSpeedRecords({ from, to, limit = 50 } = {}) {
 
   const path = `/v1/web/insights/speed-records?from=${encodeURIComponent(fromDate)}&to=${encodeURIComponent(now)}&limit=${limit}`;
   try {
-    return await vercelApiGet(path);
+    return await vercelApiGet(path, resolved);
   } catch (err) {
     return { error: err.message || "Gagal menghubungi Vercel API" };
   }
@@ -81,9 +102,13 @@ async function getSpeedRecords({ from, to, limit = 50 } = {}) {
 /**
  * Fetch Speed Insights with per-path grouping and aggregated metrics.
  * Returns data compatible with the dashboard top-pages view.
+ * 
+ * @param {string} [timeRange] - '24h', '7d', or '30d'
+ * @param {object} [creds] - Optional credentials override { token, teamId, projectId }
  */
-async function getSpeedInsightsData(timeRange = "7d") {
-  if (!TOKEN) {
+async function getSpeedInsightsData(timeRange = "7d", creds) {
+  const resolved = resolveCredentials(creds);
+  if (!resolved.token) {
     return { enabled: false, error: "VERCEL_TOKEN not configured" };
   }
 

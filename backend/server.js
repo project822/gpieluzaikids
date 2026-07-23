@@ -1069,13 +1069,32 @@ app.post(
 app.get("/admin", (req, res) => res.render("login/admin-login", { error: null }));
 
 // ============== SPEED INSIGHTS API ==============
+// Helper: ambil kredensial Vercel (env > DB) untuk diteruskan ke speedInsights.js
+async function getVercelCredentials() {
+  let dbConfig = { vercelToken: "", vercelProjectId: "" };
+  try {
+    dbConfig = await db.getSpeedInsightsConfig();
+  } catch (_) {}
+  
+  const envToken = process.env.VERCEL_TOKEN || "";
+  const envTeamId = process.env.VERCEL_TEAM_ID || "";
+  const envProjectId = process.env.VERCEL_PROJECT_ID || "";
+
+  return {
+    token: envToken || dbConfig.vercelToken,
+    teamId: envTeamId,
+    projectId: envProjectId || dbConfig.vercelProjectId,
+  };
+}
+
 app.get(
   "/api/dev/speed-insights",
   ensureDevAuth,
   asyncHandler(async (req, res) => {
     try {
       const timeRange = req.query.range || "7d";
-      const data = await getSpeedInsightsData(timeRange);
+      const creds = await getVercelCredentials();
+      const data = await getSpeedInsightsData(timeRange, creds);
       return res.json(data);
     } catch (err) {
       console.error("[Speed Insights] Error:", err);
@@ -1148,7 +1167,8 @@ app.post(
   "/api/dev/speed-insights/scan",
   ensureDevAuth,
   asyncHandler(async (req, res) => {
-    const data = await getSpeedInsightsData("30d");
+    const creds = await getVercelCredentials();
+    const data = await getSpeedInsightsData("30d", creds);
     if (data.error) {
       return res.status(400).json({ error: data.error });
     }
