@@ -1,0 +1,55 @@
+<div class="section-title">Google PageSpeed Insights</div>
+
+<div class="app-card">
+  <div class="app-card-loading" id="psi-loading">Loading PageSpeed data...</div>
+  <div class="app-card-empty" id="psi-empty" style="display:none;">⚠ PageSpeed API key belum dikonfigurasi</div>
+  <div id="psi-content" style="display:none;">
+    <div class="psi-section">
+      <div class="psi-score-circle" id="psi-circle">
+        <div class="psi-score-circle-inner">
+          <span id="psi-score">--</span>
+        </div>
+      </div>
+      <div class="psi-metrics" id="psi-metrics-grid">
+        <div class="psi-metric-item">
+          <div class="psi-metric-item-label">First Contentful Paint</div>
+          <div class="psi-metric-item-value" id="psi-fcp">--</div>
+        </div>
+        <div class="psi-metric-item">
+          <div class="psi-metric-item-label">Speed Index</div>
+          <div class="psi-metric-item-value" id="psi-si">--</div>
+        </div>
+        <div class="psi-metric-item">
+          <div class="psi-metric-item-label">Largest Contentful Paint</div>
+          <div class="psi-metric-item-value" id="psi-lcp">--</div>
+        </div>
+        <div class="psi-metric-item">
+          <div class="psi-metric-item-label">Time to Interactive</div>
+          <div class="psi-metric-item-value" id="psi-tti">--</div>
+        </div>
+        <div class="psi-metric-item">
+          <div class="psi-metric-item-label">Total Blocking Time</div>
+          <div class="psi-metric-item-value" id="psi-tbt">--</div>
+        </div>
+        <div class="psi-metric-item">
+          <div class="psi-metric-item-label">Cumulative Layout Shift</div>
+          <div class="psi-metric-item-value" id="psi-cls">--</div>
+        </div>
+      </div>
+      <div class="psi-refresh-info" id="psi-refresh">Auto-refresh setiap 24 jam</div>
+    </div>
+  </div>
+</div>
+
+<div class="section-title">Server Metrics</div>
+
+<div class="app-card">
+  <div class="metrics-list">
+    <div class="metric-row"><span class="metric-key">Uptime</span><span class="metric-value" id="mon-uptime">---</span></div>
+    <div class="metric-row"><span class="metric-key">Memory</span><span class="metric-value" id="mon-mem">---</span></div>
+    <div class="metric-row"><span class="metric-key">Node</span><span class="metric-value" id="mon-node">---</span></div>
+    <div class="metric-row"><span class="metric-key">Platform</span><span class="metric-value" id="mon-plat">---</span></div>
+    <div class="metric-row"><span class="metric-key">DB Ping</span><span class="metric-value" id="mon-dbping">---</span></div>
+    <div class="metric-row"><span class="metric-key">Requests</span><span class="metric-value" id="mon-req">0</span></div>
+  </div>
+</div>

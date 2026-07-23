@@ -147,9 +147,8 @@
                 <div class="nav-notif-item-wrap">
                   <div class="nav-notif-icon"><i class="fas fa-calendar-alt"></i></div>
                   <div class="nav-notif-body">
-                    <span class="nav-notif-label">✦ Event Mendatang</span>
-                    <span class="nav-notif-title"><%= notifEvent.title %></span>
-                    <span class="nav-notif-meta">
+                    <span class="nav-notif-label">Event Mendatang</span>
+                    <span class="nav-notif-date">
                       <i class="fas fa-calendar-alt"></i>
                       <%= (() => {
                         const s = String(notifEvent.day || '').trim();
@@ -162,12 +161,8 @@
                         const yyyy = d.getFullYear();
                         return `${dd}/${mm}/${yyyy}`;
                       })() %>
-                      <% if (notifEvent.time) { %> | <%= notifEvent.time %><% } %>
                     </span>
-                    <span class="nav-notif-days">
-                      <i class="fas fa-hourglass-half"></i> H-<%= notifDaysLeft %>
-                    </span>
-                    <span class="nav-notif-link">Lihat Event &rarr;</span>
+                    <span class="nav-notif-link">lihat detail event &rarr;</span>
                   </div>
                 </div>
               <% } else { %>

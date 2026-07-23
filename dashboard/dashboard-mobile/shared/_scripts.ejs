@@ -1,0 +1,559 @@
+<!-- ═══ JAVASCRIPT ═══ -->
+<script>
+var _ = document.getElementById.bind(document);
+
+function fmtU(s) {
+  if (s == null) return '---';
+  if (s < 60) return Math.round(s) + 's';
+  if (s < 3600) return Math.floor(s/60) + 'm ' + Math.round(s%60) + 's';
+  return Math.floor(s/3600) + 'h ' + Math.floor((s%3600)/60) + 'm';
+}
+
+function toast(m) {
+  var t=_('toast'); t.textContent=m; t.classList.add('show');
+  clearTimeout(t._h); t._h=setTimeout(function(){t.classList.remove('show')},2500);
+}
+
+function mobTab(n) {
+  document.querySelectorAll('.app-tab').forEach(function(t){t.classList.remove('active')});
+  document.querySelectorAll('.app-tabbar-item').forEach(function(b){b.classList.remove('active')});
+  _('t-'+n).classList.add('active');
+  document.querySelector('.app-tabbar-item[data-tab="'+n+'"]').classList.add('active');
+}
+
+function mobCloseModal(id) {
+  _(id).classList.remove('active');
+}
+document.addEventListener('click',function(e){
+  if(e.target.classList.contains('modal-overlay')){e.target.classList.remove('active');}
+});
+
+/* ════════ REFRESH ════════ */
+async function mobRefresh() {
+  var ri=_('ri'); if(ri)ri.classList.add('app-btn-spin');
+  setTimeout(function(){if(ri)ri.classList.remove('app-btn-spin')},500);
+  try {
+    var h=await(await fetch('/api/dev/health')).json();
+
+    // — HOME: 4-item status banner —
+    function setBannerDot(id, status) {
+      var el = _('hm-dot-'+id);
+      if(el) el.className = 'hm-banner-dot ' + status;
+    }
+    function setBannerVal(id, val) {
+      var el = _('hm-val-'+id);
+      if(el) el.textContent = val;
+    }
+    setBannerDot('website', h.website==='ok'?'ok':'error');
+    setBannerVal('website', h.website==='ok'?'Online':'Error');
+    setBannerDot('db', h.db==='ok'?'ok':'error');
+    setBannerVal('db', h.db==='ok'?h.dbPingMs+'ms':(h.dbError||'Disconnected'));
+
+    // — HOME: Stats —
+    var s=await(await fetch('/api/dev/stats')).json(),pv=s.pvStats||{};
+    _('hm-stat-visitors').textContent=pv.visitors||0;
+    _('hm-stat-pageviews').textContent=pv.pageviews||0;
+    _('hm-stat-latency').innerHTML=(s.metrics?(s.metrics.avgLatencyMs||0):0)+'<span class="unit">ms</span>';
+    _('hm-stat-requests').textContent=(h.totalRequests||0);
+
+    // — HOME: Server Info —
+    _('hm-server-uptime').textContent=fmtU(h.uptimeSeconds||0);
+    _('hm-server-mem').textContent=(h.memHeapUsedMB||0)+' MB';
+    _('hm-server-node').textContent=h.nodeVersion||'---';
+    _('hm-server-plat').textContent=h.platform||'---';
+    _('hm-server-dbping').textContent=(h.dbPingMs||0)+'ms';
+
+    // — HOME: Online Admins —
+    var a=await(await fetch('/dev/api/admins/statuses')).json();
+    var sts=a.adminStatuses||{},adms=a.admins||[];
+    var ol=adms.filter(function(x){return sts[x.username]&&sts[x.username].online===true});
+    var ac=_('hm-admin-card'), al=_('hm-admin-list'), aload=_('hm-admin-loading');
+    if(aload) aload.style.display='none';
+    if(al){
+      al.style.display='block';
+      al.innerHTML=!ol.length?'<div class="app-card-empty">Tidak ada admin online saat ini.</div>':
+        ol.map(function(x){
+          var lastOn=sts[x.username].lastOnline?new Date(sts[x.username].lastOnline).toLocaleString('id-ID'):'---';
+          return '<div class="account-item">'+
+            '<div class="account-item-left">'+
+              '<div class="account-item-avatar">'+x.username.charAt(0).toUpperCase()+'</div>'+
+              '<div class="account-item-info">'+
+                '<span class="account-item-name">'+x.username+'</span>'+
+                '<span class="account-item-status">'+
+                  '<span style="width:6px;height:6px;border-radius:50%;background:#22c55e;display:inline-block;"></span> Online'+
+                '</span>'+
+                '<span style="font-size:10px;color:#64748b;margin-top:1px;">Last: '+lastOn+'</span>'+
+              '</div>'+
+            '</div>'+
+          '</div>';
+        }).join('');
+    }
+
+    // — Content Stats —
+    try {
+      var cs=await(await fetch('/api/dev/content-stats')).json();
+      _('hm-cs-events').textContent=cs.events||0;
+      _('hm-cs-docs').textContent=cs.documentation||0;
+      _('hm-cs-admins').textContent=cs.admins||0;
+      _('hm-cs-backups').textContent=cs.backups||0;
+    }catch(e){}
+
+    // — Maintenance status on banner —
+    try {
+      var mtSt=await(await fetch('/api/dev/maintenance/status')).json();
+      setBannerDot('mt', mtSt.enabled?'warn':'ok');
+      setBannerVal('mt', mtSt.enabled?'ACTIVE':'Inactive');
+    }catch(e){ setBannerDot('mt','warn'); setBannerVal('mt','Error'); }
+
+    // Server metrics (monitoring tab)
+    _('mon-uptime').textContent=fmtU(h.uptimeSeconds||0);
+    _('mon-mem').textContent=(h.memHeapUsedMB||0)+' MB';
+    _('mon-node').textContent=h.nodeVersion||'---';
+    _('mon-plat').textContent=h.platform||'---';
+    _('mon-dbping').textContent=(h.dbPingMs||0)+'ms';
+    _('mon-req').textContent=h.totalRequests||0;
+
+    // — OVERVIEW: stats (reuse data from Home) —
+    _('ov-visitors').textContent=pv.visitors||0;
+    _('ov-pageviews').textContent=pv.pageviews||0;
+    _('ov-latency').innerHTML=(s.metrics?(s.metrics.avgLatencyMs||0):0)+'<span class="unit">ms</span>';
+    _('ov-online').textContent=pv.online||0;
+
+    // — ACTIVITY TAB —
+    try {
+      var acRes=await(await fetch('/api/dev/activity-logs?limit=30')).json();
+      var logs=acRes.logs||[];
+      _('ac-loading').style.display='none';
+      if(logs.length){
+        _('ac-list').style.display='block';
+        var acHtml='';
+        logs.forEach(function(l){
+          var cat=l.action?l.action.split('.')[0]:'other';
+          var iconSvg=cat==='admin'?'<path d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-3-6.65"/>':
+            cat==='event'?'<path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>':
+            cat==='backup'?'<path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>':
+            cat==='security'||cat==='maintenance'?'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>':
+            '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>';
+          var ts=l.timestamp?new Date(l.timestamp).toLocaleString('id-ID'):'—';
+          var detail=l.detail||'';
+          var uname=l.username||'system';
+          acHtml+='<div class="account-item" style="border-left:3px solid '+
+            (cat==='admin'?'#8B5CF6':cat==='event'?'#3B82F6':cat==='backup'?'#6366F1':cat==='security'?'#EF4444':cat==='maintenance'?'#F59E0B':'#94A3B8')+
+            ';padding-left:10px;">'+
+            '<div class="account-item-left" style="flex:1;">'+
+              '<div class="account-item-info">'+
+                '<span style="font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:700;">'+(l.action||'unknown')+'</span>'+
+                '<span class="account-item-name" style="font-size:12px;">'+detail+'</span>'+
+                '<span style="font-size:10px;color:#64748b;margin-top:2px;">👤 '+uname+' · 🕐 '+ts+'</span>'+
+              '</div>'+
+            '</div>'+
+          '</div>';
+        });
+        _('ac-list').innerHTML=acHtml;
+      }else{
+        _('ac-empty').style.display='block';
+      }
+    }catch(e){ _('ac-loading').style.display='none'; _('ac-empty').style.display='block'; }
+
+    // — ACCOUNT TAB: admin list (reuse data from Home) —
+    _('ac-list').innerHTML=!adms.length?'<div class="app-card-empty">No admins</div>':
+      adms.map(function(x){
+        var s=sts[x.username]||{},io=s.online===true,inl=x.username.charAt(0).toUpperCase();
+        var lastOn=s.lastOnline?new Date(s.lastOnline).toLocaleString('id-ID'):'---';
+        return '<div class="account-item">'+
+          '<div class="account-item-left">'+
+            '<div class="account-item-avatar">'+inl+'</div>'+
+            '<div class="account-item-info">'+
+              '<span class="account-item-name">'+x.username+'</span>'+
+              '<span class="account-item-status">'+
+                '<span style="width:6px;height:6px;border-radius:50%;background:'+(io?'#22c55e':'#64748b')+';display:inline-block;"></span> '+
+                (io?'Online':'Offline')+
+              '</span>'+
+              '<span style="font-size:10px;color:#64748b;margin-top:1px;">Last: '+lastOn+'</span>'+
+            '</div>'+
+          '</div>'+
+          '<div class="account-item-actions">'+
+            '<button class="account-action-btn" onclick="mobShowReset(\''+x.username+'\')" title="Reset Password">'+
+              '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>'+
+            '</button>'+
+            '<button class="account-action-btn danger" onclick="mobForceLogout(\''+x.username+'\')" title="Logout Device">'+
+              '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>'+
+            '</button>'+
+          '</div>'+
+        '</div>';
+      }).join('');
+
+    // — MAINTENANCE (System tab) —
+    var mt=await(await fetch('/api/dev/maintenance/status')).json();
+    _('sys-mt-toggle').checked=mt.enabled===true;
+    _('sys-mt-message').value=mt.message||'Website sedang dalam perbaikan. Silakan kembali lagi nanti.';
+    var mtIcon=_('sys-mt-icon');
+    if(mtIcon){
+      mtIcon.className='mt-hero-icon '+(mt.enabled?'on':'off');
+    }
+    var mtSub=_('sys-mt-sub');
+    if(mtSub){
+      mtSub.textContent=mt.enabled?'Pengguna sedang melihat halaman maintenance.':'Website berjalan normal. Aktifkan untuk menampilkan halaman perawatan.';
+    }
+    updatePreview();
+
+    // — SECURITY TAB — load stats (fire-and-forget, don't block refresh)
+    mobLoadSecurity(false).catch(function(e){console.warn('[security]',e);});
+
+    // — PAGE SPEED INSIGHTS (Monitoring tab) — cache 24 jam di localStorage
+    var psiKey=await(await fetch('/api/dev/pagespeed/config')).json();
+    if(psiKey.configured){
+      (function(){
+        var CACHE_KEY = '_psi_cache';
+        var cacheItem = localStorage.getItem(CACHE_KEY);
+        var cache = cacheItem ? JSON.parse(cacheItem) : null;
+        var now = Date.now();
+        var TWENTY_FOUR_HOURS = 86400000;
+        if (cache && cache.data && (now - cache.ts < TWENTY_FOUR_HOURS)) {
+          _('psi-loading').style.display='none';
+          _('psi-empty').style.display='none';
+          _('psi-content').style.display='block';
+          displayPSI(cache.data);
+          _('psi-refresh').textContent='Terakhir diperbarui: '+new Date(cache.ts).toLocaleString('id-ID')+' (auto-refresh 24 jam)';
+          return;
+        }
+        _('psi-loading').style.display='block';
+        _('psi-empty').style.display='none';
+        _('psi-content').style.display='none';
+        try{
+          fetch('/api/dev/pagespeed?url=https://gpieluzaikids.vercel.app&strategy=mobile').then(function(r){return r.json()}).then(function(psi){
+            _('psi-loading').style.display='none';
+            if(psi.error||psi.lighthouseError){
+              _('psi-empty').style.display='block';
+              _('psi-empty').textContent='⚠ '+(psi.error||psi.lighthouseError);
+            }else{
+              localStorage.setItem(CACHE_KEY, JSON.stringify({ts:Date.now(), data:psi}));
+              _('psi-content').style.display='block';
+              displayPSI(psi);
+              _('psi-refresh').textContent='Auto-refresh setiap 24 jam';
+            }
+          }).catch(function(e){
+            _('psi-loading').style.display='none';
+            _('psi-empty').style.display='block';
+            _('psi-empty').textContent='⚠ Gagal memuat PageSpeed data';
+            console.warn('[PSI]',e);
+          });
+        }catch(e){
+          _('psi-loading').style.display='none';
+          _('psi-empty').style.display='block';
+          _('psi-empty').textContent='⚠ Gagal memuat PageSpeed data';
+        }
+      })();
+    }else{
+      _('psi-loading').style.display='none';
+      _('psi-empty').style.display='block';
+    }
+
+  }catch(e){console.warn('[mobile-v2]',e);}
+}
+
+/* ════════ GOOGLE PAGE SPEED INSIGHTS ════════ */
+function displayPSI(data) {
+  var ld = data.lighthouseResult || data;
+  var cat = ld.categories || {};
+  var perf = cat.performance || {};
+  var score = perf.score != null ? Math.round(perf.score * 100) : null;
+  var audits = ld.audits || {};
+
+  var circle = _('psi-circle');
+  if(score !== null){
+    _('psi-score').textContent = score;
+    var cls = score >= 90 ? 'good' : score >= 50 ? 'needs-improvement' : 'poor';
+    circle.className = 'psi-score-circle ' + cls;
+    circle.style.setProperty('--pct', score + '%');
+  }
+
+  function fmtMetric(id, unit, div) {
+    var a = audits[id];
+    if(!a || a.score === null || a.score === undefined) { _(div).textContent = '---'; return; }
+    var val = a.numericValue;
+    if(val === undefined || val === null) { _(div).textContent = a.displayValue || '---'; return; }
+    if(unit === 's') _(div).textContent = (val/1000).toFixed(1) + 's';
+    else if(unit === 'ms') _(div).textContent = Math.round(val) + 'ms';
+    else if(unit === 'score') {
+      var sc = Math.round(val);
+      _(div).textContent = sc;
+      _(div).className = 'psi-metric-item-value ' + (sc >= 90 ? 'good' : sc >= 50 ? 'needs-improvement' : 'poor');
+      return;
+    }
+    else _(div).textContent = val.toFixed(2);
+
+    var s = a.score;
+    if(s >= 0.9) _(div).className = 'psi-metric-item-value good';
+    else if(s >= 0.5) _(div).className = 'psi-metric-item-value needs-improvement';
+    else _(div).className = 'psi-metric-item-value poor';
+  }
+
+  fmtMetric('first-contentful-paint', 'ms', 'psi-fcp');
+  fmtMetric('speed-index', 'ms', 'psi-si');
+  fmtMetric('largest-contentful-paint', 'ms', 'psi-lcp');
+  fmtMetric('interactive', 'ms', 'psi-tti');
+  fmtMetric('total-blocking-time', 'ms', 'psi-tbt');
+  fmtMetric('cumulative-layout-shift', 'score', 'psi-cls');
+}
+
+/* ════════ MAINTENANCE — TOGGLE ════════ */
+async function mobToggleMt(e){
+  try{
+    var msg = _('sys-mt-message').value.trim();
+    var r=await fetch('/api/dev/maintenance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:e, message:msg || undefined})});
+    var d=await r.json();if(!d.ok)throw new Error(d.error);
+    toast(e?'Maintenance ON':'Maintenance OFF');
+    var icon=_('sys-mt-icon');
+    if(icon) icon.className='mt-hero-icon '+(e?'on':'off');
+    var sub=_('sys-mt-sub');
+    if(sub){
+      sub.textContent=e?'Pengguna sedang melihat halaman maintenance.':'Website berjalan normal. Aktifkan untuk menampilkan halaman perawatan.';
+    }
+  }catch(x){_('sys-mt-toggle').checked=!e;toast('Error: '+x.message);}
+}
+
+/* ════════ MAINTENANCE — SAVE MESSAGE ════════ */
+async function mobSaveMtMsg() {
+  var msg = _('sys-mt-message').value.trim();
+  if (!msg) { showMtFeedback('Pesan tidak boleh kosong.', 'error'); return; }
+  var enabled = _('sys-mt-toggle').checked;
+  try {
+    var r = await fetch('/api/dev/maintenance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:enabled, message:msg})});
+    var d = await r.json();
+    if (!d.ok) throw new Error(d.error || 'Gagal');
+    showMtFeedback('✓ Pesan berhasil disimpan', 'success');
+  } catch (x) {
+    showMtFeedback('Gagal menyimpan: '+x.message, 'error');
+  }
+}
+
+function showMtFeedback(msg, type) {
+  var el = _('sys-mt-feedback');
+  el.textContent = msg;
+  el.className = 'mt-feedback ' + type;
+  el.style.display = 'block';
+  setTimeout(function(){ el.style.display = 'none'; }, 3000);
+}
+
+/* ════════ MAINTENANCE — LIVE PREVIEW ════════ */
+function updatePreview() {
+  var msgEl = _('sys-mt-message');
+  var previewEl = _('sys-mt-preview-msg');
+  if (msgEl && previewEl) {
+    previewEl.textContent = msgEl.value || 'Website sedang dalam perbaikan. Silakan kembali lagi nanti.';
+  }
+}
+
+/* ════════ SECURITY — LOAD DATA ════════ */
+async function mobLoadSecurity(showToast) {
+  try {
+    var statsRes = await fetch('/api/dev/security/stats');
+    var stats = await statsRes.json();
+
+    _('sec-events24h').textContent = stats.events24h || 0;
+    _('sec-rate-limited').textContent = stats.rateLimited || 0;
+    _('sec-bot').textContent = stats.botDetected || 0;
+    _('sec-blocked-count').textContent = stats.blockedIpCount || 0;
+    var totEl = _('sec-blocked-total');
+    if (totEl) totEl.textContent = (stats.blockedIpCount || 0) + ' entries';
+
+    // Top IPs
+    var top = stats.topIps || [];
+    var topEmpty = _('sec-top-empty');
+    var topData = _('sec-top-data');
+    if (top.length) {
+      if (topEmpty) topEmpty.style.display = 'none';
+      if (topData) topData.style.display = 'block';
+      var topBody = _('sec-top-body');
+      if (topBody) {
+        topBody.innerHTML = top.map(function(ip){
+          var cnt = ip.count || 0;
+          var cls = cnt >= 10 ? 'high' : cnt >= 5 ? 'mid' : 'low';
+          var safeIp = ip.ip.replace(/'/g, "\\'");
+          return '<tr>'+
+            '<td class="sec-ip-cell">'+ip.ip+'</td>'+
+            '<td><span class="sec-count-badge '+cls+'">'+cnt+'</span></td>'+
+            '<td><button class="sec-action-btn" onclick="mobBlockIpDirect(\''+safeIp+'\')">Block</button></td></tr>';
+        }).join('');
+      }
+    } else {
+      if (topEmpty) { topEmpty.style.display = 'block'; topEmpty.textContent = 'Belum ada data keamanan.'; }
+      if (topData) topData.style.display = 'none';
+    }
+
+    // Blocked IPs list
+    var blocked = stats.blockedIps || [];
+    var blockedList = _('sec-blocked-list');
+    var blockedEmpty = _('sec-blocked-empty');
+    if (blockedList) {
+      if (blocked.length) {
+        if (blockedEmpty) blockedEmpty.style.display = 'none';
+        blocked.forEach(function(ip){
+          var safeId = ip.replace(/\./g, '-');
+          var row = document.getElementById('sec-ip-'+safeId);
+          if (!row) {
+            var div = document.createElement('div');
+            div.className = 'sec-ip-row';
+            div.id = 'sec-ip-'+safeId;
+            div.innerHTML = '<span class="sec-ip-val">'+ip+'</span><button class="sec-action-btn" onclick="mobUnblockIp(\''+ip+'\')">Unblock</button>';
+            blockedList.appendChild(div);
+          }
+        });
+      }
+    }
+
+    // Security logs
+    var logs = stats.logs || [];
+    var logsEmpty = _('sec-logs-empty');
+    var logsData = _('sec-logs-data');
+    var logsCount = _('sec-logs-count');
+    if (logsCount) logsCount.textContent = logs.length + ' entries';
+
+    if (logs.length) {
+      if (logsEmpty) logsEmpty.style.display = 'none';
+      if (logsData) logsData.style.display = 'block';
+      var logsBody = _('sec-logs-body');
+      if (logsBody) {
+        logsBody.innerHTML = logs.map(function(l){
+          var ts = l.timestamp ? new Date(l.timestamp).toLocaleString('id-ID') : '—';
+          var type = l.type || 'unknown';
+          var typeCls = type;
+          var ip = l.ip || '—';
+          var path = l.path || '—';
+          var detail = l.detail || '';
+          return '<tr>'+
+            '<td class="sec-ts-cell">'+ts+'</td>'+
+            '<td><span class="sec-type-badge '+typeCls+'">'+type+'</span></td>'+
+            '<td class="sec-ip-cell">'+ip+'</td>'+
+            '<td class="sec-path-cell">'+path+'</td>'+
+            '<td class="sec-detail-cell">'+detail+'</td></tr>';
+        }).join('');
+      }
+    } else {
+      if (logsEmpty) logsEmpty.style.display = 'block';
+      if (logsData) logsData.style.display = 'none';
+    }
+
+    if (showToast) toast('Security data refreshed');
+  } catch(e) {
+    console.warn('[mobLoadSecurity]', e);
+    if (showToast) toast('Gagal memuat data keamanan');
+  }
+}
+
+/* ════════ SECURITY — BLOCK IP ════════ */
+async function mobBlockIp() {
+  var ip = _('sec-ip-input').value.trim();
+  if (!ip) { showSecFeedback('Masukkan IP address.', 'error'); return; }
+  await mobBlockIpDirect(ip);
+}
+
+async function mobBlockIpDirect(ip) {
+  try {
+    var r = await fetch('/api/dev/security/block-ip', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ip:ip})});
+    var d = await r.json();
+    if (!d.ok) throw new Error(d.error || 'Gagal');
+    _('sec-ip-input').value = '';
+    showSecFeedback('✓ IP '+ip+' berhasil diblokir', 'success');
+    var blockedList = _('sec-blocked-list');
+    var blockedEmpty = _('sec-blocked-empty');
+    if (blockedEmpty) blockedEmpty.style.display = 'none';
+    var safeId = ip.replace(/\./g, '-');
+    if (!document.getElementById('sec-ip-'+safeId)) {
+      var div = document.createElement('div');
+      div.className = 'sec-ip-row';
+      div.id = 'sec-ip-'+safeId;
+      div.innerHTML = '<span class="sec-ip-val">'+ip+'</span><button class="sec-action-btn" onclick="mobUnblockIp(\''+ip+'\')">Unblock</button>';
+      blockedList.appendChild(div);
+    }
+  } catch(x) {
+    showSecFeedback('Gagal memblokir: '+x.message, 'error');
+  }
+}
+
+async function mobUnblockIp(ip) {
+  try {
+    var r = await fetch('/api/dev/security/unblock-ip', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ip:ip})});
+    var d = await r.json();
+    if (!d.ok) throw new Error(d.error || 'Gagal');
+    toast('✓ IP '+ip+' dihapus');
+    var safeId = ip.replace(/\./g, '-');
+    var row = document.getElementById('sec-ip-'+safeId);
+    if (row) row.remove();
+    var blockedRows = document.querySelectorAll('#sec-blocked-list > .sec-ip-row');
+    if (!blockedRows.length) {
+      var blockedEmpty = _('sec-blocked-empty');
+      if (blockedEmpty) blockedEmpty.style.display = 'block';
+    }
+  } catch(x) {
+    toast('Gagal: '+x.message);
+  }
+}
+
+function showSecFeedback(msg, type) {
+  var el = _('sec-block-feedback');
+  el.textContent = msg;
+  el.className = 'sec-feedback ' + type;
+  el.style.display = 'block';
+  setTimeout(function(){ el.style.display = 'none'; }, 3000);
+}
+
+/* ════════ ACCOUNT — RESET PASSWORD ════════ */
+function mobShowReset(user) {
+  _('rp-user').value = user;
+  _('rp-pass').value = '';
+  _('rp-err').style.display = 'none';
+  _('rp-err').textContent = '';
+  _('rp-ok').style.display = 'none';
+  _('rp-ok').textContent = '';
+  _('rp-modal').classList.add('active');
+}
+
+async function mobResetPass() {
+  var user = _('rp-user').value;
+  var pass = _('rp-pass').value.trim();
+  if (!pass) { _('rp-err').textContent = 'Password tidak boleh kosong.'; _('rp-err').style.display = 'block'; return; }
+  try {
+    var r = await fetch('/api/dev/admins/reset-password', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username:user, newPassword:pass})});
+    var d = await r.json();
+    if (!d.ok) throw new Error(d.error || 'Gagal');
+    _('rp-ok').textContent = '✓ Password berhasil direset untuk '+user;
+    _('rp-ok').style.display = 'block';
+    _('rp-err').style.display = 'none';
+    _('rp-pass').value = '';
+  } catch(x) {
+    _('rp-err').textContent = x.message;
+    _('rp-err').style.display = 'block';
+    _('rp-ok').style.display = 'none';
+  }
+}
+
+/* ════════ ACCOUNT — FORCE LOGOUT ════════ */
+async function mobForceLogout(user) {
+  if (!confirm('Logout perangkat '+user+'?')) return;
+  try {
+    var r = await fetch('/api/dev/admins/force-logout', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username:user})});
+    var d = await r.json();
+    if (!d.ok) throw new Error(d.error || 'Gagal');
+    toast('✓ '+user+' telah di-logout');
+  } catch(x) { toast('Gagal: '+x.message); }
+}
+
+/* ════════ ACCOUNT — LOGOUT ALL ════════ */
+async function mobLogoutAll() {
+  if (!confirm('Logout semua perangkat admin?')) return;
+  try {
+    var r = await fetch('/api/dev/admins/force-logout-all', {method:'POST'});
+    var d = await r.json();
+    if (!d.ok) throw new Error(d.error || 'Gagal');
+    toast('✓ Semua perangkat telah di-logout');
+  } catch(x) { toast('Gagal: '+x.message); }
+}
+
+/* ════════ INIT ════════ */
+document.addEventListener('DOMContentLoaded', function() {
+  mobRefresh();
+  setInterval(mobRefresh, 30000);
+});
+</script>

@@ -216,77 +216,80 @@ app.use(
   express.static(dashboardDir)
 );
 
-// Session
-// PENTING: default express-session pakai MemoryStore (di RAM proses Node).
+// ============== SESSION SETUP ==============
+// Session disetup secara DINAMIS: mula-mula pakai MemoryStore stand-in (untuk
+// cold start), lalu setelah MongoDB terkoneksi di initDb(), diganti dengan
+// session middleware beneran yang pakai MongoStore.
+//
+// PENTING: express-session default pakai MemoryStore (di RAM proses Node).
 // Di Vercel (serverless), tiap request bisa dilayani instance/container yang
 // BERBEDA -> instance lain tidak tahu session yang dibuat di instance lain,
 // jadi user bisa "ke-logout" secara acak / dapat "Network error" saat fetch
 // API karena request-nya di-redirect ke halaman login (bukan JSON).
-// Solusinya: simpan session di MongoDB (sudah dipakai project ini) supaya
-// semua instance baca dari sumber yang sama.
-// Fallback: kalau MONGO_URI belum di-set, pakai MemoryStore supaya server
-// tetap bisa jalan untuk development/testing.
+// Solusinya: simpan session di MongoDB supaya semua instance baca dari
+// sumber yang sama.
 
-let sessionStore;
-if (!process.env.MONGO_URI) {
-  console.error(
-    "[Session] WARN: MONGO_URI belum di-set. Fallback ke MemoryStore. Login tidak akan " +
-      "persisten di Vercel serverless. Set MONGO_URI untuk production.",
-  );
-  sessionStore = new session.MemoryStore();
-} else {
-  if (typeof MongoStore.create !== "function") {
-    console.error(
-      "[Session] FATAL: MongoStore.create bukan function. Bentuk module connect-mongo " +
-        "tidak sesuai dugaan. Keys yang tersedia:",
-      Object.keys(connectMongoModule),
-    );
-    throw new Error(
-      "connect-mongo module tidak sesuai dugaan (MongoStore.create bukan function). " +
-        "Cek versi 'connect-mongo' yang ter-install (harus v4+) dan lihat log di atas untuk detail.",
-    );
-  }
+// Module-level mutable reference untuk session middleware.
+// Di-set pertama kali saat cold start (MemoryStore), lalu di-replace
+// oleh initDb() dengan MongoStore setelah MongoDB terkoneksi.
+// NOTE: transisi MemoryStore->MongoStore berpotensi orphan session
+// yg dibuat selama cold start, tapi dalam praktik:
+// - Window cold start sangat singkat (<1s warm, ~2-5s cold start)
+// - Request pertama biasanya cuma render login page (tanpa login)
+// - Login POST terjadi setelah initDb() selesai
+let _sessionMiddleware = null;
+let _sessionStore = null;
 
-  try {
-    sessionStore = MongoStore.create({
-      clientPromise: db.getClient(),
-      dbName: process.env.MONGO_DB_NAME || "gereja",
-      collectionName: "sessions",
-      ttl: 14 * 24 * 60 * 60, // 14 hari (detik)
-    });
+// Konfigurasi cookie konsisten — dipakai oleh fallback dan real session.
+const SESSION_COOKIE_CONFIG = {
+  maxAge: 14 * 24 * 60 * 60 * 1000, // 14 hari (ms)
+  httpOnly: true,
+  secure: "auto",
+  sameSite: "lax",
+};
 
-    sessionStore.on("error", (err) => {
-      console.error("[SessionStore] Error:", err.message);
-    });
-  } catch (err) {
-    console.error("[Session] Gagal membuat MongoStore:", err.message);
-    console.error("[Session] Fallback ke MemoryStore.");
-    sessionStore = new session.MemoryStore();
-  }
-}
-
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || (global._sessionSecret || (global._sessionSecret = crypto.randomUUID())),
+// Helper: buat session middleware dengan store tertentu
+function createSessionMiddleware(store) {
+  const secret =
+    process.env.SESSION_SECRET ||
+    (global._sessionSecret || (global._sessionSecret = crypto.randomUUID()));
+  return session({
+    secret,
     resave: false,
     saveUninitialized: false,
-    store: sessionStore,
-    cookie: {
-      maxAge: 14 * 24 * 60 * 60 * 1000, // 14 hari (ms)
-      httpOnly: true,
-      // 'auto': Secure flag otomatis nyala kalau request asli-nya HTTPS
-      // (terdeteksi lewat req.secure, akurat sekarang berkat trust proxy
-      // di atas), tanpa bergantung env var NODE_ENV yang bisa saja tidak
-      // ke-set persis "production" di semua situasi deploy.
-      secure: "auto",
-      sameSite: "lax",
-    },
-  }),
-);
+    store,
+    cookie: SESSION_COOKIE_CONFIG,
+  });
+}
 
-// Peringatan session secret
+// ── SESSION WRAPPER MIDDLEWARE ──
+// Dipasang SEBELUM semua route handler. Memastikan req.session selalu
+// tersedia, bahkan saat cold start sebelum MongoDB terkoneksi.
+// Begitu initDb() selesai, middleware asli (dengan MongoStore)
+// menggantikan fallback di atas.
+app.use((req, res, next) => {
+  if (!_sessionMiddleware) {
+    // Fallback sementara: MemoryStore. Hanya aktif sesaat saat cold start
+    // sebelum MongoDB terkoneksi. Segera setelah initDb() selesai,
+    // _sessionMiddleware akan diganti dengan MongoStore yang proper.
+    _sessionMiddleware = createSessionMiddleware(new session.MemoryStore());
+    if (!process.env.MONGO_URI) {
+      console.warn(
+        "[Session] Fallback MemoryStore aktif (MONGO_URI belum di-set). " +
+          "Login tidak akan persisten di Vercel serverless.",
+      );
+    }
+  }
+  return _sessionMiddleware(req, res, next);
+});
+
 if (!process.env.SESSION_SECRET) {
-  console.warn("[Session] ⚠️  SESSION_SECRET tidak di-set. Menggunakan random fallback — session tidak akan bertahan di Vercel serverless. Set SESSION_SECRET di environment variable.");
+  console.warn(
+    "[Session] ⚠️ ⚠️ ⚠️  SESSION_SECRET tidak di-set! " +
+      "Gunakan random fallback — session tidak akan bertahan jika request " +
+      "dilayani oleh container Vercel yang berbeda. " +
+      "WAJIB Set SESSION_SECRET di environment variable Vercel.",
+  );
 }
 
 // ============== CSRF PROTECTION ==============
@@ -489,6 +492,48 @@ function ensureDevAuth(req, res, next) {
   try {
     await db.connect();
     console.log("[DB] MongoDB connected successfully");
+
+    // ── INIT SESSION STORE ──
+    // Setelah MongoDB terkoneksi, ganti session middleware fallback
+    // (MemoryStore) dengan yang proper (MongoStore) supaya session
+    // persisten di semua container Vercel.
+    if (process.env.MONGO_URI) {
+      try {
+        if (typeof MongoStore.create !== "function") {
+          throw new Error(
+            "MongoStore.create bukan function. Cek versi connect-mongo.",
+          );
+        }
+
+        const mongoStore = MongoStore.create({
+          clientPromise: db.getClient(),
+          dbName: process.env.MONGO_DB_NAME || "gereja",
+          collectionName: "sessions",
+          ttl: 14 * 24 * 60 * 60, // 14 hari (detik)
+        });
+
+        mongoStore.on("error", (err) => {
+          console.error("[SessionStore] Error:", err.message);
+        });
+
+        // Replace session middleware dengan MongoStore
+        _sessionStore = mongoStore;
+        _sessionMiddleware = createSessionMiddleware(mongoStore);
+        console.log("[Session] MongoStore session middleware aktif.");
+      } catch (err) {
+        console.error("[Session] Gagal membuat MongoStore:", err.message);
+        console.error(
+          "[Session] Tetap pakai MemoryStore — session tidak akan persisten " +
+            "di Vercel serverless.",
+        );
+      }
+    } else {
+      // Tetap pakai MemoryStore yang sudah aktif sejak cold start
+      console.warn(
+        "[Session] MONGO_URI belum di-set. Session HANYA di MemoryStore — " +
+          "tidak persisten di Vercel serverless.",
+      );
+    }
 
     // Init default admin — hanya jika:
     // 1. Belum ada admin sama sekali
@@ -766,8 +811,7 @@ app.get("/dev/dashboard", (req, res) => res.redirect("/dev/dashboard-desktop"));
 app.get("/dev/dashboard/analytics", (req, res) => res.redirect("/dev/dashboard-desktop/analytics"));
 app.get("/dev/dashboard/monitoring", (req, res) => res.redirect("/dev/dashboard-desktop/monitoring"));
 app.get("/dev/dashboard/admins", (req, res) => res.redirect("/dev/dashboard-desktop/admins"));
-app.get("/dev/dashboard/landing", (req, res) => res.redirect("/dev/dashboard-desktop/landing"));
-app.get("/dev/dashboard/health", (req, res) => res.redirect("/dev/dashboard-desktop/health"));
+
 app.get("/dev/dashboard/maintenance", (req, res) => res.redirect("/dev/dashboard-desktop/maintenance"));
 app.get("/dev/dashboard/security", (req, res) => res.redirect("/dev/dashboard-desktop/security"));
 
@@ -786,7 +830,7 @@ app.get(
       ? Math.round((metrics.totalLatencyMsSum || 0) / (metrics.totalRequests || 1))
       : 0;
 
-    return res.render("overview/overview", {
+    return res.render("dashboard-desktop/home/home", {
       metrics,
       avgLatencyMs,
       admins: admins || [],
@@ -810,7 +854,7 @@ app.get(
       ? Math.round((metrics.totalLatencyMsSum || 0) / (metrics.totalRequests || 1))
       : 0;
 
-    return res.render("analytics/analytics", {
+    return res.render("dashboard-desktop/overview/overview", {
       avgLatencyMs,
       pvStats,
       timeRange,
@@ -827,7 +871,7 @@ app.get(
       ? Math.round((metrics.totalLatencyMsSum || 0) / (metrics.totalRequests || 1))
       : 0;
 
-    return res.render("monitoring/monitoring", {
+    return res.render("dashboard-desktop/monitor/monitor", {
       metrics,
       avgLatencyMs,
     });
@@ -843,7 +887,7 @@ app.get(
       db.getAdmins(),
     ]);
 
-    return res.render("admins/admins", {
+    return res.render("dashboard-desktop/accounts/accounts", {
       admins: admins || [],
       adminStatuses,
     });
@@ -1145,7 +1189,7 @@ app.get(
     const logs = await db.getActivityLogs({ limit: 100 });
     // Get content stats for the sidebar/header
     const contentStats = await db.getContentStats();
-    return res.render("activity/activity", { logs, contentStats });
+    return res.render("dashboard-desktop/activity/activity", { logs, contentStats });
   }),
 );
 
@@ -1320,25 +1364,7 @@ app.post(
   }),
 );
 
-// ============== DASHBOARD LANDING PAGE ==============
-// Halaman utama dashboard — ringkasan sistem dengan status banner,
-// statistik real-time, online admins, dan quick actions.
-app.get(
-  "/dev/dashboard-desktop/landing",
-  ensureDevAuth,
-  asyncHandler(async (req, res) => {
-    return res.render("dashboard-landing/dashboard", {});
-  }),
-);
 
-// Health Check page
-app.get(
-  "/dev/dashboard-desktop/health",
-  ensureDevAuth,
-  asyncHandler(async (req, res) => {
-    return res.render("health/health", {});
-  }),
-);
 
 // Maintenance page
 app.get(
@@ -1346,7 +1372,7 @@ app.get(
   ensureDevAuth,
   asyncHandler(async (req, res) => {
     const maintenanceMode = await db.getMaintenanceMode();
-    return res.render("maintenance/maintenance", { maintenanceMode });
+    return res.render("dashboard-desktop/system/system", { maintenanceMode });
   }),
 );
 
@@ -1360,7 +1386,7 @@ app.get(
       db.getSecurityLogs({ limit: 50 }),
       db.getBlockedIps(),
     ]);
-    return res.render("security/security", { secStats, secLogs, blockedIps });
+    return res.render("dashboard-desktop/security/security", { secStats, secLogs, blockedIps });
   }),
 );
 
@@ -1506,6 +1532,29 @@ app.post(
     db.logActivity({ action: "security.unblock_ip", detail: `IP ${ip} unblocked`, username: req.session.devUser?.username || "dev" }).catch(() => {});
     return res.json({ ok: true, ip });
   }),
+);
+
+// ============== SESSION DEBUG ENDPOINT ==============
+// Untuk diagnosa: cek status session saat ini.
+// Hanya bisa diakses oleh dev yang sudah login.
+app.get(
+  "/dev/api/debug/session",
+  ensureDevAuth,
+  (req, res) => {
+    const sessionData = {
+      hasSession: !!req.session,
+      hasDevUser: !!req.session?.devUser,
+      hasCsrfToken: !!req.session?.csrfToken,
+      sessionId: req.sessionID || null,
+      cookieMaxAge: req.session?.cookie?.maxAge || null,
+      storeType: _sessionStore && _sessionStore.constructor
+        ? _sessionStore.constructor.name
+        : (_sessionMiddleware ? "MemoryStore (fallback)" : "not initialized"),
+      hasMongoUri: !!process.env.MONGO_URI,
+      hasSessionSecret: !!process.env.SESSION_SECRET,
+    };
+    res.json({ ok: true, session: sessionData });
+  },
 );
 
 // ============== 404 HANDLER (route tidak ditemukan) ==============

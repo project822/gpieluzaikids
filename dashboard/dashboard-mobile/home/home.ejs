@@ -1,0 +1,114 @@
+<!-- Welcome -->
+<div class="welcome-banner">
+  <div class="welcome-title">Selamat Datang, <%= user %> 👋</div>
+  <div class="welcome-subtitle">gpieluzaikids · Developer Console</div>
+</div>
+
+<!-- ── 4-ITEM STATUS BANNER ── -->
+<div class="hm-banner" id="hm-banner">
+  <div class="hm-banner-item">
+    <span class="hm-banner-dot ok" id="hm-dot-website"></span>
+    <span class="hm-banner-label">Website</span>
+    <span class="hm-banner-val" id="hm-val-website">Checking...</span>
+  </div>
+  <div class="hm-banner-item">
+    <span class="hm-banner-dot ok" id="hm-dot-db"></span>
+    <span class="hm-banner-label">Database</span>
+    <span class="hm-banner-val" id="hm-val-db">Checking...</span>
+  </div>
+  <div class="hm-banner-item">
+    <span class="hm-banner-dot" id="hm-dot-mt"></span>
+    <span class="hm-banner-label">Maintenance</span>
+    <span class="hm-banner-val" id="hm-val-mt">—</span>
+  </div>
+</div>
+
+<!-- ── STATS GRID ── -->
+<div class="section-title">Ringkasan</div>
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-card-label">Visitors <span class="stat-card-badge">7d</span></div>
+    <div class="stat-card-value" id="hm-stat-visitors">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-label">Page Views</div>
+    <div class="stat-card-value" id="hm-stat-pageviews">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-label">Avg Latency</div>
+    <div class="stat-card-value" id="hm-stat-latency">0<span class="unit">ms</span></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-label">Total Requests</div>
+    <div class="stat-card-value" id="hm-stat-requests">0</div>
+  </div>
+</div>
+
+<!-- ── CONTENT STATS ── -->
+<div class="section-title">Content</div>
+<div class="stat-grid">
+  <div class="stat-card" style="cursor:default;">
+    <div class="stat-card-label">Events</div>
+    <div class="stat-card-value cs-stat" id="hm-cs-events">—</div>
+  </div>
+  <div class="stat-card" style="cursor:default;">
+    <div class="stat-card-label">Docs</div>
+    <div class="stat-card-value cs-stat" id="hm-cs-docs">—</div>
+  </div>
+  <div class="stat-card" style="cursor:default;">
+    <div class="stat-card-label">Admins</div>
+    <div class="stat-card-value cs-stat" id="hm-cs-admins">—</div>
+  </div>
+  <div class="stat-card" style="cursor:default;">
+    <div class="stat-card-label">Backups</div>
+    <div class="stat-card-value cs-stat" id="hm-cs-backups">—</div>
+  </div>
+</div>
+
+<!-- ── QUICK ACTIONS GRID ── -->
+<div class="section-title">Quick Actions</div>
+<div class="hm-quick-grid">
+  <button class="hm-quick-card" onclick="mobTab('overview')">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0h6"/></svg>
+    <span>Overview</span>
+  </button>
+  <button class="hm-quick-card" onclick="mobTab('overview')">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18M7 16l4-4 4 4 4-4"/></svg>
+    <span>Analytics</span>
+  </button>
+  <button class="hm-quick-card" onclick="mobTab('monitoring')">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+    <span>Monitor</span>
+  </button>
+  <button class="hm-quick-card" onclick="mobTab('account')">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-3-6.65"/></svg>
+    <span>Accounts</span>
+  </button>
+  <button class="hm-quick-card" onclick="mobTab('system')">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+    <span>System</span>
+  </button>
+  <button class="hm-quick-card" onclick="mobTab('security')">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    <span>Security</span>
+  </button>
+</div>
+
+<!-- ── SERVER INFO ── -->
+<div class="section-title">Server Info</div>
+<div class="app-card">
+  <div class="metrics-list hm-server-list">
+    <div class="metric-row"><span class="metric-key">Uptime</span><span class="metric-value" id="hm-server-uptime">---</span></div>
+    <div class="metric-row"><span class="metric-key">Memory</span><span class="metric-value" id="hm-server-mem">---</span></div>
+    <div class="metric-row"><span class="metric-key">Node</span><span class="metric-value" id="hm-server-node">---</span></div>
+    <div class="metric-row"><span class="metric-key">Platform</span><span class="metric-value" id="hm-server-plat">---</span></div>
+    <div class="metric-row"><span class="metric-key">DB Ping</span><span class="metric-value" id="hm-server-dbping">---</span></div>
+  </div>
+</div>
+
+<!-- ── ONLINE ADMINS ── -->
+<div class="section-title">Online Admins</div>
+<div class="app-card" id="hm-admin-card">
+  <div class="app-card-loading" id="hm-admin-loading">Loading...</div>
+  <div id="hm-admin-list" style="display:none;"></div>
+</div>

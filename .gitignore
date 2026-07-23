@@ -38,5 +38,4 @@ nul
 scripts/write-mobile-css.js
 
 Markdown
-Architecture.md 
-README.md 
+DESIGN.md 

@@ -375,15 +375,19 @@ async function getMaintenanceMode() {
 
 async function setMaintenanceMode({ enabled, message }) {
   const d = await connect();
+  const updateFields = {
+    enabled: Boolean(enabled),
+    updatedAt: new Date().toISOString(),
+  };
+  // Hanya update message jika dikirim eksplisit (tidak undefined).
+  // Ini penting karena toggle dari overview page tidak mengirim message,
+  // dan kita tidak ingin menimpa custom message yang sudah diset.
+  if (message !== undefined) {
+    updateFields.message = message || "Website sedang dalam perbaikan. Silakan kembali lagi nanti.";
+  }
   await d.collection("settings").updateOne(
     { _id: "maintenance" },
-    {
-      $set: {
-        enabled: Boolean(enabled),
-        message: message || "Website sedang dalam perbaikan. Silakan kembali lagi nanti.",
-        updatedAt: new Date().toISOString(),
-      },
-    },
+    { $set: updateFields },
     { upsert: true },
   );
 }
