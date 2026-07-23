@@ -71,7 +71,11 @@ async function getSpeedRecords({ from, to, limit = 50 } = {}) {
   const fromDate = from || new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
   const path = `/v1/web/insights/speed-records?from=${encodeURIComponent(fromDate)}&to=${encodeURIComponent(now)}&limit=${limit}`;
-  return await vercelApiGet(path);
+  try {
+    return await vercelApiGet(path);
+  } catch (err) {
+    return { error: err.message || "Gagal menghubungi Vercel API" };
+  }
 }
 
 /**

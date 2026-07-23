@@ -109,10 +109,10 @@
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
           <span>System</span>
         </button>
-        <a href="/dev/dashboard-desktop/security" class="hm-quick-card">
+        <button class="hm-quick-card" onclick="mobTab('security')">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           <span>Security</span>
-        </a>
+        </button>
       </div>
 
       <!-- ── SERVER INFO ── -->
@@ -178,30 +178,212 @@
 
     </section>
 
-    <!-- ═══════════════ TAB: SYSTEM ═══════════════ -->
+    <!-- ═══════════════ TAB: SYSTEM (Maintenance Mode — full desktop parity) ═══════════════ -->
     <section class="app-tab" id="t-system">
 
       <div class="section-title">Maintenance Mode</div>
 
-      <div class="maintenance-card">
-        <div class="maintenance-header">
-          <div class="maintenance-label">
-            <div class="maintenance-label-icon">
-              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            </div>
-            <div class="maintenance-label-text">
-              <strong>Maintenance Mode</strong>
-              <span>Aktifkan untuk menampilkan halaman pemeliharaan</span>
-            </div>
+      <!-- Hero Toggle Card -->
+      <div class="mt-hero-card">
+        <div class="mt-hero-left">
+          <div class="mt-hero-icon off" id="sys-mt-icon">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
           </div>
-          <label class="toggle"><input type="checkbox" id="mt-toggle" onchange="mobToggleMt(this.checked)"><span class="toggle-track"></span></label>
+          <div class="mt-hero-info">
+            <div class="mt-hero-title">Maintenance Mode</div>
+            <div class="mt-hero-sub" id="sys-mt-sub">Website berjalan normal. Aktifkan untuk menampilkan halaman perawatan.</div>
+          </div>
         </div>
-        <div class="maintenance-body">
-          <div class="maintenance-form-group">
-            <label>Pesan Kustom</label>
-            <textarea id="mt-message" rows="3" placeholder="Website sedang dalam perbaikan. Silakan kembali lagi nanti."></textarea>
+        <label class="mt-toggle-btn">
+          <input type="checkbox" id="sys-mt-toggle" onchange="mobToggleMt(this.checked)">
+          <span class="mt-toggle-slider"></span>
+        </label>
+      </div>
+
+      <!-- Message Editor -->
+      <div class="app-card">
+        <div class="card-header">
+          <span class="card-header-title">Pesan Maintenance</span>
+          <span class="card-header-sub">Ditampilkan ke pengguna saat maintenance aktif</span>
+        </div>
+        <div style="padding:12px 16px 16px;">
+          <textarea id="sys-mt-message" class="mt-textarea" rows="4" placeholder="Website sedang dalam perbaikan. Silakan kembali lagi nanti." oninput="updatePreview()">Website sedang dalam perbaikan. Silakan kembali lagi nanti.</textarea>
+          <div class="mt-msg-actions">
+            <span class="mt-msg-hint">Pesan ini muncul di halaman maintenance yang dilihat pengunjung.</span>
+            <button class="btn-primary btn-sm" onclick="mobSaveMtMsg()">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>
+              Simpan Pesan
+            </button>
           </div>
-          <div class="maintenance-status-badge" id="mt-status-badge">Inactive</div>
+          <div id="sys-mt-feedback" class="mt-feedback" style="display:none;"></div>
+        </div>
+      </div>
+
+      <!-- Preview Card -->
+      <div class="app-card">
+        <div class="card-header">
+          <span class="card-header-title">Preview Halaman Maintenance</span>
+          <span class="card-header-sub">Tampilan yang dilihat pengguna</span>
+        </div>
+        <div class="mt-preview-frame">
+          <div class="mt-preview-content">
+            <div class="mt-preview-icon">🔧</div>
+            <div class="mt-preview-title">Website Sedang Dalam Perbaikan</div>
+            <div class="mt-preview-msg" id="sys-mt-preview-msg">Website sedang dalam perbaikan. Silakan kembali lagi nanti.</div>
+            <div class="mt-preview-sub">— Tim gpieluzaikids</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info Card -->
+      <div class="app-card">
+        <div class="card-header">
+          <span class="card-header-title">Informasi</span>
+        </div>
+        <div class="mt-info-body">
+          <div class="mt-info-item">
+            <div class="mt-info-icon blue">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            </div>
+            <div class="mt-info-text">
+              <div class="mt-info-title">Halaman yang diblokir</div>
+              <div class="mt-info-desc">Saat maintenance aktif, semua request ke halaman publik (/, /events, /documentation) akan dialihkan ke halaman maintenance. Halaman admin tetap dapat diakses.</div>
+            </div>
+          </div>
+          <div class="mt-info-item">
+            <div class="mt-info-icon green">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            </div>
+            <div class="mt-info-text">
+              <div class="mt-info-title">Halaman yang tetap aktif</div>
+              <div class="mt-info-desc">Jalur /admin/*, /dev/*, dan /api/* tetap berfungsi normal. Dev dan admin masih bisa login dan bekerja selama maintenance.</div>
+            </div>
+          </div>
+          <div class="mt-info-item">
+            <div class="mt-info-icon orange">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <div class="mt-info-text">
+              <div class="mt-info-title">Perhatian</div>
+              <div class="mt-info-desc">Matikan maintenance mode setelah selesai. Pengguna tidak bisa mengakses website selama mode ini aktif.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ═══════════════ TAB: SECURITY (full desktop parity) ═══════════════ -->
+    <section class="app-tab" id="t-security">
+
+      <div class="section-title">Security Overview</div>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-card-label">Events <span class="stat-card-badge">24h</span></div>
+          <div class="stat-card-value" id="sec-events24h">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Rate Limited</div>
+          <div class="stat-card-value" id="sec-rate-limited">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Bot Detected</div>
+          <div class="stat-card-value" id="sec-bot">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Blocked IPs</div>
+          <div class="stat-card-value" id="sec-blocked-count">0</div>
+        </div>
+      </div>
+
+      <!-- Firewall Status -->
+      <div class="app-card">
+        <div class="card-header">
+          <span class="card-header-title">Firewall Status</span>
+          <span class="card-header-sub">Security headers &amp; protections</span>
+        </div>
+        <div class="sec-fw-list">
+          <div class="sec-fw-item ok">
+            <div class="sec-fw-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg></div>
+            <div class="sec-fw-info"><div class="sec-fw-name">X-Content-Type-Options</div><div class="sec-fw-val">nosniff</div></div>
+            <span class="sec-fw-pill active">Active</span>
+          </div>
+          <div class="sec-fw-item ok">
+            <div class="sec-fw-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg></div>
+            <div class="sec-fw-info"><div class="sec-fw-name">X-Frame-Options</div><div class="sec-fw-val">DENY</div></div>
+            <span class="sec-fw-pill active">Active</span>
+          </div>
+          <div class="sec-fw-item ok">
+            <div class="sec-fw-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+            <div class="sec-fw-info"><div class="sec-fw-name">X-XSS-Protection</div><div class="sec-fw-val">1; mode=block</div></div>
+            <span class="sec-fw-pill active">Active</span>
+          </div>
+          <div class="sec-fw-item ok">
+            <div class="sec-fw-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101"/><path d="M10.172 13.828a4 4 0 015.656 0l4-4a4 4 0 01-5.656-5.656l-1.102 1.101"/></svg></div>
+            <div class="sec-fw-info"><div class="sec-fw-name">Referrer-Policy</div><div class="sec-fw-val">strict-origin-when-cross-origin</div></div>
+            <span class="sec-fw-pill active">Active</span>
+          </div>
+          <div class="sec-fw-item ok">
+            <div class="sec-fw-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
+            <div class="sec-fw-info"><div class="sec-fw-name">Rate Limiting</div><div class="sec-fw-val">5 attempts / 15 min</div></div>
+            <span class="sec-fw-pill active">Active</span>
+          </div>
+          <div class="sec-fw-item ok">
+            <div class="sec-fw-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg></div>
+            <div class="sec-fw-info"><div class="sec-fw-name">Session Store</div><div class="sec-fw-val">MongoDB (persistent)</div></div>
+            <span class="sec-fw-pill active">Active</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Blocked IPs -->
+      <div class="app-card">
+        <div class="card-header">
+          <span class="card-header-title">Blocked IPs</span>
+          <span class="card-header-sub" id="sec-blocked-total">0 entries</span>
+        </div>
+        <div class="sec-block-add">
+          <input type="text" id="sec-ip-input" class="sec-ip-field" placeholder="Masukkan IP address...">
+          <button class="btn-danger btn-sm" onclick="mobBlockIp()">Block IP</button>
+        </div>
+        <div id="sec-block-feedback" class="sec-feedback" style="display:none;"></div>
+        <div id="sec-blocked-list">
+          <div class="sec-empty" id="sec-blocked-empty">Belum ada IP yang diblokir.</div>
+        </div>
+      </div>
+
+      <!-- Top IPs -->
+      <div class="app-card">
+        <div class="card-header">
+          <span class="card-header-title">Top IPs — Security Events (7d)</span>
+          <span class="card-header-sub">IP dengan aktivitas mencurigakan terbanyak</span>
+        </div>
+        <div id="sec-top-ips">
+          <div class="sec-empty" id="sec-top-empty" style="display:block;">Memuat data...</div>
+          <div id="sec-top-data" style="display:none;">
+            <table class="sec-table">
+              <thead><tr><th>IP Address</th><th>Events</th><th>Action</th></tr></thead>
+              <tbody id="sec-top-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Security Logs -->
+      <div class="app-card">
+        <div class="card-header">
+          <span class="card-header-title">Recent Security Logs</span>
+          <span class="card-header-sub" id="sec-logs-count">0 entries</span>
+        </div>
+        <div id="sec-logs-wrap">
+          <div class="sec-empty" id="sec-logs-empty">Belum ada security log.</div>
+          <div id="sec-logs-data" style="display:none;">
+            <table class="sec-table">
+              <thead><tr><th>Time</th><th>Type</th><th>IP</th><th>Path</th><th>Detail</th></tr></thead>
+              <tbody id="sec-logs-body"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -288,7 +470,7 @@
 
   </main>
 
-  <!-- ═══ BOTTOM TAB BAR (5 items) ═══ -->
+  <!-- ═══ BOTTOM TAB BAR (6 items) ═══ -->
   <nav class="app-tabbar">
     <button class="app-tabbar-item active" data-tab="home" onclick="mobTab('home')">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0h6"/></svg>
@@ -301,6 +483,10 @@
     <button class="app-tabbar-item" data-tab="system" onclick="mobTab('system')">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
       <span>System</span>
+    </button>
+    <button class="app-tabbar-item" data-tab="security" onclick="mobTab('security')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <span>Security</span>
     </button>
     <button class="app-tabbar-item" data-tab="monitoring" onclick="mobTab('monitoring')">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
@@ -554,20 +740,27 @@
         _('ov-pl').style.display='none';_('ov-pe').style.display='block';
       }
 
-      // — MAINTENANCE —
+      // — MAINTENANCE (System tab) —
       var mt=await(await fetch('/api/dev/maintenance/status')).json();
-      _('mt-toggle').checked=mt.enabled===true;
-      _('mt-message').value=mt.message||'';
-      var mtb=_('mt-status-badge');
-      if(mtb){
-        mtb.textContent=mt.enabled?'Active':'Inactive';
-        mtb.className='maintenance-status-badge '+(mt.enabled?'active':'inactive');
+      _('sys-mt-toggle').checked=mt.enabled===true;
+      _('sys-mt-message').value=mt.message||'Website sedang dalam perbaikan. Silakan kembali lagi nanti.';
+      var mtIcon=_('sys-mt-icon');
+      if(mtIcon){
+        mtIcon.className='mt-hero-icon '+(mt.enabled?'on':'off');
       }
+      var mtSub=_('sys-mt-sub');
+      if(mtSub){
+        mtSub.textContent=mt.enabled?'Pengguna sedang melihat halaman maintenance.':'Website berjalan normal. Aktifkan untuk menampilkan halaman perawatan.';
+      }
+      updatePreview();
+
+      // — SECURITY TAB — load stats (fire-and-forget, don't block refresh)
+      mobLoadSecurity(false).catch(function(e){console.warn('[security]',e);});
 
       // — PAGE SPEED INSIGHTS (Monitoring tab) — cache 24 jam di localStorage
       var psiKey=await(await fetch('/api/dev/pagespeed/config')).json();
       if(psiKey.configured){
-        (function(){ 
+        (function(){
           var CACHE_KEY = '_psi_cache';
           var cacheItem = localStorage.getItem(CACHE_KEY);
           var cache = cacheItem ? JSON.parse(cacheItem) : null;
@@ -663,20 +856,203 @@
     fmtMetric('cumulative-layout-shift', 'score', 'psi-cls');
   }
 
-  /* ════════ MAINTENANCE TOGGLE ════════ */
+  /* ════════ MAINTENANCE — TOGGLE ════════ */
   async function mobToggleMt(e){
     try{
-      var msg = _('mt-message').value.trim();
+      var msg = _('sys-mt-message').value.trim();
       var r=await fetch('/api/dev/maintenance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:e, message:msg || undefined})});
       var d=await r.json();if(!d.ok)throw new Error(d.error);
       toast(e?'Maintenance ON':'Maintenance OFF');
-      var mtb=_('mt-status-badge');
-      if(mtb){
-        mtb.textContent=e?'Active':'Inactive';
-        mtb.className='maintenance-status-badge '+(e?'active':'inactive');
+      var icon=_('sys-mt-icon');
+      if(icon) icon.className='mt-hero-icon '+(e?'on':'off');
+      var sub=_('sys-mt-sub');
+      if(sub){
+        sub.textContent=e?'Pengguna sedang melihat halaman maintenance.':'Website berjalan normal. Aktifkan untuk menampilkan halaman perawatan.';
       }
-    }catch(x){_('mt-toggle').checked=!e;toast('Error: '+x.message);}
+    }catch(x){_('sys-mt-toggle').checked=!e;toast('Error: '+x.message);}
   }
+
+  /* ════════ MAINTENANCE — SAVE MESSAGE ════════ */
+  async function mobSaveMtMsg() {
+    var msg = _('sys-mt-message').value.trim();
+    if (!msg) { showMtFeedback('Pesan tidak boleh kosong.', 'error'); return; }
+    var enabled = _('sys-mt-toggle').checked;
+    try {
+      var r = await fetch('/api/dev/maintenance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:enabled, message:msg})});
+      var d = await r.json();
+      if (!d.ok) throw new Error(d.error || 'Gagal');
+      showMtFeedback('✓ Pesan berhasil disimpan', 'success');
+    } catch (x) {
+      showMtFeedback('Gagal menyimpan: '+x.message, 'error');
+    }
+  }
+
+  function showMtFeedback(msg, type) {
+    var el = _('sys-mt-feedback');
+    el.textContent = msg;
+    el.className = 'mt-feedback ' + type;
+    el.style.display = 'block';
+    setTimeout(function(){ el.style.display = 'none'; }, 3000);
+  }
+
+  /* ════════ MAINTENANCE — LIVE PREVIEW ════════ */
+  function updatePreview() {
+    var msgEl = _('sys-mt-message');
+    var previewEl = _('sys-mt-preview-msg');
+    if (msgEl && previewEl) {
+      previewEl.textContent = msgEl.value || 'Website sedang dalam perbaikan. Silakan kembali lagi nanti.';
+    }
+  }
+
+  /* ════════ SECURITY — LOAD DATA ════════ */
+  async function mobLoadSecurity(showToast) {
+    try {
+      var statsRes = await fetch('/api/dev/security/stats');
+      var stats = await statsRes.json();
+
+      // Stats counters
+      _('sec-events24h').textContent = stats.events24h || 0;
+      _('sec-rate-limited').textContent = stats.rateLimited || 0;
+      _('sec-bot').textContent = stats.botDetected || 0;
+      _('sec-blocked-count').textContent = stats.blockedIpCount || 0;
+      var totEl = _('sec-blocked-total');
+      if (totEl) totEl.textContent = (stats.blockedIpCount || 0) + ' entries';
+
+      // Top IPs
+      if (stats.topIps && stats.topIps.length) {
+        _('sec-top-empty').style.display = 'none';
+        _('sec-top-data').style.display = 'block';
+        var topHtml = '';
+        stats.topIps.forEach(function(row) {
+          var cls = row.count > 20 ? 'high' : row.count > 5 ? 'mid' : 'low';
+          var ip = row._id || row.ip || 'unknown';
+          topHtml += '<tr><td class="sec-ip-cell">'+ip+'</td><td><span class="sec-count-badge '+cls+'">'+row.count+'</span></td>'+
+            '<td><button class="sec-action-btn" onclick="mobBlockIpDirect(\''+ip.replace(/'/g,"\\'")+'\')">Block</button></td></tr>';
+        });
+        _('sec-top-body').innerHTML = topHtml;
+      } else {
+        _('sec-top-empty').style.display = 'block';
+        _('sec-top-empty').textContent = 'Belum ada data security events dalam 7 hari terakhir.';
+        _('sec-top-data').style.display = 'none';
+      }
+
+      // Blocked IPs list (from stats response now)
+      var blockedIps = stats.blockedIps || [];
+      var listEl = _('sec-blocked-list');
+      if (blockedIps.length) {
+        listEl.innerHTML = blockedIps.map(function(ip){
+          var safeId = ip.replace(/\./g,'_').replace(/:/g,'_');
+          return '<div class="sec-ip-row" id="sec-ip-'+safeId+'"><span class="sec-ip-val">'+ip+'</span><button class="sec-action-btn" onclick="mobUnblockIp(\''+ip.replace(/'/g,"\\'")+'\')">Unblock</button></div>';
+        }).join('');
+      } else {
+        listEl.innerHTML = '<div class="sec-empty" id="sec-blocked-empty">Belum ada IP yang diblokir.</div>';
+      }
+
+      // Security logs (from stats response now)
+      var logs = stats.logs || [];
+      if (logs.length) {
+        _('sec-logs-empty').style.display = 'none';
+        _('sec-logs-data').style.display = 'block';
+        _('sec-logs-count').textContent = logs.length + ' entries';
+        var logHtml = '';
+        logs.slice(0, 40).forEach(function(log) {
+          var ts = new Date(log.timestamp);
+          var timeStr = String(ts.getHours()).padStart(2,'0')+':'+String(ts.getMinutes()).padStart(2,'0')+':'+String(ts.getSeconds()).padStart(2,'0')+' '+String(ts.getDate()).padStart(2,'0')+'/'+String(ts.getMonth()+1).padStart(2,'0');
+          var type = log.type || 'unknown';
+          var ip = log.ip || '---';
+          var path = log.path || '---';
+          var detail = log.detail || '—';
+          logHtml += '<tr><td class="sec-ts-cell">'+timeStr+'</td><td><span class="sec-type-badge '+type+'">'+type+'</span></td><td class="sec-ip-cell">'+ip+'</td><td class="sec-path-cell" title="'+path.replace(/"/g,'&quot;')+'">'+path+'</td><td class="sec-detail-cell">'+detail+'</td></tr>';
+        });
+        _('sec-logs-body').innerHTML = logHtml;
+      } else {
+        _('sec-logs-empty').style.display = 'block';
+        _('sec-logs-data').style.display = 'none';
+        _('sec-logs-count').textContent = '0 entries';
+      }
+
+      if (showToast) toast('Security data refreshed');
+    } catch(e) {
+      console.warn('[security-mobile]', e);
+    }
+  }
+
+  /* ════════ SECURITY — BLOCK IP ════════ */
+  async function mobBlockIp() {
+    var ip = _('sec-ip-input').value.trim();
+    if (!ip) { showSecFeedback('Masukkan IP address terlebih dahulu.', 'error'); return; }
+    await mobBlockIpDirect(ip);
+    _('sec-ip-input').value = '';
+  }
+
+  async function mobBlockIpDirect(ip) {
+    try {
+      var r = await fetch('/api/dev/security/block-ip', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ip:ip})});
+      var d = await r.json();
+      if (!d.ok) throw new Error(d.error || 'Gagal');
+
+      var safeId = ip.replace(/\./g,'_').replace(/:/g,'_');
+      var list = _('sec-blocked-list');
+      var empty = _('sec-blocked-empty');
+      if (empty) empty.remove();
+
+      if (!_('sec-ip-'+safeId)) {
+        var row = document.createElement('div');
+        row.className = 'sec-ip-row';
+        row.id = 'sec-ip-'+safeId;
+        row.innerHTML = '<span class="sec-ip-val">'+ip+'</span><button class="sec-action-btn" onclick="mobUnblockIp(\''+ip+'\')">Unblock</button>';
+        list.appendChild(row);
+      }
+
+      var cnt = _('sec-blocked-count');
+      if (cnt) cnt.textContent = (parseInt(cnt.textContent) || 0) + 1;
+      var tot = _('sec-blocked-total');
+      if (tot) tot.textContent = (parseInt(tot.textContent) || 0) + 1 + ' entries';
+
+      showSecFeedback('✓ IP '+ip+' berhasil diblokir', 'success');
+    } catch(e) {
+      showSecFeedback('Gagal: ' + e.message, 'error');
+    }
+  }
+
+  /* ════════ SECURITY — UNBLOCK IP ════════ */
+  async function mobUnblockIp(ip) {
+    try {
+      var r = await fetch('/api/dev/security/unblock-ip', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ip:ip})});
+      var d = await r.json();
+      if (!d.ok) throw new Error(d.error || 'Gagal');
+
+      var safeId = ip.replace(/\./g,'_').replace(/:/g,'_');
+      var row = _('sec-ip-'+safeId);
+      if (row) row.remove();
+
+      var cnt = _('sec-blocked-count');
+      if (cnt) cnt.textContent = Math.max(0, (parseInt(cnt.textContent) || 1) - 1);
+      var tot = _('sec-blocked-total');
+      if (tot) {
+        var n = Math.max(0, (parseInt(tot.textContent) || 1) - 1);
+        tot.textContent = n + ' entries';
+      }
+
+      var list = _('sec-blocked-list');
+      if (list && !list.children.length) {
+        list.innerHTML = '<div class="sec-empty" id="sec-blocked-empty">Belum ada IP yang diblokir.</div>';
+      }
+      showSecFeedback('✓ IP '+ip+' berhasil di-unblock', 'success');
+    } catch(e) {
+      showSecFeedback('Gagal: ' + e.message, 'error');
+    }
+  }
+
+  function showSecFeedback(msg, type) {
+    var el = _('sec-block-feedback');
+    el.textContent = msg;
+    el.className = 'sec-feedback ' + type;
+    el.style.display = 'block';
+    setTimeout(function(){ el.style.display = 'none'; }, 3500);
+  }
+
+
 
   /* ════════ RESET PASSWORD ════════ */
   var _resetUser = '';

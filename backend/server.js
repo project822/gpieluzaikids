@@ -1072,9 +1072,17 @@ app.get(
   "/api/dev/speed-insights",
   ensureDevAuth,
   asyncHandler(async (req, res) => {
-    const timeRange = req.query.range || "7d";
-    const data = await getSpeedInsightsData(timeRange);
-    return res.json(data);
+    try {
+      const timeRange = req.query.range || "7d";
+      const data = await getSpeedInsightsData(timeRange);
+      return res.json(data);
+    } catch (err) {
+      console.error("[Speed Insights] Error:", err);
+      return res.status(500).json({
+        enabled: false,
+        error: err.message || "Gagal mengambil data Speed Insights",
+      });
+    }
   }),
 );
 
@@ -1398,11 +1406,35 @@ app.get(
   "/api/dev/security/stats",
   ensureDevAuth,
   asyncHandler(async (req, res) => {
-    const [stats, blockedIps] = await Promise.all([
+    const [stats, blockedIps, secLogs] = await Promise.all([
       db.getSecurityStats(),
       db.getBlockedIps(),
+      db.getSecurityLogs({ limit: 50 }),
     ]);
-    return res.json({ ...stats, blockedIpCount: blockedIps.length });
+    return res.json({
+      ...stats,
+      blockedIpCount: blockedIps.length,
+      blockedIps: blockedIps.map(ip => typeof ip === "string" ? ip : ip.ip || ip),
+      logs: (secLogs || []).slice(0, 50),
+    });
+  }),
+);
+
+app.get(
+  "/api/dev/security/blocked-ips",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
+    const blockedIps = await db.getBlockedIps();
+    return res.json({ ips: blockedIps.map(ip => typeof ip === "string" ? ip : ip.ip || ip) });
+  }),
+);
+
+app.get(
+  "/api/dev/security/logs",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
+    const logs = await db.getSecurityLogs({ limit: 50 });
+    return res.json({ logs: logs || [] });
   }),
 );
 
