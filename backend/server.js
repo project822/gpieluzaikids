@@ -267,7 +267,7 @@ if (!process.env.MONGO_URI) {
 
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || crypto.randomUUID(),
+    secret: process.env.SESSION_SECRET || (global._sessionSecret || (global._sessionSecret = crypto.randomUUID())),
     resave: false,
     saveUninitialized: false,
     store: sessionStore,
