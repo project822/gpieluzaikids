@@ -1,4 +1,4 @@
-const { MongoClient } = require("mongodb");
+const { MongoClient, ObjectId } = require("mongodb");
 
 const MONGO_URI = process.env.MONGO_URI || "";
 const DB_NAME = process.env.MONGO_DB_NAME || "gereja";
@@ -546,83 +546,6 @@ async function forceLogoutAllAdmins() {
   return deleted;
 }
 
-// ───────────── Speed Insights Snapshots (history) ─────────────
-// Simpan snapshot performa bulanan untuk melihat tren dari waktu ke waktu.
-
-async function saveSpeedInsightsSnapshot(data) {
-  const d = await connect();
-  const snapshot = {
-    timestamp: new Date(),
-    label: new Date().toISOString().slice(0, 7), // "2026-07"
-    summary: {
-      totalPages: (data.paths || []).length,
-      totalRecords: data.total || 0,
-      avgLcp: null,
-      avgFcp: null,
-      avgTtfb: null,
-    },
-    paths: (data.paths || []).slice(0, 30), // simpan max 30 path
-  };
-
-  // Hitung rata-rata
-  const lcpVals = (data.paths || []).map((p) => p.lcp?.median).filter(Boolean);
-  const fcpVals = (data.paths || []).map((p) => p.fcp?.median).filter(Boolean);
-  const ttfbVals = (data.paths || []).map((p) => p.ttfb?.median).filter(Boolean);
-  if (lcpVals.length) snapshot.summary.avgLcp = Math.round(lcpVals.reduce((a, b) => a + b, 0) / lcpVals.length);
-  if (fcpVals.length) snapshot.summary.avgFcp = Math.round(fcpVals.reduce((a, b) => a + b, 0) / fcpVals.length);
-  if (ttfbVals.length) snapshot.summary.avgTtfb = Math.round(ttfbVals.reduce((a, b) => a + b, 0) / ttfbVals.length);
-
-  await d.collection("speedSnapshots").insertOne(snapshot);
-
-  // Hapus snapshot lama (> 12 bulan)
-  const cutoff = new Date(Date.now() - 12 * 30 * 24 * 60 * 60 * 1000);
-  await d.collection("speedSnapshots").deleteMany({ timestamp: { $lt: cutoff } });
-
-  return snapshot;
-}
-
-async function getSpeedInsightsSnapshots({ limit = 12 } = {}) {
-  const d = await connect();
-  return d.collection("speedSnapshots")
-    .find({})
-    .sort({ timestamp: -1 })
-    .limit(limit)
-    .toArray();
-}
-
-async function getLatestSnapshotLabel() {
-  const d = await connect();
-  const latest = await d.collection("speedSnapshots")
-    .find({})
-    .sort({ timestamp: -1 })
-    .limit(1)
-    .toArray();
-  return latest.length ? latest[0].label : null;
-}
-
-// ───────────── Speed Insights Token Config ─────────────
-
-async function getSpeedInsightsConfig() {
-  const d = await connect();
-  const doc = await d.collection("settings").findOne({ _id: "speedInsightsConfig" });
-  return doc || { vercelToken: "", vercelProjectId: "", updatedAt: null };
-}
-
-async function saveSpeedInsightsConfig({ vercelToken, vercelProjectId }) {
-  const d = await connect();
-  await d.collection("settings").updateOne(
-    { _id: "speedInsightsConfig" },
-    {
-      $set: {
-        vercelToken: vercelToken || "",
-        vercelProjectId: vercelProjectId || "",
-        updatedAt: new Date().toISOString(),
-      },
-    },
-    { upsert: true },
-  );
-}
-
 // ───────────── Google PageSpeed Insights Config ─────────────
 
 async function getPageSpeedConfig() {
@@ -643,6 +566,157 @@ async function savePageSpeedConfig({ apiKey }) {
     },
     { upsert: true },
   );
+}
+
+// ───────────── Activity Log / Audit Trail ─────────────
+
+const MAX_ACTIVITY_LOGS = 1000;
+
+async function logActivity({ action, detail, username, ip }) {
+  const d = await connect();
+  await d.collection("activityLogs").insertOne({
+    action,      // 'admin.create' | 'admin.delete' | 'admin.reset_password' | 'admin.force_logout' | 'admin.force_logout_all'
+                  // | 'event.create' | 'event.edit' | 'event.delete'
+                  // | 'doc.add'
+                  // | 'maintenance.toggle' | 'maintenance.message'
+                  // | 'security.block_ip' | 'security.unblock_ip'
+                  // | 'backup.create'
+    detail: detail || "",
+    username: username || "system",
+    ip: ip || "",
+    timestamp: new Date(),
+  });
+
+  // Keep collection size bounded
+  const count = await d.collection("activityLogs").countDocuments();
+  if (count > MAX_ACTIVITY_LOGS) {
+    const oldest = await d.collection("activityLogs")
+      .find()
+      .sort({ timestamp: 1 })
+      .limit(count - MAX_ACTIVITY_LOGS)
+      .toArray();
+    const ids = oldest.map((o) => o._id);
+    await d.collection("activityLogs").deleteMany({ _id: { $in: ids } });
+  }
+}
+
+async function getActivityLogs({ limit = 50, action } = {}) {
+  const d = await connect();
+  const query = action ? { action } : {};
+  return d.collection("activityLogs")
+    .find(query)
+    .sort({ timestamp: -1 })
+    .limit(limit)
+    .toArray();
+}
+
+// ───────────── Content Stats ─────────────
+
+async function getContentStats() {
+  const d = await connect();
+  const [events, admins, docs, backups] = await Promise.all([
+    d.collection("events").countDocuments(),
+    d.collection("admins").countDocuments(),
+    d.collection("events").countDocuments({ driveLink: { $exists: true, $ne: "" } }),
+    d.collection("backups").countDocuments(),
+  ]);
+  return {
+    events,
+    admins,
+    documentation: docs,
+    backups,
+  };
+}
+
+// ───────────── Backup (MongoDB-based, works on Vercel) ─────────────
+
+async function createBackup(triggeredBy = "system") {
+  const d = await connect();
+  
+  // Export all collections
+  const [events, admins, metrics, adminStatus, settings, securityLogs, activityLogs, pageviews] = await Promise.all([
+    d.collection("events").find({}).toArray(),
+    d.collection("admins").find({}).toArray(),
+    d.collection("metrics").find({}).toArray(),
+    d.collection("adminStatus").find({}).toArray(),
+    d.collection("settings").find({}).toArray(),
+    d.collection("securityLogs").find({}).toArray(),
+    d.collection("activityLogs").find({}).toArray(),
+    d.collection("pageviews").find({}).sort({ timestamp: -1 }).limit(1000).toArray(),
+  ]);
+
+  const backupDoc = {
+    createdAt: new Date(),
+    triggeredBy,
+    summary: {
+      events: events.length,
+      admins: admins.length,
+      metrics: metrics.length,
+      adminStatus: adminStatus.length,
+      settings: settings.length,
+      securityLogs: securityLogs.length,
+      activityLogs: activityLogs.length,
+      pageviews: pageviews.length,
+    },
+    // Store data as JSON strings (avoid BSON size limits for large docs)
+    data: JSON.stringify({
+      events,
+      admins,
+      metrics,
+      adminStatus,
+      settings,
+      securityLogs,
+      activityLogs,
+      pageviews,
+    }),
+  };
+
+  await d.collection("backups").insertOne(backupDoc);
+
+  // Keep max 20 backups, delete oldest
+  const count = await d.collection("backups").countDocuments();
+  if (count > 20) {
+    const oldest = await d.collection("backups")
+      .find()
+      .sort({ createdAt: 1 })
+      .limit(count - 20)
+      .toArray();
+    const ids = oldest.map((o) => o._id);
+    await d.collection("backups").deleteMany({ _id: { $in: ids } });
+  }
+
+  // Log activity
+  await logActivity({
+    action: "backup.create",
+    detail: `Backup created: ${events.length} events, ${admins.length} admins`,
+    username: triggeredBy,
+  });
+
+  return {
+    id: backupDoc._id.toString(),
+    createdAt: backupDoc.createdAt,
+    summary: backupDoc.summary,
+  };
+}
+
+async function getBackups({ limit = 10 } = {}) {
+  const d = await connect();
+  return d.collection("backups")
+    .find({}, { projection: { data: 0 } }) // exclude large data field
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .toArray();
+}
+
+async function getBackup(id) {
+  const d = await connect();
+  return d.collection("backups").findOne({ _id: new ObjectId(id) });
+}
+
+async function getLatestBackup() {
+  const d = await connect();
+  return d.collection("backups")
+    .findOne({}, { sort: { createdAt: -1 }, projection: { data: 0 } });
 }
 
 module.exports = {
@@ -676,11 +750,13 @@ module.exports = {
   unblockIp,
   forceLogoutAdmin,
   forceLogoutAllAdmins,
-  getSpeedInsightsConfig,
-  saveSpeedInsightsConfig,
-  saveSpeedInsightsSnapshot,
-  getSpeedInsightsSnapshots,
-  getLatestSnapshotLabel,
   getPageSpeedConfig,
   savePageSpeedConfig,
+  logActivity,
+  getActivityLogs,
+  getContentStats,
+  createBackup,
+  getBackups,
+  getBackup,
+  getLatestBackup,
 };

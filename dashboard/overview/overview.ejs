@@ -13,7 +13,6 @@
     <link rel="stylesheet" href="/dashboard-assets/overview/overview.css" media="print" onload="this.media='all'">
     <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
     <script defer src="/_vercel/insights/script.js"></script>
-    <script defer src="https://unpkg.com/@vercel/speed-insights/dist/index.js"></script>
   </head>
 <body>
   <div class="dash-shell">
@@ -113,7 +112,7 @@
             </div>
             <div>
               <div class="overview-link-title">Monitoring</div>
-              <div class="overview-link-sub">Speed Insights &amp; server metrics</div>
+              <div class="overview-link-sub">Server metrics &amp; health</div>
             </div>
           </a>
           <a href="/dev/dashboard-desktop/admins" class="card overview-link-card">
@@ -154,35 +153,8 @@
           </a>
         </div>
 
-        <!-- ── REAL-TIME HEALTH CHECK (Speed Insights + Server) ── -->
+        <!-- ── REAL-TIME HEALTH CHECK (Server) ── -->
         <div class="ov-health-row">
-
-          <!-- Web Vitals compact card -->
-          <div class="card ov-vitals-card">
-            <div class="section-header">
-              <span>Web Vitals — Real-time</span>
-              <span class="sub" id="ov-si-badge">Loading...</span>
-            </div>
-            <div id="ov-si-body">
-              <div class="ov-loading" id="ov-si-loading">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:ov-spin 1.2s linear infinite;flex-shrink:0;"><circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" stroke-linecap="round"/></svg>
-                Loading Web Vitals...
-              </div>
-              <div id="ov-si-nc" class="ov-empty" style="display:none;">
-                ⚡ Speed Insights belum dikonfigurasi. Set VERCEL_TOKEN &amp; VERCEL_PROJECT_ID.
-              </div>
-              <div id="ov-si-data" style="display:none;">
-                <div class="ov-vitals-compact" id="ov-vitals-row"><!-- filled by JS --></div>
-                <div class="ov-score-row">
-                  <div class="ov-score-label">Performance Score</div>
-                  <div class="ov-score-bar-wrap">
-                    <div class="ov-score-bar" id="ov-score-bar" style="width:0%;"></div>
-                  </div>
-                  <div class="ov-score-num" id="ov-score-num">—</div>
-                </div>
-              </div>
-            </div>
-          </div>
 
           <!-- Server metrics compact card -->
           <div class="card ov-server-card">
@@ -222,7 +194,7 @@
             </div>
             <div class="ov-server-footer">
               <a href="/dev/dashboard-desktop/health" class="btn" style="font-size:12px;">Full Health Check →</a>
-              <a href="/dev/dashboard-desktop/monitoring" class="btn" style="font-size:12px;">Speed Insights →</a>
+              <a href="/dev/dashboard-desktop/monitoring" class="btn" style="font-size:12px;">Server Monitor →</a>
             </div>
           </div>
 
@@ -233,27 +205,6 @@
   </div>
 
   <script>
-  function getSiColor(v, m) {
-    if (v == null) return '#94A3B8';
-    const t = {lcp:{good:2500,poor:4000},fcp:{good:1800,poor:3000},ttfb:{good:800,poor:1800},cls:{good:0.1,poor:0.25},inp:{good:200,poor:500}}[m];
-    if (!t) return '#94A3B8';
-    return v <= t.good ? '#16A34A' : v <= t.poor ? '#D97706' : '#DC2626';
-  }
-  function calcPerfScore(paths) {
-    if (!paths || !paths.length) return null;
-    const thresholds = {lcp:{good:2500,poor:4000},fcp:{good:1800,poor:3000},ttfb:{good:800,poor:1800},cls:{good:0.1,poor:0.25},inp:{good:200,poor:500}};
-    const weights = {lcp:30,fcp:15,ttfb:20,cls:15,inp:20};
-    let tw = 0, ts = 0;
-    ['lcp','fcp','ttfb','cls','inp'].forEach(m => {
-      const vals = paths.map(p => p[m] && p[m].median).filter(v => v != null);
-      if (!vals.length) return;
-      const avg = vals.reduce((a,b)=>a+b,0)/vals.length;
-      const t = thresholds[m];
-      let score = avg <= t.good ? 100 : avg <= t.poor ? Math.round(50+50*(1-(avg-t.good)/(t.poor-t.good))) : Math.max(0,Math.round(50*(1-(avg-t.poor)/t.poor)));
-      ts += score * weights[m]; tw += weights[m];
-    });
-    return tw > 0 ? Math.round(ts / tw) : null;
-  }
   function fmtUptime(s) {
     if (s < 60) return s + 's';
     if (s < 3600) return Math.floor(s/60) + 'm';
@@ -294,56 +245,6 @@
     }
   }
 
-  async function ovLoadVitals() {
-    try {
-      const statusRes = await fetch('/api/dev/speed-insights/status');
-      const status = await statusRes.json();
-      if (!status.configured) {
-        document.getElementById('ov-si-loading').style.display = 'none';
-        document.getElementById('ov-si-nc').style.display = 'block';
-        document.getElementById('ov-si-badge').textContent = '⚠ Not configured';
-        return;
-      }
-      const res  = await fetch('/api/dev/speed-insights?range=7d');
-      const data = await res.json();
-      document.getElementById('ov-si-loading').style.display = 'none';
-      if (data.error || !data.paths || !data.paths.length) {
-        document.getElementById('ov-si-nc').style.display = 'block';
-        document.getElementById('ov-si-nc').textContent = '📊 Belum ada data Web Vitals.';
-        document.getElementById('ov-si-badge').textContent = 'No data';
-        return;
-      }
-      document.getElementById('ov-si-data').style.display = 'block';
-      document.getElementById('ov-si-badge').textContent  = '✓ ' + data.total + ' records';
-      document.getElementById('ov-si-badge').style.color  = 'var(--green)';
-      const metrics = [{key:'lcp',label:'LCP'},{key:'fcp',label:'FCP'},{key:'ttfb',label:'TTFB'},{key:'cls',label:'CLS',f:true},{key:'inp',label:'INP'}];
-      let html = '';
-      metrics.forEach(m => {
-        const vals = data.paths.map(p => p[m.key] && p[m.key].median).filter(v => v != null);
-        if (!vals.length) return;
-        const avg = vals.reduce((a,b)=>a+b,0)/vals.length;
-        const disp = m.f ? avg.toFixed(3) : Math.round(avg) + 'ms';
-        html += `<div class="ov-vital-chip" style="border-color:${getSiColor(avg,m.key)}40;">
-          <span class="ov-vital-label">${m.label}</span>
-          <span class="ov-vital-val" style="color:${getSiColor(avg,m.key)};">${disp}</span>
-        </div>`;
-      });
-      document.getElementById('ov-vitals-row').innerHTML = html;
-      const score = calcPerfScore(data.paths);
-      if (score !== null) {
-        const bar = document.getElementById('ov-score-bar');
-        bar.style.width = score + '%';
-        bar.style.background = score >= 90 ? 'var(--green)' : score >= 50 ? 'var(--orange)' : 'var(--red)';
-        document.getElementById('ov-score-num').textContent = score;
-        document.getElementById('ov-score-num').style.color = score >= 90 ? 'var(--green)' : score >= 50 ? 'var(--orange)' : 'var(--red)';
-      }
-    } catch(e) {
-      document.getElementById('ov-si-loading').style.display = 'none';
-      document.getElementById('ov-si-nc').style.display = 'block';
-      document.getElementById('ov-si-nc').textContent = 'Failed to load Web Vitals: ' + e.message;
-    }
-  }
-
   async function ovToggleMaintenance(enabled) {
     const dot  = document.getElementById('ov-dot-mt');
     const val  = document.getElementById('ov-val-mt');
@@ -365,9 +266,7 @@
   }
 
   ovLoadHealth();
-  ovLoadVitals();
   setInterval(ovLoadHealth, 30000);
-  setInterval(ovLoadVitals, 60000);
   </script>
 </body>
 </html>

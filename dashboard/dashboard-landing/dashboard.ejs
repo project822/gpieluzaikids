@@ -14,7 +14,6 @@
   <!-- Vercel Analytics -->
   <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
   <script defer src="/_vercel/insights/script.js"></script>
-  <script defer src="https://unpkg.com/@vercel/speed-insights/dist/index.js"></script>
 </head>
 <body>
 
@@ -56,11 +55,7 @@
             <span class="db-banner-label">Database</span>
             <span class="db-banner-val" id="db-val-db">Checking...</span>
           </div>
-          <div class="db-banner-item">
-            <span class="db-banner-dot" id="db-dot-si"></span>
-            <span class="db-banner-label">Speed Insights</span>
-            <span class="db-banner-val" id="db-val-si">Checking...</span>
-          </div>
+
           <div class="db-banner-item">
             <span class="db-banner-dot" id="db-dot-mt"></span>
             <span class="db-banner-label">Maintenance</span>
@@ -117,6 +112,26 @@
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             <span>Security</span>
           </a>
+        </div>
+
+        <!-- ── CONTENT STATS ── -->
+        <div class="stat-grid" style="margin-bottom:12px;">
+          <div class="stat-card" style="cursor:default;">
+            <div class="stat-label">Events</div>
+            <div class="stat-value cs-stat" id="cs-events">—</div>
+          </div>
+          <div class="stat-card" style="cursor:default;">
+            <div class="stat-label">Documentation</div>
+            <div class="stat-value cs-stat" id="cs-docs">—</div>
+          </div>
+          <div class="stat-card" style="cursor:default;">
+            <div class="stat-label">Admins</div>
+            <div class="stat-value cs-stat" id="cs-admins">—</div>
+          </div>
+          <div class="stat-card" style="cursor:default;">
+            <div class="stat-label">Backups</div>
+            <div class="stat-value cs-stat" id="cs-backups">—</div>
+          </div>
         </div>
 
         <!-- ── ADMIN ONLINE / RECENT SECTION ── -->
@@ -209,16 +224,6 @@
         document.getElementById('db-admin-list').innerHTML = html;
       }
 
-      // Speed Insights status
-      const siRes = await fetch('/api/dev/speed-insights/status');
-      const siStatus = await siRes.json();
-      setBanner('si', siStatus.configured ? 'ok' : 'warn', siStatus.configured ? 'Configured' : 'Not set up');
-      if (siStatus.configured) {
-        document.getElementById('db-dot-si').className = 'db-banner-dot ok';
-      } else {
-        document.getElementById('db-dot-si').className = 'db-banner-dot warn';
-      }
-
       // Maintenance
       const mtRes = await fetch('/api/dev/maintenance/status');
       const mt = await mtRes.json();
@@ -228,7 +233,20 @@
     }
   }
 
-  window.dbRefreshNow = function() { dbRefresh(); };
+  window.dbRefreshNow = function() { dbRefresh(); };  // Content stats
+  async function refreshContentStats() {
+    try {
+      const res = await fetch('/api/dev/content-stats');
+      const stats = await res.json();
+      document.getElementById('cs-events').textContent = stats.events || 0;
+      document.getElementById('cs-docs').textContent = stats.documentation || 0;
+      document.getElementById('cs-admins').textContent = stats.admins || 0;
+      document.getElementById('cs-backups').textContent = stats.backups || 0;
+    } catch (_) {}
+  }
+
+  refreshContentStats();
+  setInterval(refreshContentStats, 60000);
 
   dbRefresh();
   setInterval(dbRefresh, 30000);

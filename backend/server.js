@@ -24,7 +24,6 @@ const sharp = require("sharp");
 
 const db = require("./dbMongo");
 const { rateLimitLogin } = require("./rateLimit");
-const { getSpeedInsightsData, getMetricRating } = require("./speedInsights");
 
 const app = express();
 const PORT = process.env.PORT || 10082;
@@ -100,7 +99,37 @@ if (!fs.existsSync(dashboardDir)) {
 const dashboardSharedDir = path.join(dashboardDir, "shared");
 
 // ============== SECURITY MIDDLEWARE ==============
+
+// P7: HTTP→HTTPS redirect — kalau request masuk lewat HTTP, redirect ke HTTPS
 app.use((req, res, next) => {
+  // Hanya redirect kalau request asli bukan HTTPS (req.secure false)
+  // req.secure akurat karena sudah ada app.set("trust proxy", 1) di atas
+  if (!req.secure && process.env.NODE_ENV === "production") {
+    const host = req.headers["host"] || req.hostname;
+    return res.redirect(301, `https://${host}${req.originalUrl}`);
+  }
+  next();
+});
+
+app.use((req, res, next) => {
+  // P6: CORS — batasi akses API dari origin lain
+  const origin = req.headers["origin"];
+  const allowedOrigins = [
+    "https://gpieluzaikids.vercel.app",
+    "https://www.gpieluzaikids.vercel.app",
+  ];
+  // Izinkan localhost untuk development
+  if (origin && (allowedOrigins.includes(origin) || origin.startsWith("http://localhost") || origin.startsWith("https://localhost"))) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-CSRF-Token");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+  }
+  // Preflight (OPTIONS) — langsung 200 tanpa proses lanjutan
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
+  }
+
   // Security headers — semua zero-overhead, hanya header HTTP
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
@@ -238,7 +267,7 @@ if (!process.env.MONGO_URI) {
 
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "dev-secret-change-this-admin",
+    secret: process.env.SESSION_SECRET || crypto.randomUUID(),
     resave: false,
     saveUninitialized: false,
     store: sessionStore,
@@ -254,6 +283,11 @@ app.use(
     },
   }),
 );
+
+// Peringatan session secret
+if (!process.env.SESSION_SECRET) {
+  console.warn("[Session] ⚠️  SESSION_SECRET tidak di-set. Menggunakan random fallback — session tidak akan bertahan di Vercel serverless. Set SESSION_SECRET di environment variable.");
+}
 
 // ============== CSRF PROTECTION ==============
 // Session-based CSRF token: simpan token di session, validasi setiap
@@ -456,12 +490,15 @@ function ensureDevAuth(req, res, next) {
     await db.connect();
     console.log("[DB] MongoDB connected successfully");
 
-    // Init default admin jika belum ada
+    // Init default admin — hanya jika:
+    // 1. Belum ada admin sama sekali
+    // 2. Env var DISABLE_DEFAULT_ADMIN tidak di-set
     const admins = await db.getAdmins();
-    if (!admins || admins.length === 0) {
-      const passwordHash = await bcrypt.hash("admin123", 10);
-      await db.addAdmin({ username: "admin", passwordHash });
-      console.log("Default admin created: username=admin password=admin123");
+    if (!process.env.DISABLE_DEFAULT_ADMIN && (!admins || admins.length === 0)) {
+      const passwordHash = await bcrypt.hash(process.env.DEFAULT_ADMIN_PASSWORD || "admin123", 10);
+      await db.addAdmin({ username: process.env.DEFAULT_ADMIN_USERNAME || "admin", passwordHash });
+      console.log("Default admin created: " + (process.env.DEFAULT_ADMIN_USERNAME || "admin") + "/" + (process.env.DEFAULT_ADMIN_PASSWORD ? "<from env>" : "admin123"));
+      console.log("⚠️  AMAN: Set DISABLE_DEFAULT_ADMIN=1 setelah deploy untuk menonaktifkan fitur ini.");
     }
   } catch (err) {
     console.error("[DB] Failed to connect to MongoDB:", err.message);
@@ -682,21 +719,44 @@ app.get("/admin/logout", (req, res) => {
 });
 
 // ============== DEVELOPER AUTH ROUTES ==============
+// P1: Credentials dari environment variable, bukan hardcoded
+const DEV_USERNAME = process.env.DEV_USERNAME || "dev";
+const DEV_PASSWORD_HASH = process.env.DEV_PASSWORD_HASH || "";
+
 app.get("/dev/login", (req, res) => {
   return res.render("login/login", { error: null });
 });
 
-app.post("/dev/login", (req, res) => {
+app.post("/dev/login", asyncHandler(async (req, res) => {
   const { username, password } = req.body || {};
-  if (username === "dev" && password === "dev123") {
-    req.session.devUser = { username: "dev" };
+  
+  // Bandingkan username
+  if (username !== DEV_USERNAME) {
+    return res.render("login/login", { error: "Username atau password developer salah." });
+  }
+  
+  // Jika DEV_PASSWORD_HASH di-set, pakai bcrypt compare
+  // Jika tidak di-set, fallback ke plaintext (untuk development)
+  let passwordOk = false;
+  if (DEV_PASSWORD_HASH) {
+    passwordOk = await bcrypt.compare(password || "", DEV_PASSWORD_HASH);
+  } else {
+    passwordOk = password === "dev123";
+    if (passwordOk && !global._devAuthFallbackWarned) {
+      global._devAuthFallbackWarned = true;
+      console.warn("[DevAuth] ⚠️  Password developer pakai fallback hardcoded. Set DEV_PASSWORD_HASH di environment variable!");
+    }
+  }
+  
+  if (passwordOk) {
+    req.session.devUser = { username: DEV_USERNAME };
     const redirectTo = req.session.redirectTo || "/dev/dashboard-desktop";
     delete req.session.redirectTo;
     return res.redirect(redirectTo);
   } else {
     return res.render("login/login", { error: "Username atau password developer salah." });
   }
-});
+}));
 
 // ============== DEV DASHBOARD DESKTOP PAGES ==============
 // Halaman sidebar (Overview, Analytics, Monitoring, Admins) masing-masing punya view & route sendiri.
@@ -840,6 +900,7 @@ app.post(
     }
     const passwordHash = await bcrypt.hash(password, 10);
     await db.addAdmin({ username, passwordHash });
+    db.logActivity({ action: "admin.create", detail: `Admin "${username}" created`, username: req.session.devUser?.username || "dev" }).catch(() => {});
     return res.json({ ok: true, username });
   }),
 );
@@ -860,6 +921,7 @@ app.post(
     }
     const passwordHash = await bcrypt.hash(newPassword, 10);
     await db.updateAdminPassword(username, passwordHash);
+    db.logActivity({ action: "admin.reset_password", detail: `Password for "${username}" reset`, username: req.session.devUser?.username || "dev" }).catch(() => {});
     return res.json({ ok: true, username });
   }),
 );
@@ -874,6 +936,7 @@ app.post(
       return res.status(400).json({ error: "Username wajib diisi" });
     }
     await db.deleteAdmin(username);
+    db.logActivity({ action: "admin.delete", detail: `Admin "${username}" deleted`, username: req.session.devUser?.username || "dev" }).catch(() => {});
     return res.json({ ok: true });
   }),
 );
@@ -901,6 +964,7 @@ app.post(
       return res.status(400).json({ error: "Username wajib diisi" });
     }
     const deleted = await db.forceLogoutAdmin(username);
+    db.logActivity({ action: "admin.force_logout", detail: `Forced logout "${username}" from ${deleted} device(s)`, username: req.session.devUser?.username || "dev" }).catch(() => {});
     return res.json({ ok: true, username, sessionsDeleted: deleted });
   }),
 );
@@ -911,6 +975,7 @@ app.post(
   ensureDevAuth,
   asyncHandler(async (req, res) => {
     const total = await db.forceLogoutAllAdmins();
+    db.logActivity({ action: "admin.force_logout_all", detail: `Forced logout ALL admins from ${total} device(s)`, username: req.session.devUser?.username || "dev" }).catch(() => {});
     return res.json({ ok: true, sessionsDeleted: total });
   }),
 );
@@ -963,6 +1028,7 @@ app.post(
     };
     await db.addEvent(event);
     invalidateEventsCache();
+    db.logActivity({ action: "event.create", detail: `Event "${title}" created (${day})`, username: req.session.user?.username || "admin" }).catch(() => {});
     res.redirect("/admin/events");
   }),
 );
@@ -1000,6 +1066,7 @@ app.post(
 
     await db.updateEvent(req.params.id, patch);
     invalidateEventsCache();
+    db.logActivity({ action: "event.edit", detail: `Event "${title}" updated`, username: req.session.user?.username || "admin" }).catch(() => {});
     res.redirect("/admin/events");
   }),
 );
@@ -1014,6 +1081,7 @@ app.post(
     if (!ev) return res.status(404).json({ error: "Event not found" });
     await db.deleteEvent(id);
     invalidateEventsCache();
+    db.logActivity({ action: "event.delete", detail: `Event "${ev.title}" (${ev.day}) deleted`, username: req.session.user?.username || "admin" }).catch(() => {});
     return res.json({ ok: true });
   }),
 );
@@ -1037,6 +1105,7 @@ app.post(
     const ev = await db.getEvent(eventId);
     if (!ev) return res.status(404).json({ error: "Event not found" });
     await db.updateEvent(eventId, { driveLink });
+    db.logActivity({ action: "doc.add", detail: `Documentation added to event ${ev.title || eventId}`, username: req.session.user?.username || "admin" }).catch(() => {});
     return res.json({ ok: true });
   }),
 );
@@ -1068,132 +1137,15 @@ app.post(
 // Admin panel at /admin — render login page directly (canonical route)
 app.get("/admin", (req, res) => res.render("login/admin-login", { error: null }));
 
-// ============== SPEED INSIGHTS API ==============
-// Helper: ambil kredensial Vercel (env > DB) untuk diteruskan ke speedInsights.js
-async function getVercelCredentials() {
-  let dbConfig = { vercelToken: "", vercelProjectId: "" };
-  try {
-    dbConfig = await db.getSpeedInsightsConfig();
-  } catch (_) {}
-  
-  const envToken = process.env.VERCEL_TOKEN || "";
-  const envTeamId = process.env.VERCEL_TEAM_ID || "";
-  const envProjectId = process.env.VERCEL_PROJECT_ID || "";
-
-  return {
-    token: envToken || dbConfig.vercelToken,
-    teamId: envTeamId,
-    projectId: envProjectId || dbConfig.vercelProjectId,
-  };
-}
-
+// ============== DEV DASHBOARD: Activity Log ==============
 app.get(
-  "/api/dev/speed-insights",
+  "/dev/dashboard-desktop/activity",
   ensureDevAuth,
   asyncHandler(async (req, res) => {
-    try {
-      const timeRange = req.query.range || "7d";
-      const creds = await getVercelCredentials();
-      const data = await getSpeedInsightsData(timeRange, creds);
-      return res.json(data);
-    } catch (err) {
-      console.error("[Speed Insights] Error:", err);
-      return res.status(500).json({
-        enabled: false,
-        error: err.message || "Gagal mengambil data Speed Insights",
-      });
-    }
-  }),
-);
-
-app.get("/api/dev/speed-insights/status", ensureDevAuth, asyncHandler(async (req, res) => {
-  // Check environment variables first, then fallback to DB config
-  const envToken = process.env.VERCEL_TOKEN || "";
-  const envProjectId = process.env.VERCEL_PROJECT_ID || "";
-  
-  // Try to get stored config from DB
-  let dbConfig = { vercelToken: "", vercelProjectId: "" };
-  try {
-    dbConfig = await db.getSpeedInsightsConfig();
-  } catch (_) {}
-  
-  const token = envToken || dbConfig.vercelToken;
-  const projectId = envProjectId || dbConfig.vercelProjectId;
-  
-  return res.json({
-    configured: !!(token && projectId),
-    hasToken: !!token,
-    hasProjectId: !!projectId,
-    source: envToken ? "env" : (dbConfig.vercelToken ? "db" : "none"),
-  });
-}));
-
-// ============== SPEED INSIGHTS CONFIG API (save tokens to DB) ==============
-app.post(
-  "/api/dev/speed-insights/config",
-  ensureDevAuth,
-  asyncHandler(async (req, res) => {
-    const { vercelToken, vercelProjectId } = req.body || {};
-    await db.saveSpeedInsightsConfig({
-      vercelToken: vercelToken || "",
-      vercelProjectId: vercelProjectId || "",
-    });
-    return res.json({ ok: true });
-  }),
-);
-
-app.get(
-  "/api/dev/speed-insights/config",
-  ensureDevAuth,
-  asyncHandler(async (req, res) => {
-    const config = await db.getSpeedInsightsConfig();
-    // Never expose full token - show only masked version
-    const maskedToken = config.vercelToken
-      ? config.vercelToken.substring(0, 4) + "••••" + config.vercelToken.substring(config.vercelToken.length - 4)
-      : "";
-    return res.json({
-      vercelToken: config.vercelToken ? maskedToken : "",
-      hasToken: !!config.vercelToken,
-      vercelProjectId: config.vercelProjectId,
-      updatedAt: config.updatedAt,
-    });
-  }),
-);
-
-// ============== SPEED INSIGHTS MONTHLY SNAPSHOT ==============
-// Ambil snapshot performa saat ini dan simpan ke MongoDB untuk history.
-// Bisa dipanggil manual dari dashboard atau via cron job eksternal.
-app.post(
-  "/api/dev/speed-insights/scan",
-  ensureDevAuth,
-  asyncHandler(async (req, res) => {
-    const creds = await getVercelCredentials();
-    const data = await getSpeedInsightsData("30d", creds);
-    if (data.error) {
-      return res.status(400).json({ error: data.error });
-    }
-    const snapshot = await db.saveSpeedInsightsSnapshot(data);
-    return res.json({ ok: true, label: snapshot.label, summary: snapshot.summary });
-  }),
-);
-
-// Ambil history snapshot
-app.get(
-  "/api/dev/speed-insights/snapshots",
-  ensureDevAuth,
-  asyncHandler(async (req, res) => {
-    const snapshots = await db.getSpeedInsightsSnapshots({ limit: 12 });
-    return res.json({ snapshots });
-  }),
-);
-
-// Cek kapan snapshot terakhir diambil
-app.get(
-  "/api/dev/speed-insights/last-scan",
-  ensureDevAuth,
-  asyncHandler(async (req, res) => {
-    const label = await db.getLatestSnapshotLabel();
-    return res.json({ label });
+    const logs = await db.getActivityLogs({ limit: 100 });
+    // Get content stats for the sidebar/header
+    const contentStats = await db.getContentStats();
+    return res.render("activity/activity", { logs, contentStats });
   }),
 );
 
@@ -1215,17 +1167,82 @@ app.get(
 
 app.post(
   "/dev/dashboard-mobile",
-  (req, res) => {
+  asyncHandler(async (req, res) => {
     const { username, password } = req.body || {};
-    if (username === "dev" && password === "dev123") {
-      req.session.devUser = { username: "dev" };
+    
+    if (username !== DEV_USERNAME) {
+      return res.render("login/login", {
+        error: "Username atau password salah.",
+        actionUrl: "/dev/dashboard-mobile",
+      });
+    }
+    
+    let passwordOk = false;
+    if (DEV_PASSWORD_HASH) {
+      passwordOk = await bcrypt.compare(password || "", DEV_PASSWORD_HASH);
+    } else {
+      passwordOk = password === "dev123";
+    }
+    
+    if (passwordOk) {
+      req.session.devUser = { username: DEV_USERNAME };
       return res.redirect("/dev/dashboard-mobile");
     }
     return res.render("login/login", {
       error: "Username atau password salah.",
       actionUrl: "/dev/dashboard-mobile",
     });
-  },
+  }),
+);
+
+// ============== DEV API: Content Stats ==============
+app.get(
+  "/api/dev/content-stats",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
+    const stats = await db.getContentStats();
+    return res.json(stats);
+  }),
+);
+
+// ============== DEV API: Activity Log ==============
+app.get(
+  "/api/dev/activity-logs",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
+    const limit = parseInt(req.query.limit) || 50;
+    const logs = await db.getActivityLogs({ limit });
+    return res.json({ logs });
+  }),
+);
+
+// ============== DEV API: Backup ==============
+app.get(
+  "/api/dev/backup/status",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
+    const [latest, list, stats] = await Promise.all([
+      db.getLatestBackup(),
+      db.getBackups({ limit: 10 }),
+      db.getContentStats(),
+    ]);
+    return res.json({
+      hasBackup: !!latest,
+      latestBackup: latest ? { createdAt: latest.createdAt, summary: latest.summary, id: latest._id.toString() } : null,
+      totalBackups: stats.backups,
+      backups: list.map(b => ({ id: b._id.toString(), createdAt: b.createdAt, summary: b.summary, triggeredBy: b.triggeredBy })),
+    });
+  }),
+);
+
+app.post(
+  "/api/dev/backup/create",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
+    const username = req.session.devUser?.username || "dev";
+    const backup = await db.createBackup(username);
+    return res.json({ ok: true, backup });
+  }),
 );
 
 // ============== GOOGLE PAGE SPEED INSIGHTS API ==============
@@ -1418,6 +1435,8 @@ app.post(
   asyncHandler(async (req, res) => {
     const { enabled, message } = req.body || {};
     await db.setMaintenanceMode({ enabled: Boolean(enabled), message });
+    const action = enabled ? "maintenance.toggle_on" : "maintenance.toggle_off";
+    db.logActivity({ action, detail: `Maintenance ${enabled ? "ACTIVATED" : "DEACTIVATED"}`, username: req.session.devUser?.username || "dev" }).catch(() => {});
     return res.json({ ok: true, enabled: Boolean(enabled) });
   }),
 );
@@ -1472,6 +1491,7 @@ app.post(
 
     await db.blockIp(ip);
     await db.logSecurityEvent({ type: "blocked_ip", ip, path: "/", detail: "Manually blocked via dashboard" });
+    db.logActivity({ action: "security.block_ip", detail: `IP ${ip} blocked`, username: req.session.devUser?.username || "dev" }).catch(() => {});
     return res.json({ ok: true, ip });
   }),
 );
@@ -1483,6 +1503,7 @@ app.post(
     const { ip } = req.body || {};
     if (!ip) return res.status(400).json({ error: "IP address wajib diisi" });
     await db.unblockIp(ip);
+    db.logActivity({ action: "security.unblock_ip", detail: `IP ${ip} unblocked`, username: req.session.devUser?.username || "dev" }).catch(() => {});
     return res.json({ ok: true, ip });
   }),
 );
@@ -1506,8 +1527,6 @@ app.use((err, req, res, next) => {
 
 // ============== EXPORT (for Vercel) ==============
 module.exports = app;
-// getMetricRating tetap bisa diakses tanpa menimpa export utama (app) di atas
-module.exports.getMetricRating = getMetricRating;
 
 // Only listen when run directly (not on Vercel serverless)
 if (require.main === module) {

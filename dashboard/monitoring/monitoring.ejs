@@ -15,7 +15,6 @@
   <!-- Vercel Analytics -->
   <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
   <script defer src="/_vercel/insights/script.js"></script>
-  <script defer src="https://unpkg.com/@vercel/speed-insights/dist/index.js"></script>
 </head>
 <body>
 
@@ -29,14 +28,9 @@
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
           </button>
           <h1>Monitoring</h1>
-          <p>Speed Insights (Web Vitals) & server health.</p>
+          <p>Server health &amp; performance metrics.</p>
         </div>
         <div class="topbar-actions">
-          <select class="select-btn" id="range-select" onchange="loadSpeedInsights()">
-            <option value="24h">Last 24 Hours</option>
-            <option value="7d" selected>Last 7 Days</option>
-            <option value="30d">Last 30 Days</option>
-          </select>
         </div>
       </header>
 
@@ -61,197 +55,12 @@
           </div>
         </div>
 
-        <div class="card" id="speed-insights-card">
-          <div class="section-header">
-            <span>Speed Insights <span style="font-weight:500;font-size:11.5px;color:var(--muted);">— Vercel Web Vitals</span></span>
-            <span class="sub">
-              <span id="si-records-count" style="display:none;"></span>
-              <span id="si-status-badge"></span>
-              <button class="btn" onclick="openSiConfigModal()" style="margin-left:8px;font-size:11px;padding:4px 10px;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                Config
-              </button>
-              <a href="https://vercel.com/dashboard" target="_blank" rel="noopener" style="margin-left:10px;color:var(--blue);text-decoration:none;font-weight:700;">Buka di Vercel ↗</a>
-            </span>
-          </div>
-          <div id="speed-insights-body" style="min-height:160px;">
-            <div id="si-loading" style="padding:40px 20px;text-align:center;color:var(--muted);font-size:13px;">
-              <div style="margin-bottom:10px;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;animation:spin 1s linear infinite;">
-                  <circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" stroke-linecap="round"/>
-                </svg>
-              </div>
-              Loading Speed Insights...
-            </div>
-            <div id="si-not-configured" style="display:none;padding:40px 20px;text-align:center;color:var(--muted);font-size:13px;">
-              <div style="margin-bottom:10px;font-size:24px;">⚡</div>
-              Speed Insights belum dikonfigurasi.<br>
-              <small style="opacity:0.7;">Set VERCEL_TOKEN dan VERCEL_PROJECT_ID di environment variables.</small><br>
-              <small style="opacity:0.7;display:block;margin-top:6px;">Catatan: Vercel belum menyediakan REST API publik resmi untuk data ini, jadi meski sudah dikonfigurasi, data di sini bisa saja tidak lengkap/berubah sewaktu-waktu. Untuk data yang pasti akurat, lihat langsung di <a href="https://vercel.com/dashboard" target="_blank" rel="noopener" style="color:var(--blue);">Vercel Dashboard ↗</a>.</small>
-            </div>
-            <div id="si-error" style="display:none;padding:40px 20px;text-align:center;color:var(--red);font-size:13px;"></div>
-            <div id="si-data" style="display:none;">
-              <div class="si-summary" id="si-summary">
-                <div class="si-summary-item">
-                  <div class="si-summary-label">Pages Tracked</div>
-                  <div class="si-summary-value" id="si-total-pages">0</div>
-                </div>
-                <div class="si-summary-item">
-                  <div class="si-summary-label">Total Records</div>
-                  <div class="si-summary-value" id="si-total-records">0</div>
-                </div>
-                <div class="si-summary-item">
-                  <div class="si-summary-label">Avg LCP</div>
-                  <div class="si-summary-value" id="si-avg-lcp">—</div>
-                </div>
-                <div class="si-summary-item">
-                  <div class="si-summary-label">Avg FCP</div>
-                  <div class="si-summary-value" id="si-avg-fcp">—</div>
-                </div>
-              </div>
-              <div style="overflow-x:auto;">
-                <table class="si-table" id="si-table">
-                  <thead>
-                    <tr>
-                      <th>Path</th>
-                      <th title="Largest Contentful Paint">LCP</th>
-                      <th title="First Contentful Paint">FCP</th>
-                      <th title="Time to First Byte">TTFB</th>
-                      <th title="Cumulative Layout Shift">CLS</th>
-                      <th title="Interaction to Next Paint">INP</th>
-                      <th title="Number of measurements">#</th>
-                    </tr>
-                  </thead>
-                  <tbody id="si-table-body"></tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-
       </main>
     </div>
   </div>
 
   <script>
-  async function loadSpeedInsights() {
-    try {
-      const statusRes = await fetch('/api/dev/speed-insights/status');
-      const status = await statusRes.json();
-
-      if (!status.configured) {
-        document.getElementById('si-loading').style.display = 'none';
-        document.getElementById('si-not-configured').style.display = 'block';
-        document.getElementById('si-status-badge').textContent = '⚠ Not configured';
-        return;
-      }
-
-      document.getElementById('si-status-badge').textContent = '✓ Enabled';
-      document.getElementById('si-status-badge').style.color = '#16A34A';
-
-      const range = document.getElementById('range-select').value || '7d';
-      const res = await fetch('/api/dev/speed-insights?range=' + range);
-      const data = await res.json();
-
-      document.getElementById('si-loading').style.display = 'none';
-
-      if (data.error) {
-        document.getElementById('si-error').textContent = data.error;
-        document.getElementById('si-error').style.display = 'block';
-        return;
-      }
-
-      if (!data.paths || !data.paths.length) {
-        document.getElementById('si-error').textContent = 'No speed insights data available yet. Visit the site to start collecting Web Vitals.';
-        document.getElementById('si-error').style.display = 'block';
-        return;
-      }
-
-      document.getElementById('si-data').style.display = 'block';
-      document.getElementById('si-records-count').style.display = 'inline';
-      document.getElementById('si-records-count').textContent = data.total + ' records';
-
-      document.getElementById('si-total-pages').textContent = data.paths.length;
-      document.getElementById('si-total-records').textContent = data.total;
-
-      const validLcp = data.paths.filter(p => p.lcp.median != null).map(p => p.lcp.median);
-      const validFcp = data.paths.filter(p => p.fcp.median != null).map(p => p.fcp.median);
-
-      if (validLcp.length) {
-        const avgLcp = Math.round(validLcp.reduce((a, b) => a + b, 0) / validLcp.length);
-        document.getElementById('si-avg-lcp').textContent = avgLcp + 'ms';
-        document.getElementById('si-avg-lcp').style.color = getSiColor(avgLcp, 'lcp');
-      }
-      if (validFcp.length) {
-        const avgFcp = Math.round(validFcp.reduce((a, b) => a + b, 0) / validFcp.length);
-        document.getElementById('si-avg-fcp').textContent = avgFcp + 'ms';
-        document.getElementById('si-avg-fcp').style.color = getSiColor(avgFcp, 'fcp');
-      }
-
-      let html = '';
-      data.paths.slice(0, 20).forEach(p => {
-        const lcpStr = p.lcp.median != null ? p.lcp.median + 'ms' : '—';
-        const fcpStr = p.fcp.median != null ? p.fcp.median + 'ms' : '—';
-        const ttfbStr = p.ttfb.median != null ? p.ttfb.median + 'ms' : '—';
-        const clsStr = p.cls.median != null ? p.cls.median.toFixed(2) : '—';
-        const inpStr = p.inp.median != null ? p.inp.median + 'ms' : '—';
-
-        html += `<tr>
-          <td class="si-path-cell" title="${p.path}">${p.path}</td>
-          <td class="si-metric-val"><span class="si-metric-dot" style="background:${getSiColor(p.lcp.median, 'lcp')}"></span>${lcpStr}</td>
-          <td class="si-metric-val"><span class="si-metric-dot" style="background:${getSiColor(p.fcp.median, 'fcp')}"></span>${fcpStr}</td>
-          <td class="si-metric-val"><span class="si-metric-dot" style="background:${getSiColor(p.ttfb.median, 'ttfb')}"></span>${ttfbStr}</td>
-          <td class="si-metric-val"><span class="si-metric-dot" style="background:${getSiColor(p.cls.median, 'cls')}"></span>${clsStr}</td>
-          <td class="si-metric-val"><span class="si-metric-dot" style="background:${getSiColor(p.inp.median, 'inp')}"></span>${inpStr}</td>
-          <td style="color:var(--muted);font-size:11px;">${p.count}</td>
-        </tr>`;
-      });
-
-      document.getElementById('si-table-body').innerHTML = html;
-    } catch (e) {
-      document.getElementById('si-loading').style.display = 'none';
-      document.getElementById('si-error').textContent = 'Failed to load Speed Insights: ' + e.message;
-      document.getElementById('si-error').style.display = 'block';
-      console.warn('[monitoring] speed-insights error', e);
-    }
-  }
-
-  function getSiColor(value, metric) {
-    if (value === null || value === undefined) return '#94A3B8';
-    const thresholds = {
-      lcp: { good: 2500, poor: 4000 },
-      fcp: { good: 1800, poor: 3000 },
-      ttfb: { good: 800, poor: 1800 },
-      cls: { good: 0.1, poor: 0.25 },
-      inp: { good: 200, poor: 500 },
-    };
-    const t = thresholds[metric];
-    if (!t) return '#94A3B8';
-    if (value <= t.good) return '#16A34A';
-    if (value <= t.poor) return '#D97706';
-    return '#DC2626';
-  }
-
-  // ── Snapshot bulanan ──
-  // Cek kapan snapshot terakhir diambil. Auto-scan jika > 30 hari.
-  async function checkSnapshot() {
-    try {
-      const res = await fetch('/api/dev/speed-insights/last-scan');
-      const data = await res.json();
-      const now = new Date();
-      const currentMonth = now.toISOString().slice(0, 7); // "2026-07"
-      if (data.label !== currentMonth) {
-        // Auto scan
-        await fetch('/api/dev/speed-insights/scan', { method: 'POST' });
-      }
-    } catch (_) {}
-  }
-  checkSnapshot();
-
-  loadSpeedInsights();
-  setInterval(loadSpeedInsights, 60000);
-
-  // Live-refresh server metrics alongside speed insights
+  // Live-refresh server metrics
   async function refreshServerMetrics() {
     try {
       const res = await fetch('/api/dev/stats');
@@ -269,119 +78,6 @@
   }
   setInterval(refreshServerMetrics, 30000);
 
-  // ── SPEED INSIGHTS CONFIG MODAL ──
-  let siConfigOverlay = null;
-  let siConfigModalHtml = `
-  <div class="modal-overlay" id="si-config-modal">
-    <div class="modal">
-      <div class="modal-title">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-        Speed Insights Configuration
-      </div>
-      <div style="margin-bottom:14px;font-size:12.5px;color:var(--muted);line-height:1.6;">
-        Masukkan token Vercel dan Project ID untuk mengaktifkan Speed Insights.<br>
-        <strong style="color:var(--text);">Token akan tersimpan di database</strong> dan tidak perlu di-set sebagai environment variable.
-      </div>
-      <div class="modal-error" id="si-config-error"></div>
-      <div class="modal-success" id="si-config-success"></div>
-      <div class="modal-field">
-        <label for="si-vercel-token">Vercel Token</label>
-        <input id="si-vercel-token" type="password" placeholder="Paste Vercel access token" autocomplete="off">
-        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Buat di <a href="https://vercel.com/account/tokens" target="_blank" rel="noopener" style="color:var(--blue);">vercel.com/account/tokens ↗</a></div>
-      </div>
-      <div class="modal-field">
-        <label for="si-project-id">Project ID</label>
-        <input id="si-project-id" type="text" placeholder="prj_xxxxxxxxxxxx" autocomplete="off">
-        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Dapat dari <strong>Vercel Dashboard → Project → Settings → General → Project ID</strong></div>
-      </div>
-      <div class="modal-actions">
-        <button class="modal-btn" onclick="closeSiConfigModal()">Cancel</button>
-        <button class="modal-btn primary" onclick="submitSiConfig()">Save Configuration</button>
-      </div>
-    </div>
-  </div>`;
-
-  function injectSiModal() {
-    if (!document.getElementById('si-config-modal')) {
-      const div = document.createElement('div');
-      div.innerHTML = siConfigModalHtml;
-      document.body.appendChild(div.firstElementChild);
-      const overlay = document.getElementById('si-config-modal');
-      overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) closeSiConfigModal();
-      });
-    }
-  }
-
-  window.openSiConfigModal = async function() {
-    injectSiModal();
-    document.getElementById('si-config-modal').classList.add('active');
-    document.getElementById('si-config-error').classList.remove('show');
-    document.getElementById('si-config-error').textContent = '';
-    document.getElementById('si-config-success').classList.remove('show');
-    document.getElementById('si-config-success').textContent = '';
-
-    // Load existing config
-    try {
-      const res = await fetch('/api/dev/speed-insights/config');
-      const data = await res.json();
-      document.getElementById('si-project-id').value = data.vercelProjectId || '';
-      if (data.hasToken) {
-        document.getElementById('si-vercel-token').placeholder = '•••••••• (already configured)';
-      }
-    } catch (_) {}
-  };
-
-  window.closeSiConfigModal = function() {
-    const modal = document.getElementById('si-config-modal');
-    if (modal) {
-      modal.classList.remove('active');
-      document.getElementById('si-vercel-token').value = '';
-      document.getElementById('si-project-id').value = '';
-    }
-  };
-
-  window.submitSiConfig = async function() {
-    const token = document.getElementById('si-vercel-token').value.trim();
-    const projectId = document.getElementById('si-project-id').value.trim();
-    const errorEl = document.getElementById('si-config-error');
-    const successEl = document.getElementById('si-config-success');
-    errorEl.classList.remove('show');
-    successEl.classList.remove('show');
-
-    // Allow empty token (if already configured) but require projectId
-    if (!token && !projectId) {
-      errorEl.textContent = 'Setidaknya Project ID harus diisi';
-      errorEl.classList.add('show');
-      return;
-    }
-
-    try {
-      const payload = {};
-      if (token) payload.vercelToken = token;
-      if (projectId) payload.vercelProjectId = projectId;
-
-      const res = await fetch('/api/dev/speed-insights/config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-      if (data.ok) {
-        successEl.textContent = 'Konfigurasi Speed Insights berhasil disimpan!';
-        successEl.classList.add('show');
-        document.getElementById('si-vercel-token').value = '';
-        closeSiConfigModal();
-        loadSpeedInsights();
-      } else {
-        errorEl.textContent = data.error || 'Gagal menyimpan konfigurasi';
-        errorEl.classList.add('show');
-      }
-    } catch (e) {
-      errorEl.textContent = 'Network error';
-      errorEl.classList.add('show');
-    }
-  };
   </script>
 
 </body>

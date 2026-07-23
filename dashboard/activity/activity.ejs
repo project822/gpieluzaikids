@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Activity Log — Dev Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"></noscript>
+  <%- include('_critical-css') %>
+  <link rel="stylesheet" href="/dashboard-assets/shared/base.css" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="/dashboard-assets/activity/activity.css" media="print" onload="this.media='all'">
+</head>
+<body>
+  <div class="dash-shell">
+    <%- include('_sidebar', { active: 'activity' }) %>
+
+    <div class="main">
+      <header class="topbar">
+        <div class="topbar-heading">
+          <button class="hamburger" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+          <h1>Activity Log</h1>
+          <p>Audit trail of all admin actions &amp; system changes.</p>
+        </div>
+        <div class="topbar-actions">
+          <div class="online-badge">
+            <span class="online-dot"></span>
+            <span id="al-count"><%= logs.length %></span> entries
+          </div>
+          <button class="btn" onclick="refreshLogs()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Refresh
+          </button>
+        </div>
+      </header>
+
+      <main class="content">
+
+        <!-- ── STATS ROW ── -->
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total Logs</div>
+            <div class="stat-value"><%= logs.length %></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Events</div>
+            <div class="stat-value"><%= contentStats.events || 0 %></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Documentation</div>
+            <div class="stat-value"><%= contentStats.documentation || 0 %></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Admins</div>
+            <div class="stat-value"><%= contentStats.admins || 0 %></div>
+          </div>
+        </div>
+
+        <!-- ── FILTER CHIPS ── -->
+        <div class="al-filters" id="al-filters">
+          <button class="al-filter active" data-filter="all" onclick="filterLogs('all')">All</button>
+          <button class="al-filter" data-filter="admin" onclick="filterLogs('admin')">Admin</button>
+          <button class="al-filter" data-filter="event" onclick="filterLogs('event')">Events</button>
+          <button class="al-filter" data-filter="doc" onclick="filterLogs('doc')">Docs</button>
+          <button class="al-filter" data-filter="maintenance" onclick="filterLogs('maintenance')">Maintenance</button>
+          <button class="al-filter" data-filter="security" onclick="filterLogs('security')">Security</button>
+          <button class="al-filter" data-filter="backup" onclick="filterLogs('backup')">Backup</button>
+        </div>
+
+        <!-- ── TIMELINE ── -->
+        <div class="card">
+          <div class="section-header">
+            <span>Timeline</span>
+            <span class="sub"><span id="al-display-count"><%= logs.length %></span> displayed</span>
+          </div>
+          <div class="al-timeline" id="al-timeline">
+            <% if (logs && logs.length) { %>
+              <% logs.forEach(log => { %>
+                <div class="al-entry" data-action="<%= log.action ? log.action.split('.')[0] : 'other' %>">
+                  <div class="al-entry-line"></div>
+                  <div class="al-entry-icon al-icon-<%= log.action ? log.action.split('.')[0] : 'other' %>">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <% if (log.action && log.action.startsWith('admin')) { %>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-3-6.65"/>
+                      <% } else if (log.action && log.action.startsWith('event')) { %>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                      <% } else if (log.action && log.action.startsWith('doc')) { %>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                      <% } else if (log.action && log.action.startsWith('maintenance')) { %>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      <% } else if (log.action && log.action.startsWith('security')) { %>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                      <% } else if (log.action && log.action.startsWith('backup')) { %>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                      <% } else { %>
+                        <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+                      <% } %>
+                    </svg>
+                  </div>
+                  <div class="al-entry-body">
+                    <div class="al-entry-action">
+                      <span class="al-action-badge al-badge-<%= log.action ? log.action.split('.')[0] : 'other' %>">
+                        <%= log.action ? log.action.replace('.', ' · ') : 'unknown' %>
+                      </span>
+                      <span class="al-entry-detail"><%= log.detail || '' %></span>
+                    </div>
+                    <div class="al-entry-meta">
+                      <span class="al-entry-user">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        <%= log.username || 'system' %>
+                      </span>
+                      <span class="al-entry-time">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                        <%= log.timestamp ? new Date(log.timestamp).toLocaleString('id-ID') : '—' %>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              <% }) %>
+            <% } else { %>
+              <div class="al-empty">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.3;"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                <p>Belum ada aktivitas yang tercatat.</p>
+                <small>Aksi admin akan muncul di sini secara otomatis.</small>
+              </div>
+            <% } %>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+  // Helper for icon selection (mirrors server-side getActionIcon)
+  function getFilterCategory(action) {
+    if (!action) return 'other';
+    return action.split('.')[0];
+  }
+
+  // Filter logs
+  function filterLogs(category) {
+    // Update filter buttons
+    document.querySelectorAll('.al-filter').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`.al-filter[data-filter="${category}"]`).classList.add('active');
+
+    // Filter entries
+    const entries = document.querySelectorAll('.al-entry');
+    let visibleCount = 0;
+    entries.forEach(entry => {
+      const entryCategory = entry.dataset.action || 'other';
+      if (category === 'all' || entryCategory === category) {
+        entry.style.display = '';
+        visibleCount++;
+      } else {
+        entry.style.display = 'none';
+      }
+    });
+
+    document.getElementById('al-display-count').textContent = visibleCount;
+  }
+
+  // Refresh logs
+  async function refreshLogs() {
+    try {
+      const res = await fetch('/api/dev/activity-logs?limit=100');
+      const data = await res.json();
+      if (data.logs) {
+        // Reload page to get fresh data with proper rendering
+        window.location.reload();
+      }
+    } catch (e) {
+      console.warn('[activity] refresh error', e);
+    }
+  }
+
+  // Auto-refresh every 60s
+  // setInterval(refreshLogs, 60000); // disabled to avoid page reload
+  </script>
+
+</body>
+</html>

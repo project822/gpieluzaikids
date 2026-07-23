@@ -53,11 +53,7 @@
           <span class="hm-banner-label">Database</span>
           <span class="hm-banner-val" id="hm-val-db">Checking...</span>
         </div>
-        <div class="hm-banner-item">
-          <span class="hm-banner-dot" id="hm-dot-si"></span>
-          <span class="hm-banner-label">Speed Ins.</span>
-          <span class="hm-banner-val" id="hm-val-si">Checking...</span>
-        </div>
+
         <div class="hm-banner-item">
           <span class="hm-banner-dot" id="hm-dot-mt"></span>
           <span class="hm-banner-label">Maintenance</span>
@@ -83,6 +79,27 @@
         <div class="stat-card">
           <div class="stat-card-label">Total Requests</div>
           <div class="stat-card-value" id="hm-stat-requests">0</div>
+        </div>
+      </div>
+
+      <!-- ── CONTENT STATS ── -->
+      <div class="section-title">Content</div>
+      <div class="stat-grid">
+        <div class="stat-card" style="cursor:default;">
+          <div class="stat-card-label">Events</div>
+          <div class="stat-card-value cs-stat" id="hm-cs-events">—</div>
+        </div>
+        <div class="stat-card" style="cursor:default;">
+          <div class="stat-card-label">Docs</div>
+          <div class="stat-card-value cs-stat" id="hm-cs-docs">—</div>
+        </div>
+        <div class="stat-card" style="cursor:default;">
+          <div class="stat-card-label">Admins</div>
+          <div class="stat-card-value cs-stat" id="hm-cs-admins">—</div>
+        </div>
+        <div class="stat-card" style="cursor:default;">
+          <div class="stat-card-label">Backups</div>
+          <div class="stat-card-value cs-stat" id="hm-cs-backups">—</div>
         </div>
       </div>
 
@@ -148,32 +165,17 @@
         <div class="stat-card"><div class="stat-card-label">Online Now</div><div class="stat-card-value" id="ov-online">0</div></div>
       </div>
 
-      <div class="section-title">Web Vitals</div>
+    </section>
 
-      <div class="app-card" id="ov-vitals">
-        <div class="app-card-loading" id="ov-vl">Loading Web Vitals...</div>
-        <div class="app-card-empty" id="ov-ve" style="display:none;">⚠ Speed Insights belum dikonfigurasi</div>
-        <div id="ov-vd" style="display:none;">
-          <div class="vitals-row" id="ov-vr"></div>
-          <div class="score-section">
-            <div class="score-header"><span>Performance Score</span><span class="score-number" id="ov-sc">--</span></div>
-            <div class="score-track"><div class="score-fill" id="ov-sf" style="width:0%"></div></div>
-          </div>
-        </div>
-      </div>
+    <!-- ═══════════════ TAB: ACTIVITY LOG ═══════════════ -->
+    <section class="app-tab" id="t-activity">
 
-      <div class="section-title">Per-Path Analysis</div>
-      <div class="app-card" id="ov-paths">
-        <div class="app-card-loading" id="ov-pl">Loading...</div>
-        <div class="app-card-empty" id="ov-pe" style="display:none;">Belum ada data</div>
-        <div id="ov-pd" style="display:none;">
-          <table class="analysis-table">
-            <thead>
-              <tr><th>Path</th><th>LCP</th><th>FCP</th><th>Score</th></tr>
-            </thead>
-            <tbody id="ov-pt"></tbody>
-          </table>
-        </div>
+      <div class="section-title">Activity Log</div>
+
+      <div class="app-card">
+        <div class="app-card-loading" id="ac-loading">Loading activity log...</div>
+        <div class="app-card-empty" id="ac-empty" style="display:none;">Belum ada aktivitas yang tercatat.</div>
+        <div id="ac-list" style="display:none;"></div>
       </div>
 
     </section>
@@ -480,6 +482,10 @@
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18M7 16l4-4 4 4 4-4"/></svg>
       <span>Overview</span>
     </button>
+    <button class="app-tabbar-item" data-tab="activity" onclick="mobTab('activity')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+      <span>Activity</span>
+    </button>
     <button class="app-tabbar-item" data-tab="system" onclick="mobTab('system')">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
       <span>System</span>
@@ -536,44 +542,6 @@
     if (s < 60) return Math.round(s) + 's';
     if (s < 3600) return Math.floor(s/60) + 'm ' + Math.round(s%60) + 's';
     return Math.floor(s/3600) + 'h ' + Math.floor((s%3600)/60) + 'm';
-  }
-
-  function siC(v,m) {
-    if (v==null) return '#94a3b8';
-    var t={lcp:{g:2500,p:4000},fcp:{g:1800,p:3000},ttfb:{g:800,p:1800},cls:{g:0.1,p:0.25},inp:{g:200,p:500}}[m];
-    return t ? (v<=t.g?'#22c55e':v<=t.p?'#f59e0b':'#ef4444') : '#94a3b8';
-  }
-
-  function calcSc(p) {
-    if (!p||!p.length) return null;
-    var th={lcp:{g:2500,p:4000},fcp:{g:1800,p:3000},ttfb:{g:800,p:1800},cls:{g:0.1,p:0.25},inp:{g:200,p:500}};
-    var w={lcp:30,fcp:15,ttfb:20,cls:15,inp:20},tw=0,ts=0;
-    ['lcp','fcp','ttfb','cls','inp'].forEach(function(m){
-      var v=p.map(function(x){return x[m]&&x[m].median}).filter(function(x){return x!=null});
-      if (!v.length) return;
-      var a=v.reduce(function(a,b){return a+b},0)/v.length,t=th[m];
-      var sc=a<=t.g?100:a<=t.p?Math.round(50+50*(1-(a-t.g)/(t.p-t.g))):Math.max(0,Math.round(50*(1-(a-t.p)/t.p)));
-      ts+=sc*w[m];tw+=w[m];
-    });
-    return tw>0?Math.round(ts/tw):null;
-  }
-
-  function shV(p,pr) {
-    var m=[{k:'lcp',l:'LCP'},{k:'fcp',l:'FCP'},{k:'ttfb',l:'TTFB'},{k:'cls',l:'CLS',f:true},{k:'inp',l:'INP'}];
-    var h='';
-    m.forEach(function(x){
-      var v=p.map(function(y){return y[x.k]&&y[x.k].median}).filter(function(y){return y!=null});
-      if (!v.length) return;
-      var a=v.reduce(function(a,b){return a+b},0)/v.length, d=x.f?a.toFixed(3):Math.round(a)+'ms';
-      h+='<div class="vital-chip" style="border-color:'+siC(a,x.k)+'40;"><span class="vital-chip-label">'+x.l+'</span><span class="vital-chip-value" style="color:'+siC(a,x.k)+';">'+d+'</span></div>';
-    });
-    _(pr+'-vr').innerHTML=h;
-    var sc=calcSc(p);
-    if (sc!==null) {
-      var f=_(pr+'-sf'); f.style.width=sc+'%';
-      f.style.background=sc>=90?'#22c55e':sc>=50?'#f59e0b':'#ef4444';
-      _(pr+'-sc').textContent=sc;_(pr+'-sc').style.color=sc>=90?'#22c55e':sc>=50?'#f59e0b':'#ef4444';
-    }
   }
 
   function toast(m) {
@@ -656,12 +624,14 @@
           }).join('');
       }
 
-      // — Speed Insights status on banner —
+      // — Content Stats —
       try {
-        var siSt=await(await fetch('/api/dev/speed-insights/status')).json();
-        setBannerDot('si', siSt.configured?'ok':'warn');
-        setBannerVal('si', siSt.configured?'Configured':'Not set');
-      }catch(e){ setBannerDot('si','warn'); setBannerVal('si','Error'); }
+        var cs=await(await fetch('/api/dev/content-stats')).json();
+        _('hm-cs-events').textContent=cs.events||0;
+        _('hm-cs-docs').textContent=cs.documentation||0;
+        _('hm-cs-admins').textContent=cs.admins||0;
+        _('hm-cs-backups').textContent=cs.backups||0;
+      }catch(e){}
 
       // — Maintenance status on banner —
       try {
@@ -683,6 +653,42 @@
       _('ov-pageviews').textContent=pv.pageviews||0;
       _('ov-latency').innerHTML=(s.metrics?(s.metrics.avgLatencyMs||0):0)+'<span class="unit">ms</span>';
       _('ov-online').textContent=pv.online||0;
+
+      // — ACTIVITY TAB —
+      try {
+        var acRes=await(await fetch('/api/dev/activity-logs?limit=30')).json();
+        var logs=acRes.logs||[];
+        _('ac-loading').style.display='none';
+        if(logs.length){
+          _('ac-list').style.display='block';
+          var acHtml='';
+          logs.forEach(function(l){
+            var cat=l.action?l.action.split('.')[0]:'other';
+            var iconSvg=cat==='admin'?'<path d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-3-6.65"/>':
+              cat==='event'?'<path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>':
+              cat==='backup'?'<path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>':
+              cat==='security'||cat==='maintenance'?'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>':
+              '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>';
+            var ts=l.timestamp?new Date(l.timestamp).toLocaleString('id-ID'):'—';
+            var detail=l.detail||'';
+            var uname=l.username||'system';
+            acHtml+='<div class="account-item" style="border-left:3px solid '+
+              (cat==='admin'?'#8B5CF6':cat==='event'?'#3B82F6':cat==='backup'?'#6366F1':cat==='security'?'#EF4444':cat==='maintenance'?'#F59E0B':'#94A3B8')+
+              ';padding-left:10px;">'+
+              '<div class="account-item-left" style="flex:1;">'+
+                '<div class="account-item-info">'+
+                  '<span style="font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:700;">'+(l.action||'unknown')+'</span>'+
+                  '<span class="account-item-name" style="font-size:12px;">'+detail+'</span>'+
+                  '<span style="font-size:10px;color:#64748b;margin-top:2px;">👤 '+uname+' · 🕐 '+ts+'</span>'+
+                '</div>'+
+              '</div>'+
+            '</div>';
+          });
+          _('ac-list').innerHTML=acHtml;
+        }else{
+          _('ac-empty').style.display='block';
+        }
+      }catch(e){ _('ac-loading').style.display='none'; _('ac-empty').style.display='block'; }
 
       // — ACCOUNT TAB: admin list (reuse data from Home) —
       _('ac-list').innerHTML=!adms.length?'<div class="app-card-empty">No admins</div>':
@@ -711,34 +717,6 @@
             '</div>'+
           '</div>';
         }).join('');
-
-      // — SPEED INSIGHTS (Overview tab) —
-      var siS=await(await fetch('/api/dev/speed-insights/status')).json();
-      if(siS.configured){
-        var siD=await(await fetch('/api/dev/speed-insights?range=7d')).json();
-        if(siD.error||!siD.paths||!siD.paths.length){
-          _('ov-vl').style.display='none';_('ov-ve').style.display='block';
-          _('ov-pl').style.display='none';_('ov-pe').style.display='block';
-        }else{
-          _('ov-vl').style.display='none';_('ov-vd').style.display='block';
-          _('ov-pl').style.display='none';_('ov-pd').style.display='block';
-          shV(siD.paths,'ov');
-          // Path analysis table
-          var rows='';
-          siD.paths.slice(0,10).forEach(function(p){
-            var lcp=p.lcp&&p.lcp.median?Math.round(p.lcp.median)+'ms':'---';
-            var fcp=p.fcp&&p.fcp.median?Math.round(p.fcp.median)+'ms':'---';
-            var sc=p.lcp&&p.lcp.median?calcSc([p]):null;
-            var sclass=sc>=90?'good':sc>=50?'needs-improvement':'poor';
-            var sdisplay=sc!==null?sc:'---';
-            rows+='<tr><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+p.path+'</td><td>'+lcp+'</td><td>'+fcp+'</td><td><span class="analysis-score '+sclass+'">'+sdisplay+'</span></td></tr>';
-          });
-          _('ov-pt').innerHTML=rows;
-        }
-      }else{
-        _('ov-vl').style.display='none';_('ov-ve').style.display='block';
-        _('ov-pl').style.display='none';_('ov-pe').style.display='block';
-      }
 
       // — MAINTENANCE (System tab) —
       var mt=await(await fetch('/api/dev/maintenance/status')).json();

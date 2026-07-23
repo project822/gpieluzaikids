@@ -89,56 +89,7 @@
           </div>
         </div>
 
-        <!-- Performance Metrics Row -->
-        <div class="hc-section-row">
-
-          <div class="card hc-perf-card">
-            <div class="section-header">
-              <span>Web Vitals — User</span>
-              <span class="sub" id="hc-si-status-badge">Loading...</span>
-            </div>
-            <div id="hc-si-body">
-              <div class="hc-loading" id="hc-si-loading">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin-icon"><circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" stroke-linecap="round"/></svg>
-                Memuat Web Vitals...
-              </div>
-              <div id="hc-si-not-configured" class="hc-empty" style="display:none;">
-                <span style="font-size:22px;">⚡</span>
-                Speed Insights belum dikonfigurasi.<br>
-                <small>Set VERCEL_TOKEN &amp; VERCEL_PROJECT_ID untuk mengaktifkan.</small>
-              </div>
-              <div id="hc-si-data" style="display:none;">
-                <div class="hc-vitals-grid" id="hc-vitals-grid">
-                  <!-- filled by JS -->
-                </div>
-                <div class="hc-perf-score-row">
-                  <div class="hc-score-wrap">
-                    <div class="hc-score-label">Performance Score</div>
-                    <div class="hc-score-ring-wrap">
-                      <svg class="hc-score-ring" viewBox="0 0 60 60">
-                        <circle cx="30" cy="30" r="24" fill="none" stroke="var(--border)" stroke-width="5"/>
-                        <circle cx="30" cy="30" r="24" fill="none" stroke-width="5"
-                          stroke-linecap="round"
-                          stroke-dasharray="150.8"
-                          stroke-dashoffset="150.8"
-                          id="hc-score-arc"
-                          style="transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset 0.8s ease, stroke 0.5s ease;"/>
-                        <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
-                          font-size="13" font-weight="800" fill="var(--text)" id="hc-score-text">—</text>
-                      </svg>
-                    </div>
-                  </div>
-                  <div class="hc-score-legend">
-                    <div class="hc-legend-item"><span class="hc-legend-dot good"></span> Good (90–100)</div>
-                    <div class="hc-legend-item"><span class="hc-legend-dot needs"></span> Needs Improvement (50–89)</div>
-                    <div class="hc-legend-item"><span class="hc-legend-dot poor"></span> Poor (&lt;50)</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="card hc-system-card">
+        <div class="card">
             <div class="section-header">
               <span>System Info</span>
               <span class="sub">Server / Node.js</span>
@@ -185,8 +136,6 @@
             </div>
           </div>
 
-        </div>
-
         <!-- Historical Health Timeline -->
         <div class="card" style="margin-top:16px;">
           <div class="section-header">
@@ -197,6 +146,51 @@
             <div class="hc-loading">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin-icon"><circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" stroke-linecap="round"/></svg>
               Collecting data...
+            </div>
+          </div>
+        </div>
+
+        <!-- ── BACKUP STATUS ── -->
+        <div class="card" style="margin-top:16px;">
+          <div class="section-header">
+            <span>Database Backup</span>
+            <span class="sub">MongoDB snapshots</span>
+          </div>
+          <div id="hc-backup-body">
+            <div class="hc-loading" id="hc-bu-loading">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin-icon"><circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" stroke-linecap="round"/></svg>
+              Loading backup info...
+            </div>
+            <div id="hc-bu-data" style="display:none;">
+              <div class="hc-bu-header">
+                <div class="hc-bu-status" id="hc-bu-status">
+                  <span class="hc-bu-dot ok"></span>
+                  <span id="hc-bu-status-text">No backup yet</span>
+                </div>
+                <button class="btn btn-primary" onclick="triggerBackup()" id="hc-bu-btn" style="font-size:11px;padding:5px 12px;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                  Backup Now
+                </button>
+              </div>
+              <div class="hc-bu-info" id="hc-bu-info">
+                <div class="hc-sysrow">
+                  <span class="hc-sys-label">Last Backup</span>
+                  <span class="hc-sys-val" id="hc-bu-last">—</span>
+                </div>
+                <div class="hc-sysrow">
+                  <span class="hc-sys-label">Events Saved</span>
+                  <span class="hc-sys-val" id="hc-bu-events">—</span>
+                </div>
+                <div class="hc-sysrow">
+                  <span class="hc-sys-label">Total Backups</span>
+                  <span class="hc-sys-val" id="hc-bu-total">—</span>
+                </div>
+                <div class="hc-sysrow">
+                  <span class="hc-sys-label">Triggered By</span>
+                  <span class="hc-sys-val" id="hc-bu-triggered">—</span>
+                </div>
+              </div>
+              <div id="hc-bu-feedback" style="display:none;padding:8px 14px;border-radius:6px;font-size:12px;margin-top:8px;"></div>
             </div>
           </div>
         </div>
@@ -231,62 +225,6 @@
       badge.textContent = label;
       badge.className = 'hc-status-badge ' + status;
     }
-  }
-
-  function getSiColor(value, metric) {
-    if (value === null || value === undefined) return '#94A3B8';
-    const thresholds = {
-      lcp: { good: 2500, poor: 4000 },
-      fcp: { good: 1800, poor: 3000 },
-      ttfb: { good: 800, poor: 1800 },
-      cls: { good: 0.1, poor: 0.25 },
-      inp: { good: 200, poor: 500 },
-    };
-    const t = thresholds[metric];
-    if (!t) return '#94A3B8';
-    if (value <= t.good) return '#16A34A';
-    if (value <= t.poor) return '#D97706';
-    return '#DC2626';
-  }
-
-  function calcPerfScore(paths) {
-    // Simple weighted score from LCP + FCP + TTFB + CLS + INP averages
-    if (!paths || !paths.length) return null;
-    const thresholds = {
-      lcp: { good: 2500, poor: 4000 },
-      fcp: { good: 1800, poor: 3000 },
-      ttfb: { good: 800, poor: 1800 },
-      cls: { good: 0.1, poor: 0.25 },
-      inp: { good: 200, poor: 500 },
-    };
-    const weights = { lcp: 30, fcp: 15, ttfb: 20, cls: 15, inp: 20 };
-    let totalWeight = 0, totalScore = 0;
-    const metrics = ['lcp','fcp','ttfb','cls','inp'];
-    metrics.forEach(m => {
-      const vals = paths.map(p => p[m] && p[m].median).filter(v => v != null);
-      if (!vals.length) return;
-      const avg = vals.reduce((a,b) => a+b, 0) / vals.length;
-      const t = thresholds[m];
-      let score;
-      if (avg <= t.good) score = 100;
-      else if (avg <= t.poor) score = Math.round(50 + 50 * (1 - (avg - t.good) / (t.poor - t.good)));
-      else score = Math.max(0, Math.round(50 * (1 - (avg - t.poor) / t.poor)));
-      totalScore += score * weights[m];
-      totalWeight += weights[m];
-    });
-    return totalWeight > 0 ? Math.round(totalScore / totalWeight) : null;
-  }
-
-  function renderScore(score) {
-    const arc = document.getElementById('hc-score-arc');
-    const text = document.getElementById('hc-score-text');
-    if (!arc || !text) return;
-    if (score === null) { text.textContent = '—'; return; }
-    const circumference = 150.8;
-    const offset = circumference - (score / 100) * circumference;
-    arc.style.strokeDashoffset = offset;
-    arc.style.stroke = score >= 90 ? '#16A34A' : score >= 50 ? '#D97706' : '#DC2626';
-    text.textContent = score;
   }
 
   function renderTimeline() {
@@ -373,84 +311,66 @@
     }
   }
 
-  async function loadSpeedInsights() {
+  // ── BACKUP STATUS ──
+  async function loadBackupStatus() {
     try {
-      const statusRes = await fetch('/api/dev/speed-insights/status');
-      const status = await statusRes.json();
-
-      if (!status.configured) {
-        document.getElementById('hc-si-loading').style.display = 'none';
-        document.getElementById('hc-si-not-configured').style.display = 'flex';
-        document.getElementById('hc-si-status-badge').textContent = '⚠ Not configured';
-        return;
-      }
-
-      const res = await fetch('/api/dev/speed-insights?range=7d');
+      const res = await fetch('/api/dev/backup/status');
       const data = await res.json();
 
-      document.getElementById('hc-si-loading').style.display = 'none';
-      if (data.error || !data.paths || !data.paths.length) {
-        document.getElementById('hc-si-not-configured').style.display = 'flex';
-        document.getElementById('hc-si-not-configured').innerHTML = '<span style="font-size:22px;">📊</span>Belum ada data Web Vitals.<br><small>Kunjungi website untuk mulai mengumpulkan data.</small>';
-        document.getElementById('hc-si-status-badge').textContent = 'No data';
-        return;
+      document.getElementById('hc-bu-loading').style.display = 'none';
+      document.getElementById('hc-bu-data').style.display = 'block';
+
+      if (data.hasBackup && data.latestBackup) {
+        const lb = data.latestBackup;
+        document.getElementById('hc-bu-status-text').textContent = 'Backup available';
+        document.getElementById('hc-bu-last').textContent = new Date(lb.createdAt).toLocaleString('id-ID');
+        document.getElementById('hc-bu-events').textContent = (lb.summary && lb.summary.events) || '—';
+        document.getElementById('hc-bu-total').textContent = data.totalBackups || 0;
+        document.getElementById('hc-bu-triggered').textContent = lb.triggeredBy || '—';
+      } else {
+        document.getElementById('hc-bu-status-text').textContent = 'Belum ada backup';
+        document.getElementById('hc-bu-last').textContent = '—';
+        document.getElementById('hc-bu-total').textContent = 0;
       }
-
-      document.getElementById('hc-si-data').style.display = 'block';
-      document.getElementById('hc-si-status-badge').textContent = '✓ ' + data.total + ' records (7d)';
-      document.getElementById('hc-si-status-badge').style.color = 'var(--green)';
-
-      // Build vitals grid (summary across all paths)
-      const paths = data.paths;
-      const metrics = [
-        { key: 'lcp',  label: 'LCP',  unit: 'ms' },
-        { key: 'fcp',  label: 'FCP',  unit: 'ms' },
-        { key: 'ttfb', label: 'TTFB', unit: 'ms' },
-        { key: 'cls',  label: 'CLS',  unit: '',   isFloat: true },
-        { key: 'inp',  label: 'INP',  unit: 'ms' },
-      ];
-
-      let gridHtml = '';
-      metrics.forEach(m => {
-        const vals = paths.map(p => p[m.key] && p[m.key].median).filter(v => v != null);
-        if (!vals.length) return;
-        const avg = vals.reduce((a,b) => a+b, 0) / vals.length;
-        const display = m.isFloat ? avg.toFixed(3) : Math.round(avg);
-        const color = getSiColor(avg, m.key);
-        gridHtml += `<div class="hc-vital-item" style="border-color:${color}20;">
-          <div class="hc-vital-label">${m.label}</div>
-          <div class="hc-vital-val" style="color:${color};">${display}${m.unit}</div>
-          <div class="hc-vital-sub">${getMetricRating(m.key, avg)}</div>
-        </div>`;
-      });
-      document.getElementById('hc-vitals-grid').innerHTML = gridHtml;
-
-      // Score ring
-      const score = calcPerfScore(paths);
-      renderScore(score);
-
-    } catch (e) {
-      document.getElementById('hc-si-loading').style.display = 'none';
-      document.getElementById('hc-si-not-configured').style.display = 'flex';
-      document.getElementById('hc-si-not-configured').textContent = 'Failed to load Web Vitals: ' + e.message;
-      console.warn('[health] speed insights error', e);
+    } catch (_) {
+      document.getElementById('hc-bu-loading').textContent = 'Gagal memuat data backup.';
     }
   }
 
-  function getMetricRating(metric, value) {
-    if (value == null) return '—';
-    const t = { lcp:{good:2500,poor:4000}, fcp:{good:1800,poor:3000}, ttfb:{good:800,poor:1800}, cls:{good:0.1,poor:0.25}, inp:{good:200,poor:500} }[metric];
-    if (!t) return '—';
-    if (value <= t.good) return 'Good';
-    if (value <= t.poor) return 'Needs Improvement';
-    return 'Poor';
-  }
+  window.triggerBackup = async function() {
+    const btn = document.getElementById('hc-bu-btn');
+    const feedback = document.getElementById('hc-bu-feedback');
+    btn.disabled = true;
+    btn.textContent = 'Backing up...';
+    try {
+      const res = await fetch('/api/dev/backup/create', { method: 'POST' });
+      const data = await res.json();
+      if (data.ok) {
+        feedback.style.display = 'block';
+        feedback.style.background = 'rgba(16,185,129,0.10)';
+        feedback.style.color = '#10B981';
+        feedback.textContent = '✓ Backup berhasil! (' + new Date().toLocaleString('id-ID') + ')';
+        loadBackupStatus();
+      } else {
+        throw new Error(data.error || 'Backup failed');
+      }
+    } catch (e) {
+      feedback.style.display = 'block';
+      feedback.style.background = 'rgba(239,68,68,0.10)';
+      feedback.style.color = '#EF4444';
+      feedback.textContent = '✗ Gagal: ' + e.message;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Backup Now';
+      setTimeout(() => { feedback.style.display = 'none'; }, 5000);
+    }
+  };
+
+  loadBackupStatus();
 
   // Init
   runHealthCheck();
-  loadSpeedInsights();
   setInterval(runHealthCheck, 30000);
-  setInterval(loadSpeedInsights, 60000);
   </script>
 
 </body>
