@@ -230,17 +230,22 @@ app.use(
 // sumber yang sama.
 
 // Module-level mutable reference untuk session middleware.
-// Di-set pertama kali saat cold start (MemoryStore), lalu di-replace
-// oleh initDb() dengan MongoStore setelah MongoDB terkoneksi.
-// NOTE: transisi MemoryStore->MongoStore berpotensi orphan session
-// yg dibuat selama cold start, tapi dalam praktik:
-// - Window cold start sangat singkat (<1s warm, ~2-5s cold start)
-// - Request pertama biasanya cuma render login page (tanpa login)
-// - Login POST terjadi setelah initDb() selesai
+// Di-set SATU KALI oleh session wrapper di bawah (bukan di initDb()),
+// setelah MongoDB terkoneksi dan MongoStore siap. Dengan inisialisasi
+// sekali ini, kita menghindari bug orphan session:
+//   Cold start -> MemoryStore -> user login -> session di MemoryStore
+//   -> initDb() ganti ke MongoStore -> request berikutnya cari session
+//   di MongoStore (tidak ada) -> user ke-logout.
+//
+// NOTE: Di Vercel serverless, tiap request bisa dilayani container
+// BERBEDA. MongoStore menyimpan session di MongoDB agar semua container
+// baca dari sumber yang sama. Tanpa MongoStore, session di MemoryStore
+// hanya bertahan di satu container.
 let _sessionMiddleware = null;
 let _sessionStore = null;
+let _sessionInitPromise = null;
 
-// Konfigurasi cookie konsisten — dipakai oleh fallback dan real session.
+// Konfigurasi cookie konsisten — dipakai oleh semua store.
 const SESSION_COOKIE_CONFIG = {
   maxAge: 14 * 24 * 60 * 60 * 1000, // 14 hari (ms)
   httpOnly: true,
@@ -264,23 +269,70 @@ function createSessionMiddleware(store) {
 
 // ── SESSION WRAPPER MIDDLEWARE ──
 // Dipasang SEBELUM semua route handler. Memastikan req.session selalu
-// tersedia, bahkan saat cold start sebelum MongoDB terkoneksi.
-// Begitu initDb() selesai, middleware asli (dengan MongoStore)
-// menggantikan fallback di atas.
+// tersedia. Inisialisasi session store dilakukan SEKALI di sini (bukan
+// di initDb()), supaya tidak terjadi switch store mid-flight yang bikin
+// session orphan -> user ke-logout.
 app.use((req, res, next) => {
-  if (!_sessionMiddleware) {
-    // Fallback sementara: MemoryStore. Hanya aktif sesaat saat cold start
-    // sebelum MongoDB terkoneksi. Segera setelah initDb() selesai,
-    // _sessionMiddleware akan diganti dengan MongoStore yang proper.
-    _sessionMiddleware = createSessionMiddleware(new session.MemoryStore());
-    if (!process.env.MONGO_URI) {
-      console.warn(
-        "[Session] Fallback MemoryStore aktif (MONGO_URI belum di-set). " +
-          "Login tidak akan persisten di Vercel serverless.",
-      );
-    }
+  // Jika sudah terinisialisasi, pakai langsung
+  if (_sessionMiddleware) {
+    return _sessionMiddleware(req, res, next);
   }
-  return _sessionMiddleware(req, res, next);
+
+  // Cold start: inisialisasi session store (MongoStore atau MemoryStore)
+  if (!_sessionInitPromise) {
+    _sessionInitPromise = (async () => {
+      try {
+        await db.connect();
+
+        if (process.env.MONGO_URI) {
+          if (typeof MongoStore.create !== "function") {
+            throw new Error(
+              "MongoStore.create bukan function. Cek versi connect-mongo.",
+            );
+          }
+
+          const mongoStore = MongoStore.create({
+            clientPromise: db.getClient(),
+            dbName: process.env.MONGO_DB_NAME || "gereja",
+            collectionName: "sessions",
+            ttl: 14 * 24 * 60 * 60, // 14 hari (detik)
+          });
+
+          mongoStore.on("error", (err) => {
+            console.error("[SessionStore] Error:", err.message);
+          });
+
+          _sessionStore = mongoStore;
+          _sessionMiddleware = createSessionMiddleware(mongoStore);
+          console.log("[Session] MongoStore session middleware aktif.");
+        } else {
+          _sessionMiddleware = createSessionMiddleware(new session.MemoryStore());
+          console.warn(
+            "[Session] MONGO_URI belum di-set. Session HANYA di MemoryStore — " +
+              "tidak persisten di Vercel serverless.",
+          );
+        }
+      } catch (err) {
+        console.error("[Session] Gagal init session store:", err.message);
+        _sessionMiddleware = createSessionMiddleware(new session.MemoryStore());
+        console.warn(
+          "[Session] Fallback MemoryStore — session tidak akan persisten " +
+            "di Vercel serverless.",
+        );
+      }
+    })();
+  }
+
+  // Block request hingga inisialisasi selesai
+  _sessionInitPromise
+    .then(() => _sessionMiddleware(req, res, next))
+    .catch((err) => {
+      console.error("[Session] Init gagal (unexpected):", err.message);
+      if (!_sessionMiddleware) {
+        _sessionMiddleware = createSessionMiddleware(new session.MemoryStore());
+      }
+      _sessionMiddleware(req, res, next);
+    });
 });
 
 if (!process.env.SESSION_SECRET) {
@@ -481,6 +533,21 @@ function ensureAuth(req, res, next) {
 
 function ensureDevAuth(req, res, next) {
   if (req.session && req.session.devUser) return next();
+
+  // Untuk AJAX / API / JSON request: jangan redirect ke login page
+  // (yang balikin HTML), tapi kirim JSON error. Tanpa ini, fetch() dari
+  // dashboard akan nge-follow redirect ke /dev/login, dapet HTML, lalu
+  // res.json() di frontend gagal dengan "Unexpected token '<' ...".
+  const isApiRequest =
+    req.path.startsWith("/api/") ||
+    req.xhr ||
+    req.headers.accept === "application/json";
+  if (isApiRequest) {
+    return res.status(401).json({
+      error: "Sesi telah berakhir. Silakan refresh halaman dan login kembali.",
+    });
+  }
+
   if (req.session) {
     req.session.redirectTo = req.originalUrl;
   }
@@ -494,46 +561,12 @@ function ensureDevAuth(req, res, next) {
     console.log("[DB] MongoDB connected successfully");
 
     // ── INIT SESSION STORE ──
-    // Setelah MongoDB terkoneksi, ganti session middleware fallback
-    // (MemoryStore) dengan yang proper (MongoStore) supaya session
-    // persisten di semua container Vercel.
-    if (process.env.MONGO_URI) {
-      try {
-        if (typeof MongoStore.create !== "function") {
-          throw new Error(
-            "MongoStore.create bukan function. Cek versi connect-mongo.",
-          );
-        }
-
-        const mongoStore = MongoStore.create({
-          clientPromise: db.getClient(),
-          dbName: process.env.MONGO_DB_NAME || "gereja",
-          collectionName: "sessions",
-          ttl: 14 * 24 * 60 * 60, // 14 hari (detik)
-        });
-
-        mongoStore.on("error", (err) => {
-          console.error("[SessionStore] Error:", err.message);
-        });
-
-        // Replace session middleware dengan MongoStore
-        _sessionStore = mongoStore;
-        _sessionMiddleware = createSessionMiddleware(mongoStore);
-        console.log("[Session] MongoStore session middleware aktif.");
-      } catch (err) {
-        console.error("[Session] Gagal membuat MongoStore:", err.message);
-        console.error(
-          "[Session] Tetap pakai MemoryStore — session tidak akan persisten " +
-            "di Vercel serverless.",
-        );
-      }
-    } else {
-      // Tetap pakai MemoryStore yang sudah aktif sejak cold start
-      console.warn(
-        "[Session] MONGO_URI belum di-set. Session HANYA di MemoryStore — " +
-          "tidak persisten di Vercel serverless.",
-      );
-    }
+    // Inisialisasi session store sekarang ditangani oleh session wrapper
+    // middleware (lihat SESSION WRAPPER MIDDLEWARE di atas), BUKAN di sini.
+    // Alasan: inisialisasi di sini menyebabkan switch store mid-flight
+    // (MemoryStore -> MongoStore) yang bikin session orphan -> user
+    // ke-logout saat pindah halaman. Session wrapper menginisialisasi
+    // store SEKALI dan menunggu hingga siap sebelum menerima request.
 
     // Init default admin — hanya jika:
     // 1. Belum ada admin sama sekali
@@ -1571,6 +1604,19 @@ app.use((err, req, res, next) => {
   if (res.headersSent) {
     return next(err);
   }
+
+  // Untuk API request, kirim JSON error (bukan HTML) supaya fetch()
+  // di frontend bisa parse response dengan benar.
+  const isApiRequest =
+    req.path.startsWith("/api/") ||
+    req.xhr ||
+    req.headers.accept === "application/json";
+  if (isApiRequest) {
+    return res.status(500).json({
+      error: "Terjadi kesalahan pada server. Silakan coba lagi nanti.",
+    });
+  }
+
   res.status(500).send("Terjadi kesalahan pada server. Silakan coba lagi nanti.");
 });
 
