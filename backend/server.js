@@ -101,12 +101,53 @@ const dashboardSharedDir = path.join(dashboardDir, "shared");
 
 // ============== SECURITY MIDDLEWARE ==============
 app.use((req, res, next) => {
-  // Security headers
+  // Security headers — semua zero-overhead, hanya header HTTP
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
   res.setHeader("X-XSS-Protection", "1; mode=block");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
   res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+
+  // HSTS: paksa HTTPS selama 2 tahun (termasuk subdomain, preload-ready)
+  // Nol overhead — hanya satu baris header.
+  res.setHeader("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload");
+
+  // CSP: cegah XSS dengan membatasi sumber script/style/font/image
+  // 'unsafe-inline' diperlukan untuk Vercel Analytics inline script + style
+  // yang dipasang oleh header.ejs. Setelah semua script dipindah ke file
+  // eksternal, ganti 'unsafe-inline' dengan nonce.
+  res.setHeader(
+    "Content-Security-Policy",
+    [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' https://vitals.vercel-insights.com https://www.googletagmanager.com",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com",
+      "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com",
+      "img-src 'self' data: https://maps.googleapis.com https://www.google.com",
+      "connect-src 'self' https://vitals.vercel-insights.com",
+      "frame-src 'none'",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+    ].join("; "),
+  );
+
+  next();
+});
+
+// ============== INPUT SANITIZATION ==============
+// Cegah stored XSS: strip tag HTML dari semua input teks yang dikirim user.
+// Ini lapisan pertahanan tambahan selain auto-escaping EJS (<%= %>).
+// Overhead minimal — regex sederhana, hanya jalan untuk POST/PUT/PATCH.
+app.use((req, res, next) => {
+  if (["POST", "PUT", "PATCH"].includes(req.method) && req.body && typeof req.body === "object") {
+    for (const key of Object.keys(req.body)) {
+      if (typeof req.body[key] === "string") {
+        // Hapus tag HTML (tapi biarkan teks di dalamnya)
+        req.body[key] = req.body[key].replace(/<[^>]*>/g, "");
+      }
+    }
+  }
   next();
 });
 
@@ -117,8 +158,8 @@ app.set("views", [viewsDir, dashboardDir, adminViewsDir, dashboardSharedDir]);
 // Gzip compression for all responses
 app.use(compression());
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+app.use(express.urlencoded({ extended: true, limit: "100kb" }));
+app.use(express.json({ limit: "100kb" }));
 app.use(
   express.static(PUBLIC_ASSETS_DIR, {
     maxAge: "7d",
@@ -213,6 +254,52 @@ app.use(
     },
   }),
 );
+
+// ============== CSRF PROTECTION ==============
+// Session-based CSRF token: simpan token di session, validasi setiap
+// POST/PUT/DELETE request. Untuk form HTML dicek via body._csrf,
+// untuk fetch/API dicek via header X-CSRF-Token.
+// Login routes dikecualikan karena session belum ada.
+// Login routes & dashboard APIs dikecualikan:
+// - Login: session belum ada
+// - Dashboard APIs: sudah terproteksi ensureDevAuth + sameSite:lax cookie
+const CSRF_EXEMPT_PATHS = [
+  "/admin/login", "/dev/login", "/login", "/dev/dashboard-mobile",
+  "/api/dev/", "/dev/api/", "/api/events/"
+];
+
+app.use((req, res, next) => {
+  // Generate token jika belum ada
+  if (!req.session.csrfToken) {
+    req.session.csrfToken = crypto.randomUUID();
+  }
+
+  // Ekspos token ke semua view via res.locals
+  res.locals.csrfToken = req.session.csrfToken;
+
+  // Cuma validasi untuk method yang mengubah state
+  if (!["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) return next();
+
+  // Skip untuk login paths (session belum exist)
+  const isExempt = CSRF_EXEMPT_PATHS.some((p) => req.path === p || req.path.startsWith(p + "/"));
+  if (isExempt) return next();
+
+  // Baca token dari body (form) atau header (fetch/API)
+  const tokenFromBody = req.body && req.body._csrf;
+  const tokenFromHeader = req.headers["x-csrf-token"];
+  const submitted = tokenFromBody || tokenFromHeader;
+
+  if (!submitted || submitted !== req.session.csrfToken) {
+    // Untuk request API (JSON), balik JSON error
+    if (req.xhr || req.headers.accept === "application/json" || req.path.startsWith("/api/")) {
+      return res.status(403).json({ error: "CSRF token tidak valid. Refresh halaman dan coba lagi." });
+    }
+    // Untuk form submission, redirect back
+    return res.status(403).send("CSRF token tidak valid. Refresh halaman dan coba lagi.");
+  }
+
+  next();
+});
 
   // Multer for file uploads
   // Pakai memoryStorage: file masuk sebagai buffer di req.file.buffer,
@@ -1042,6 +1129,42 @@ app.get(
       vercelProjectId: config.vercelProjectId,
       updatedAt: config.updatedAt,
     });
+  }),
+);
+
+// ============== SPEED INSIGHTS MONTHLY SNAPSHOT ==============
+// Ambil snapshot performa saat ini dan simpan ke MongoDB untuk history.
+// Bisa dipanggil manual dari dashboard atau via cron job eksternal.
+app.post(
+  "/api/dev/speed-insights/scan",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
+    const data = await getSpeedInsightsData("30d");
+    if (data.error) {
+      return res.status(400).json({ error: data.error });
+    }
+    const snapshot = await db.saveSpeedInsightsSnapshot(data);
+    return res.json({ ok: true, label: snapshot.label, summary: snapshot.summary });
+  }),
+);
+
+// Ambil history snapshot
+app.get(
+  "/api/dev/speed-insights/snapshots",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
+    const snapshots = await db.getSpeedInsightsSnapshots({ limit: 12 });
+    return res.json({ snapshots });
+  }),
+);
+
+// Cek kapan snapshot terakhir diambil
+app.get(
+  "/api/dev/speed-insights/last-scan",
+  ensureDevAuth,
+  asyncHandler(async (req, res) => {
+    const label = await db.getLatestSnapshotLabel();
+    return res.json({ label });
   }),
 );
 

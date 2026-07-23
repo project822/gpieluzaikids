@@ -40,6 +40,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" media="print" onload="this.media='all';this.onload=null" crossorigin="anonymous" referrerpolicy="no-referrer">
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer"></noscript>
 
+    <!-- CSRF Token -->
+    <meta name="csrf-token" content="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+
     <!-- Vercel Analytics -->
     <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
     <script defer src="/_vercel/insights/script.js"></script>
@@ -49,6 +52,46 @@
       window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
     </script>
     <script defer src="/_vercel/speed-insights/script.js"></script>
+
+    <!-- CSRF: auto-attach X-CSRF-Token ke semua fetch/XHR -->
+    <script>
+      (function() {
+        var token = document.querySelector('meta[name="csrf-token"]');
+        if (!token) return;
+        token = token.getAttribute('content');
+        if (!token) return;
+
+        // Intercept fetch
+        var origFetch = window.fetch;
+        window.fetch = function(url, opts) {
+          opts = opts || {};
+          opts.headers = opts.headers || {};
+          if (['POST','PUT','PATCH','DELETE'].includes((opts.method || 'GET').toUpperCase())) {
+            opts.headers['X-CSRF-Token'] = token;
+          }
+          return origFetch.call(window, url, opts);
+        };
+
+        // Intercept XMLHttpRequest
+        var origOpen = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function(method) {
+          this._csrfMethod = method;
+          return origOpen.apply(this, arguments);
+        };
+        var origSetReqHeader = XMLHttpRequest.prototype.setRequestHeader;
+        XMLHttpRequest.prototype.setRequestHeader = function(header, value) {
+          if (header.toLowerCase() === 'x-csrf-token') return;
+          return origSetReqHeader.apply(this, arguments);
+        };
+        var origSend = XMLHttpRequest.prototype.send;
+        XMLHttpRequest.prototype.send = function() {
+          if (['POST','PUT','PATCH','DELETE'].includes((this._csrfMethod || 'GET').toUpperCase())) {
+            this.setRequestHeader('X-CSRF-Token', token);
+          }
+          return origSend.apply(this, arguments);
+        };
+      })();
+    </script>
   </head>
   <body class="page-is-ready">
     <% const shouldHideNavbar = typeof hideNavbar === 'undefined' ? false : hideNavbar; %>
@@ -81,17 +124,37 @@
               <i class="fas fa-bell"></i>
             </button>
             <div class="nav-notif-popup" id="nav-notif-popup">
-              <% if (typeof events !== 'undefined' && events && events.length) { %>
-                <% const latestEvent = events[0]; %>
+              <% 
+                // Cari event pertama yang dalam jendela notifikasi (H-14 s.d H-3)
+                // Notifikasi muncul H-14 sebelum event, menghilang otomatis di H-3
+                // (sinkron dengan pembatasan pendaftaran)
+                let notifEvent = null;
+                let notifDaysLeft = 0;
+                if (typeof events !== 'undefined' && events && events.length) {
+                  const now = new Date();
+                  for (const ev of events) {
+                    if (ev.day) {
+                      const evDate = new Date(ev.day + 'T23:59:59');
+                      const diff = Math.ceil((evDate - now) / (1000 * 60 * 60 * 24));
+                      if (diff > 3 && diff <= 14) {
+                        notifEvent = ev;
+                        notifDaysLeft = diff;
+                        break;
+                      }
+                    }
+                  }
+                }
+              %>
+              <% if (notifEvent) { %>
                 <div class="nav-notif-item-wrap">
                   <div class="nav-notif-icon"><i class="fas fa-calendar-alt"></i></div>
                   <div class="nav-notif-body">
-                    <span class="nav-notif-label">Event Baru</span>
-                    <span class="nav-notif-title"><%= latestEvent.title %></span>
+                    <span class="nav-notif-label">✦ Event Mendatang</span>
+                    <span class="nav-notif-title"><%= notifEvent.title %></span>
                     <span class="nav-notif-meta">
                       <i class="fas fa-calendar-alt"></i>
                       <%= (() => {
-                        const s = String(latestEvent.day || '').trim();
+                        const s = String(notifEvent.day || '').trim();
                         let d = null;
                         const m1 = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
                         if (m1) d = new Date(Number(m1[1]), Number(m1[2]) - 1, Number(m1[3]));
@@ -101,14 +164,18 @@
                         const yyyy = d.getFullYear();
                         return `${dd}/${mm}/${yyyy}`;
                       })() %>
-                      <% if (latestEvent.time) { %> | <%= latestEvent.time %><% } %>
+                      <% if (notifEvent.time) { %> | <%= notifEvent.time %><% } %>
+                    </span>
+                    <span class="nav-notif-days">
+                      <i class="fas fa-hourglass-half"></i> H-<%= notifDaysLeft %>
                     </span>
                     <span class="nav-notif-link">Lihat Event &rarr;</span>
                   </div>
                 </div>
               <% } else { %>
-                <div class="nav-notif-empty" style="padding: 14px; text-align: center; color: var(--text-muted); font-family: var(--font-body); font-size: 0.82rem;">
-                  Tidak ada informasi terbaru
+                <div class="nav-notif-empty">
+                  <i class="fas fa-check-circle" style="color: var(--primary); font-size: 1.2rem; margin-bottom: 4px;"></i>
+                  <span>Tidak ada informasi terbaru</span>
                 </div>
               <% } %>
             </div>

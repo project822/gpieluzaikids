@@ -317,35 +317,54 @@ html.theme-light .nav.shrink {
 }
 
 .nav-notif-label {
-  font-family: var(--font-label);
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  background: linear-gradient(135deg, var(--accent), #818cf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .nav-notif-title {
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: 0.88rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.92rem;
   color: var(--on-surface);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  line-height: 1.3;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
 }
 
 .nav-notif-meta {
-  font-family: var(--font-label);
-  font-size: 0.75rem;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
   color: var(--on-surface-variant);
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   flex-wrap: wrap;
+  opacity: 0.85;
+}
+
+.nav-notif-days {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #f59e0b;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  align-self: flex-start;
 }
 
 .nav-notif-meta i {
@@ -353,13 +372,14 @@ html.theme-light .nav.shrink {
 }
 
 .nav-notif-link {
-  font-family: var(--font-body);
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
   color: var(--accent);
-  margin-top: 2px;
-  transition: transform 200ms ease;
+  margin-top: 4px;
+  transition: transform 200ms ease, color 200ms ease;
   display: inline-block;
+  letter-spacing: 0.02em;
 }
 
 .nav-notif-item-wrap:hover .nav-notif-link {
@@ -367,11 +387,15 @@ html.theme-light .nav.shrink {
 }
 
 .nav-notif-empty {
-  padding: 14px;
+  padding: 18px 14px;
   text-align: center;
   color: var(--on-surface-variant);
   font-family: var(--font-body);
   font-size: 0.82rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
 }
 
 /* ── Badge Dot on Bell ── */

@@ -546,6 +546,60 @@ async function forceLogoutAllAdmins() {
   return deleted;
 }
 
+// ───────────── Speed Insights Snapshots (history) ─────────────
+// Simpan snapshot performa bulanan untuk melihat tren dari waktu ke waktu.
+
+async function saveSpeedInsightsSnapshot(data) {
+  const d = await connect();
+  const snapshot = {
+    timestamp: new Date(),
+    label: new Date().toISOString().slice(0, 7), // "2026-07"
+    summary: {
+      totalPages: (data.paths || []).length,
+      totalRecords: data.total || 0,
+      avgLcp: null,
+      avgFcp: null,
+      avgTtfb: null,
+    },
+    paths: (data.paths || []).slice(0, 30), // simpan max 30 path
+  };
+
+  // Hitung rata-rata
+  const lcpVals = (data.paths || []).map((p) => p.lcp?.median).filter(Boolean);
+  const fcpVals = (data.paths || []).map((p) => p.fcp?.median).filter(Boolean);
+  const ttfbVals = (data.paths || []).map((p) => p.ttfb?.median).filter(Boolean);
+  if (lcpVals.length) snapshot.summary.avgLcp = Math.round(lcpVals.reduce((a, b) => a + b, 0) / lcpVals.length);
+  if (fcpVals.length) snapshot.summary.avgFcp = Math.round(fcpVals.reduce((a, b) => a + b, 0) / fcpVals.length);
+  if (ttfbVals.length) snapshot.summary.avgTtfb = Math.round(ttfbVals.reduce((a, b) => a + b, 0) / ttfbVals.length);
+
+  await d.collection("speedSnapshots").insertOne(snapshot);
+
+  // Hapus snapshot lama (> 12 bulan)
+  const cutoff = new Date(Date.now() - 12 * 30 * 24 * 60 * 60 * 1000);
+  await d.collection("speedSnapshots").deleteMany({ timestamp: { $lt: cutoff } });
+
+  return snapshot;
+}
+
+async function getSpeedInsightsSnapshots({ limit = 12 } = {}) {
+  const d = await connect();
+  return d.collection("speedSnapshots")
+    .find({})
+    .sort({ timestamp: -1 })
+    .limit(limit)
+    .toArray();
+}
+
+async function getLatestSnapshotLabel() {
+  const d = await connect();
+  const latest = await d.collection("speedSnapshots")
+    .find({})
+    .sort({ timestamp: -1 })
+    .limit(1)
+    .toArray();
+  return latest.length ? latest[0].label : null;
+}
+
 // ───────────── Speed Insights Token Config ─────────────
 
 async function getSpeedInsightsConfig() {
@@ -624,6 +678,9 @@ module.exports = {
   forceLogoutAllAdmins,
   getSpeedInsightsConfig,
   saveSpeedInsightsConfig,
+  saveSpeedInsightsSnapshot,
+  getSpeedInsightsSnapshots,
+  getLatestSnapshotLabel,
   getPageSpeedConfig,
   savePageSpeedConfig,
 };
