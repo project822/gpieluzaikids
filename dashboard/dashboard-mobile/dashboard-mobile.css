@@ -400,6 +400,88 @@ html, body {
   border-radius: 0 0 3px 3px;
 }
 
+/* ════════════════════════════════════════════════════
+   HOME TAB — desktop dashboard features ported to mobile
+   ════════════════════════════════════════════════════ */
+
+/* ─── 4-ITEM STATUS BANNER ─── */
+.hm-banner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.hm-banner-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+}
+.hm-banner-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  flex-shrink: 0; background: var(--muted);
+  transition: all 0.3s;
+}
+.hm-banner-dot.ok { background: var(--green); box-shadow: 0 0 6px rgba(34,197,94,0.4); }
+.hm-banner-dot.warn { background: var(--orange); box-shadow: 0 0 6px rgba(245,158,11,0.4); }
+.hm-banner-dot.error { background: var(--red); box-shadow: 0 0 6px rgba(239,68,68,0.4); }
+.hm-banner-label {
+  font-size: 10px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+.hm-banner-val {
+  margin-left: auto;
+  font-size: 11px; font-weight: 700; color: var(--text);
+}
+
+/* ─── QUICK ACTIONS GRID ─── */
+.hm-quick-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.hm-quick-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 14px 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-decoration: none;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+}
+.hm-quick-card svg {
+  width: 20px; height: 20px;
+  color: var(--blue);
+}
+.hm-quick-card:active {
+  background: var(--surface-elevated);
+  transform: scale(0.96);
+}
+.hm-quick-card span {
+  font-size: 10px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+
+/* ─── SERVER INFO LIST (compact) ─── */
+.hm-server-list .metric-row {
+  padding: 9px 16px;
+}
+
 /* ─── PAGE SPEED INSIGHTS ─── */
 .psi-section {
   background: var(--surface);

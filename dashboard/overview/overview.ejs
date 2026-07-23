@@ -9,8 +9,8 @@
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"></noscript>
     <%- include('_critical-css') %>
-    <link rel="stylesheet" href="/dashboard-assets/css/base.css" media="print" onload="this.media='all'">
-    <link rel="stylesheet" href="/dashboard-assets/css/overview.css" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="/dashboard-assets/shared/base.css" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="/dashboard-assets/overview/overview.css" media="print" onload="this.media='all'">
     <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
     <script defer src="/_vercel/insights/script.js"></script>
     <script defer src="https://unpkg.com/@vercel/speed-insights/dist/index.js"></script>
@@ -81,7 +81,7 @@
               <div class="ov-status-label">Admin Accounts</div>
               <div class="ov-status-val"><%= admins ? admins.length : 0 %> registered</div>
             </div>
-            <a href="/dev/dashboard/admins" class="ov-status-pill ok" style="text-decoration:none;">Manage</a>
+            <a href="/dev/dashboard-desktop/admins" class="ov-status-pill ok" style="text-decoration:none;">Manage</a>
           </div>
           <div class="ov-status-card" id="ov-card-mt">
             <div class="ov-status-dot <%= maintenanceMode && maintenanceMode.enabled ? 'warn' : 'ok' %>" id="ov-dot-mt"></div>
@@ -98,7 +98,7 @@
 
         <!-- ── QUICK NAV LINKS ── -->
         <div class="overview-grid">
-          <a href="/dev/dashboard/analytics" class="card overview-link-card">
+          <a href="/dev/dashboard-desktop/analytics" class="card overview-link-card">
             <div class="overview-link-icon" style="background:var(--blue-bg);color:var(--blue);">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18M7 16l4-4 4 4 4-4"/></svg>
             </div>
@@ -107,7 +107,7 @@
               <div class="overview-link-sub">Traffic, page views &amp; bounce rate</div>
             </div>
           </a>
-          <a href="/dev/dashboard/monitoring" class="card overview-link-card">
+          <a href="/dev/dashboard-desktop/monitoring" class="card overview-link-card">
             <div class="overview-link-icon" style="background:var(--orange-bg);color:var(--orange);">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
             </div>
@@ -116,7 +116,7 @@
               <div class="overview-link-sub">Speed Insights &amp; server metrics</div>
             </div>
           </a>
-          <a href="/dev/dashboard/admins" class="card overview-link-card">
+          <a href="/dev/dashboard-desktop/admins" class="card overview-link-card">
             <div class="overview-link-icon" style="background:var(--green-bg);color:var(--green);">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-3-6.65"/></svg>
             </div>
@@ -125,7 +125,7 @@
               <div class="overview-link-sub">Manage admin accounts &amp; access</div>
             </div>
           </a>
-          <a href="/dev/dashboard/health" class="card overview-link-card">
+          <a href="/dev/dashboard-desktop/health" class="card overview-link-card">
             <div class="overview-link-icon" style="background:rgba(239,68,68,0.10);color:#EF4444;">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
             </div>
@@ -134,7 +134,7 @@
               <div class="overview-link-sub">DB status, uptime &amp; Web Vitals</div>
             </div>
           </a>
-          <a href="/dev/dashboard/maintenance" class="card overview-link-card">
+          <a href="/dev/dashboard-desktop/maintenance" class="card overview-link-card">
             <div class="overview-link-icon" style="background:var(--orange-bg);color:var(--orange);">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
             </div>
@@ -143,7 +143,7 @@
               <div class="overview-link-sub">Toggle user-facing maintenance page</div>
             </div>
           </a>
-          <a href="/dev/dashboard/security" class="card overview-link-card">
+          <a href="/dev/dashboard-desktop/security" class="card overview-link-card">
             <div class="overview-link-icon" style="background:rgba(124,58,237,0.10);color:#7C3AED;">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             </div>
@@ -221,8 +221,8 @@
               </div>
             </div>
             <div class="ov-server-footer">
-              <a href="/dev/dashboard/health" class="btn" style="font-size:12px;">Full Health Check →</a>
-              <a href="/dev/dashboard/monitoring" class="btn" style="font-size:12px;">Speed Insights →</a>
+              <a href="/dev/dashboard-desktop/health" class="btn" style="font-size:12px;">Full Health Check →</a>
+              <a href="/dev/dashboard-desktop/monitoring" class="btn" style="font-size:12px;">Speed Insights →</a>
             </div>
           </div>
 

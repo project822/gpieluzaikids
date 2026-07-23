@@ -9,8 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
   <%- include('_critical-css') %>
-  <link rel="stylesheet" href="/dashboard-assets/css/base.css">
-  <link rel="stylesheet" href="/dashboard-assets/css/analytics.css">
+  <link rel="stylesheet" href="/dashboard-assets/shared/base.css">
+  <link rel="stylesheet" href="/dashboard-assets/analytics/analytics.css">
 
   <!-- Vercel Analytics -->
   <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
@@ -151,7 +151,7 @@
     });
 
     window.changeRange = function(val) {
-      window.location.href = '/dev/dashboard/analytics?range=' + val;
+      window.location.href = '/dev/dashboard-desktop/analytics?range=' + val;
     };
 
     let currentRange = '<%= timeRange %>';

@@ -51,7 +51,7 @@ const asyncHandler = (fn) => (req, res, next) => {
 const projectRoot = process.cwd();
 
 const PUBLIC_VIEWS_DIR = path.join(projectRoot, "frontend", "views");
-const ADMIN_VIEWS_DIR = path.join(projectRoot, "admin");
+const ADMIN_DIR = path.join(projectRoot, "admin");
 
 // Fallback jika path tidak ditemukan di process.cwd() (sama seperti fallback
 // untuk viewsDir di bawah -- process.cwd() kadang tidak menunjuk ke project
@@ -66,6 +66,17 @@ if (!fs.existsSync(PUBLIC_ASSETS_DIR)) {
 }
 const UPLOADS_DIR = path.join(PUBLIC_ASSETS_DIR, "uploads");
 
+// Pastikan direktori uploads sudah ada sejak startup (bukan hanya saat upload)
+// untuk menghindari race condition dan error ENOENT di lingkungan serverless.
+try {
+  if (!fs.existsSync(UPLOADS_DIR)) {
+    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+    console.log("[Uploads] Created directory:", UPLOADS_DIR);
+  }
+} catch (dirErr) {
+  console.error("[Uploads] Gagal membuat direktori uploads:", dirErr.message);
+}
+
 // Fallback jika path tidak ditemukan di process.cwd()
 let viewsDir = PUBLIC_VIEWS_DIR;
 if (!fs.existsSync(path.join(viewsDir, "index.ejs"))) {
@@ -75,27 +86,26 @@ if (!fs.existsSync(path.join(viewsDir, "index.ejs"))) {
   }
 }
 
-// Fallback untuk admin views
-let adminViewsDir = ADMIN_VIEWS_DIR;
-if (!fs.existsSync(path.join(adminViewsDir, "login.ejs"))) {
+// Fallback untuk admin views (per feature)
+let adminViewsDir = ADMIN_DIR;
+if (!fs.existsSync(path.join(adminViewsDir, "login", "login.ejs"))) {
   const altAdmin = path.join(__dirname, "..", "admin");
-  if (fs.existsSync(path.join(altAdmin, "login.ejs"))) {
+  if (fs.existsSync(path.join(altAdmin, "login", "login.ejs"))) {
     adminViewsDir = altAdmin;
   }
 }
 
-// Fallback untuk dashboard views & assets
+// Fallback untuk dashboard views & assets (per feature)
 const DASHBOARD_DIR = path.join(projectRoot, "dashboard");
-const DASHBOARD_VIEWS_DIR = path.join(DASHBOARD_DIR, "views");
 
 let dashboardDir = DASHBOARD_DIR;
-if (!fs.existsSync(DASHBOARD_VIEWS_DIR)) {
+if (!fs.existsSync(dashboardDir)) {
   const altDashboard = path.join(__dirname, "..", "dashboard");
   if (fs.existsSync(altDashboard)) {
     dashboardDir = altDashboard;
   }
 }
-const dashboardViewsDir = path.join(dashboardDir, "views");
+const dashboardSharedDir = path.join(dashboardDir, "shared");
 
 // ============== SECURITY MIDDLEWARE ==============
 app.use((req, res, next) => {
@@ -110,7 +120,7 @@ app.use((req, res, next) => {
 
 // ============== EXPRESS SETUP ==============
 app.set("view engine", "ejs");
-app.set("views", [viewsDir, adminViewsDir, dashboardViewsDir]);
+app.set("views", [viewsDir, adminViewsDir, dashboardDir, dashboardSharedDir]);
 
 // Gzip compression for all responses
 app.use(compression());
@@ -130,6 +140,12 @@ app.use(
       }
     },
   }),
+);
+
+// CSS dan aset halaman admin (disajikan dari folder admin)
+app.use(
+  "/admin-assets",
+  express.static(path.join(projectRoot, "admin"))
 );
 
 // CSS dan aset halaman-halaman dev dashboard (disajikan dari folder dashboard)
@@ -292,12 +308,21 @@ async function processPosterImage(buffer) {
 }
 
 async function savePosterFile(buffer) {
-  if (!fs.existsSync(UPLOADS_DIR)) {
-    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+  try {
+    if (!fs.existsSync(UPLOADS_DIR)) {
+      fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+    }
+    const filename = `${Date.now()}-${crypto.randomUUID()}.webp`;
+    const filePath = path.join(UPLOADS_DIR, filename);
+    await fs.promises.writeFile(filePath, buffer);
+    return `/uploads/${filename}`;
+  } catch (err) {
+    console.error("[savePosterFile] Gagal menyimpan poster:", err.message);
+    console.error("[savePosterFile] UPLOADS_DIR:", UPLOADS_DIR);
+    console.error("[savePosterFile] PUBLIC_ASSETS_DIR:", PUBLIC_ASSETS_DIR);
+    console.error("[savePosterFile] projectRoot:", projectRoot);
+    throw err;
   }
-  const filename = `${Date.now()}-${crypto.randomUUID()}.webp`;
-  await fs.promises.writeFile(path.join(UPLOADS_DIR, filename), buffer);
-  return `/uploads/${filename}`;
 }
 
 // ============== FAVICON ==============
@@ -477,18 +502,18 @@ app.get(
 // ============== ADMIN ROUTES (prefix /admin) ==============
 
 // Login (canonical: /admin/login)
-app.get("/admin/login", (req, res) => res.render("login", { error: null }));
+app.get("/admin/login", (req, res) => res.render("login/login", { error: null }));
 
 const handleAdminLogin = asyncHandler(async (req, res) => {
   const { username, password } = req.body;
   const admins = await db.getAdmins();
   const admin = (admins || []).find((a) => a.username === username);
   if (!admin) {
-    return res.render("login", { error: "Invalid credentials" });
+    return res.render("login/login", { error: "Invalid credentials" });
   }
   const ok = await bcrypt.compare(password, admin.passwordHash);
   if (!ok) {
-    return res.render("login", { error: "Invalid credentials" });
+    return res.render("login/login", { error: "Invalid credentials" });
   }
   req.session.user = { username };
   await db.setAdminOnline(username);
@@ -536,13 +561,14 @@ app.post(
 
 app.get("/dev/logout", (req, res) => {
   const username = req.session && req.session.devUser ? req.session.devUser.username : null;
+  const redirectTo = req.query.redirect || "/dev/login";
   req.session.destroy(() => {
     if (username) {
       db.setAdminOffline(username).catch((e) => {
         console.error("[Logout] setAdminOffline gagal:", e.message);
       });
     }
-    res.redirect("/dev/login");
+    res.redirect(redirectTo);
   });
 });
 
@@ -560,26 +586,36 @@ app.get("/admin/logout", (req, res) => {
 
 // ============== DEVELOPER AUTH ROUTES ==============
 app.get("/dev/login", (req, res) => {
-  return res.render(path.join(dashboardViewsDir, "login"), { error: null });
+  return res.render("login/login", { error: null });
 });
 
 app.post("/dev/login", (req, res) => {
   const { username, password } = req.body || {};
   if (username === "dev" && password === "dev123") {
     req.session.devUser = { username: "dev" };
-    const redirectTo = req.session.redirectTo || "/dev/dashboard";
+    const redirectTo = req.session.redirectTo || "/dev/dashboard-desktop";
     delete req.session.redirectTo;
     return res.redirect(redirectTo);
   } else {
-    return res.render(path.join(dashboardViewsDir, "login"), { error: "Username atau password developer salah." });
+    return res.render("login/login", { error: "Username atau password developer salah." });
   }
 });
 
-// ============== DEV DASHBOARD PAGES ==============
+// ============== DEV DASHBOARD DESKTOP PAGES ==============
 // Halaman sidebar (Overview, Analytics, Monitoring, Admins) masing-masing punya view & route sendiri.
+// Route /dev/dashboard dialihkan ke /dev/dashboard-desktop untuk backward compatibility.
+
+app.get("/dev/dashboard", (req, res) => res.redirect("/dev/dashboard-desktop"));
+app.get("/dev/dashboard/analytics", (req, res) => res.redirect("/dev/dashboard-desktop/analytics"));
+app.get("/dev/dashboard/monitoring", (req, res) => res.redirect("/dev/dashboard-desktop/monitoring"));
+app.get("/dev/dashboard/admins", (req, res) => res.redirect("/dev/dashboard-desktop/admins"));
+app.get("/dev/dashboard/landing", (req, res) => res.redirect("/dev/dashboard-desktop/landing"));
+app.get("/dev/dashboard/health", (req, res) => res.redirect("/dev/dashboard-desktop/health"));
+app.get("/dev/dashboard/maintenance", (req, res) => res.redirect("/dev/dashboard-desktop/maintenance"));
+app.get("/dev/dashboard/security", (req, res) => res.redirect("/dev/dashboard-desktop/security"));
 
 app.get(
-  "/dev/dashboard",
+  "/dev/dashboard-desktop",
   ensureDevAuth,
   asyncHandler(async (req, res) => {
     const timeRange = req.query.range || "7d";
@@ -593,7 +629,7 @@ app.get(
       ? Math.round((metrics.totalLatencyMsSum || 0) / (metrics.totalRequests || 1))
       : 0;
 
-    return res.render("overview", {
+    return res.render("overview/overview", {
       metrics,
       avgLatencyMs,
       admins: admins || [],
@@ -605,7 +641,7 @@ app.get(
 );
 
 app.get(
-  "/dev/dashboard/analytics",
+  "/dev/dashboard-desktop/analytics",
   ensureDevAuth,
   asyncHandler(async (req, res) => {
     const timeRange = req.query.range || "7d";
@@ -617,7 +653,7 @@ app.get(
       ? Math.round((metrics.totalLatencyMsSum || 0) / (metrics.totalRequests || 1))
       : 0;
 
-    return res.render("analytics", {
+    return res.render("analytics/analytics", {
       avgLatencyMs,
       pvStats,
       timeRange,
@@ -626,7 +662,7 @@ app.get(
 );
 
 app.get(
-  "/dev/dashboard/monitoring",
+  "/dev/dashboard-desktop/monitoring",
   ensureDevAuth,
   asyncHandler(async (req, res) => {
     const metrics = await db.getMetrics();
@@ -634,7 +670,7 @@ app.get(
       ? Math.round((metrics.totalLatencyMsSum || 0) / (metrics.totalRequests || 1))
       : 0;
 
-    return res.render("monitoring", {
+    return res.render("monitoring/monitoring", {
       metrics,
       avgLatencyMs,
     });
@@ -642,7 +678,7 @@ app.get(
 );
 
 app.get(
-  "/dev/dashboard/admins",
+  "/dev/dashboard-desktop/admins",
   ensureDevAuth,
   asyncHandler(async (req, res) => {
     const [adminStatuses, admins] = await Promise.all([
@@ -650,7 +686,7 @@ app.get(
       db.getAdmins(),
     ]);
 
-    return res.render("admins", {
+    return res.render("admins/admins", {
       admins: admins || [],
       adminStatuses,
     });
@@ -659,19 +695,19 @@ app.get(
 
 // Redirect aliases for dashboard monitoring
 app.get("/admin/dashboard-monitoring", ensureDevAuth, (req, res) => {
-  return res.redirect("/dev/dashboard");
+  return res.redirect("/dev/dashboard-desktop");
 });
 
 app.get("/admin/dashboard", ensureDevAuth, (req, res) => {
-  return res.redirect("/dev/dashboard");
+  return res.redirect("/dev/dashboard-desktop");
 });
 
 app.get("/dashboard-monitoring", ensureDevAuth, (req, res) => {
-  return res.redirect("/dev/dashboard");
+  return res.redirect("/dev/dashboard-desktop");
 });
 
 app.get("/admin/events/dashboard-monitoring", ensureDevAuth, (req, res) => {
-  return res.redirect("/dev/dashboard");
+  return res.redirect("/dev/dashboard-desktop");
 });
 
 // Real-time stats API for dashboard auto-refresh
@@ -788,12 +824,12 @@ app.get(
   ensureAuth,
   asyncHandler(async (req, res) => {
     const events = await db.getEvents();
-    return res.render("events", { events });
+    return res.render("events/events", { events });
   }),
 );
 
 app.get("/admin/events/new", ensureAuth, (req, res) => {
-  return res.render("form", { event: null, error: req.query.error || null });
+  return res.render("events/form", { event: null, error: req.query.error || null });
 });
 
 app.post(
@@ -837,7 +873,7 @@ app.get(
   asyncHandler(async (req, res) => {
     const event = await db.getEvent(req.params.id);
     if (!event) return res.status(404).send("Not found");
-    res.render("form", { event, error: req.query.error || null });
+    res.render("events/form", { event, error: req.query.error || null });
   }),
 );
 
@@ -887,7 +923,7 @@ app.get(
   ensureAuth,
   asyncHandler(async (req, res) => {
     const events = await db.getEvents();
-    return res.render("documentation", { events });
+    return res.render("documentation/documentation", { events });
   }),
 );
 
@@ -928,8 +964,8 @@ app.post(
   }),
 );
 
-// Redirect root admin to login
-app.get("/admin", (req, res) => res.redirect("/admin/login"));
+// Admin panel at /admin — render login page directly (canonical route)
+app.get("/admin", (req, res) => res.render("login/login", { error: null }));
 
 // ============== SPEED INSIGHTS API ==============
 app.get(
@@ -998,13 +1034,33 @@ app.get(
 
 // ============== DEV DASHBOARD: MOBILE V2 ==============
 // Halaman mobile dengan 5 tab: Home, Overview, System, Monitoring, Account
+// Route ini STANDALONE — punya login sendiri, tidak perlu redirect ke /dev/login.
 app.get(
   "/dev/dashboard-mobile",
-  ensureDevAuth,
-  asyncHandler(async (req, res) => {
-    const user = req.session.devUser ? req.session.devUser.username : "Dev";
-    return res.render("dashboard-mobile", { user });
-  }),
+  (req, res) => {
+    // Jika sudah login, tampilkan dashboard
+    if (req.session && req.session.devUser) {
+      const user = req.session.devUser.username;
+      return res.render("dashboard-mobile/dashboard-mobile", { user });
+    }
+    // Jika belum login, tampilkan form login langsung di halaman yang sama
+    return res.render("login/login", { error: null, actionUrl: "/dev/dashboard-mobile" });
+  },
+);
+
+app.post(
+  "/dev/dashboard-mobile",
+  (req, res) => {
+    const { username, password } = req.body || {};
+    if (username === "dev" && password === "dev123") {
+      req.session.devUser = { username: "dev" };
+      return res.redirect("/dev/dashboard-mobile");
+    }
+    return res.render("login/login", {
+      error: "Username atau password salah.",
+      actionUrl: "/dev/dashboard-mobile",
+    });
+  },
 );
 
 // ============== GOOGLE PAGE SPEED INSIGHTS API ==============
@@ -1086,35 +1142,35 @@ app.post(
 // Halaman utama dashboard — ringkasan sistem dengan status banner,
 // statistik real-time, online admins, dan quick actions.
 app.get(
-  "/dev/dashboard/landing",
+  "/dev/dashboard-desktop/landing",
   ensureDevAuth,
   asyncHandler(async (req, res) => {
-    return res.render("dashboard", {});
+    return res.render("dashboard-landing/dashboard", {});
   }),
 );
 
 // Health Check page
 app.get(
-  "/dev/dashboard/health",
+  "/dev/dashboard-desktop/health",
   ensureDevAuth,
   asyncHandler(async (req, res) => {
-    return res.render("health", {});
+    return res.render("health/health", {});
   }),
 );
 
 // Maintenance page
 app.get(
-  "/dev/dashboard/maintenance",
+  "/dev/dashboard-desktop/maintenance",
   ensureDevAuth,
   asyncHandler(async (req, res) => {
     const maintenanceMode = await db.getMaintenanceMode();
-    return res.render("maintenance", { maintenanceMode });
+    return res.render("maintenance/maintenance", { maintenanceMode });
   }),
 );
 
 // Security page
 app.get(
-  "/dev/dashboard/security",
+  "/dev/dashboard-desktop/security",
   ensureDevAuth,
   asyncHandler(async (req, res) => {
     const [secStats, secLogs, blockedIps] = await Promise.all([
@@ -1122,7 +1178,7 @@ app.get(
       db.getSecurityLogs({ limit: 50 }),
       db.getBlockedIps(),
     ]);
-    return res.render("security", { secStats, secLogs, blockedIps });
+    return res.render("security/security", { secStats, secLogs, blockedIps });
   }),
 );
 
@@ -1268,6 +1324,7 @@ module.exports.getMetricRating = getMetricRating;
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`Server running http://localhost:${PORT}`);
-    console.log(`Admin panel: http://localhost:${PORT}/admin/login`);
+    console.log(`Admin panel: http://localhost:${PORT}/admin`);
+    console.log(`Desktop dashboard: http://localhost:${PORT}/dev/dashboard-desktop`);
   });
 }

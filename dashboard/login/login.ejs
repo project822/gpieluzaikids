@@ -13,7 +13,7 @@
   <script defer src="/_vercel/insights/script.js"></script>
   <script defer src="https://unpkg.com/@vercel/speed-insights/dist/index.js"></script>
 
-  <link rel="stylesheet" href="/dashboard-assets/css/login.css">
+  <link rel="stylesheet" href="/dashboard-assets/login/login.css">
 </head>
 <body>
 
@@ -46,7 +46,7 @@
       <% } %>
 
       <!-- Form -->
-      <form method="post" action="/dev/login">
+      <form method="post" action="<%= typeof actionUrl !== 'undefined' ? actionUrl : '/dev/login' %>">
 
         <div class="form-group">
           <label for="dev-username">Username</label>
