@@ -1,0 +1,255 @@
+<!-- ── ADD ADMIN MODAL ── -->
+<div class="modal-overlay" id="add-admin-modal" style="display:none;">
+  <div class="modal">
+    <div class="modal-title">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+      Add Admin
+    </div>
+    <div class="modal-error" id="aa-error"></div>
+    <div class="modal-success" id="aa-success"></div>
+    <div class="modal-field">
+      <label for="aa-username">Username</label>
+      <input id="aa-username" type="text" placeholder="Username" autocomplete="off">
+    </div>
+    <div class="modal-field">
+      <label for="aa-password">Password</label>
+      <input id="aa-password" type="password" placeholder="Min. 4 characters" autocomplete="off">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="closeAddAdminModal()">Cancel</button>
+      <button class="modal-btn primary" onclick="submitAddAdmin()">Add Admin</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── RESET PASSWORD MODAL ── -->
+<div class="modal-overlay" id="rp-modal" style="display:none;">
+  <div class="modal">
+    <div class="modal-title">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 7a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+      Reset Password
+    </div>
+    <div class="modal-error" id="rp-error"></div>
+    <div class="modal-success" id="rp-success"></div>
+    <div class="modal-field">
+      <label>Username</label>
+      <div style="font-weight:700;font-size:15px;padding:8px 0;" id="rp-username-display">—</div>
+    </div>
+    <div class="modal-field">
+      <label for="rp-password">New Password</label>
+      <input id="rp-password" type="password" placeholder="Min. 4 characters" autocomplete="off">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="closeRpModal()">Cancel</button>
+      <button class="modal-btn primary" onclick="submitRp()">Reset Password</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── FORCE LOGOUT MODAL ── -->
+<div class="modal-overlay" id="fl-modal" style="display:none;">
+  <div class="modal">
+    <div class="modal-title" style="color:var(--orange);">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h10m0 0l-3-3m3 3l-3 3M4 5v14"/></svg>
+      Force Logout
+    </div>
+    <div class="modal-error" id="fl-error"></div>
+    <div class="modal-success" id="fl-success"></div>
+    <p style="padding:12px 0;color:var(--muted);line-height:1.6;">
+      This will log <strong id="fl-username-display">—</strong> out of <strong>all devices</strong> and invalidate their current session. They will need to log in again.
+    </p>
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="closeFlModal()">Cancel</button>
+      <button class="modal-btn primary" style="background:var(--orange);" onclick="submitFl()">Logout All Devices</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── DELETE ADMIN MODAL ── -->
+<div class="modal-overlay" id="del-modal" style="display:none;">
+  <div class="modal">
+    <div class="modal-title" style="color:var(--red);">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+      Delete Admin
+    </div>
+    <div class="modal-error" id="del-error"></div>
+    <div class="modal-success" id="del-success"></div>
+    <p style="padding:12px 0;color:var(--muted);line-height:1.6;">
+      This will permanently delete <strong id="del-username-display">—</strong>. They will lose all access immediately.
+    </p>
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="closeDelModal()">Cancel</button>
+      <button class="modal-btn primary" style="background:var(--red);" onclick="submitDel()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── HELPERS ──
+function show(id)   { var el = document.getElementById(id); if (el) el.style.display = 'flex'; }
+function hide(id)   { var el = document.getElementById(id); if (el) el.style.display = 'none'; }
+function text(id, v){ var el = document.getElementById(id); if (el) el.textContent = v; }
+function val(id)    { var el = document.getElementById(id); return el ? el.value : ''; }
+
+// ── ADD ADMIN ──
+var _addAdminUser = '';
+
+function openAddAdminModal() {
+  text('aa-error', ''); text('aa-success', '');
+  hide('aa-error'); hide('aa-success');
+  document.getElementById('aa-username').value = '';
+  document.getElementById('aa-password').value = '';
+  show('add-admin-modal');
+  document.getElementById('aa-username').focus();
+}
+
+function closeAddAdminModal() { hide('add-admin-modal'); }
+
+async function submitAddAdmin() {
+  var err = document.getElementById('aa-error');
+  var ok  = document.getElementById('aa-success');
+  err.className = 'modal-error'; ok.className = 'modal-success';
+  err.textContent = ''; ok.textContent = '';
+
+  var username = val('aa-username').trim();
+  var password = val('aa-password');
+  if (!username || username.length < 2) { err.textContent = 'Username minimal 2 karakter'; err.classList.add('show'); return; }
+  if (!password || password.length < 4) { err.textContent = 'Password minimal 4 karakter'; err.classList.add('show'); return; }
+
+  try {
+    var r = await fetch('/dev/api/admins/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    var d = await r.json();
+    if (d.error) { err.textContent = d.error; err.classList.add('show'); return; }
+    ok.textContent = 'Admin "' + username + '" berhasil ditambahkan!';
+    ok.classList.add('show');
+    setTimeout(function() { closeAddAdminModal(); location.reload(); }, 1200);
+  } catch (e) {
+    err.textContent = 'Error: ' + e.message;
+    err.classList.add('show');
+  }
+}
+
+// ── RESET PASSWORD ──
+var _resetUser = '';
+
+function openResetPasswordModal(username) {
+  _resetUser = username;
+  text('rp-username-display', username);
+  text('rp-error', ''); text('rp-success', '');
+  hide('rp-error'); hide('rp-success');
+  document.getElementById('rp-password').value = '';
+  show('rp-modal');
+  document.getElementById('rp-password').focus();
+}
+
+function closeRpModal() { hide('rp-modal'); _resetUser = ''; }
+
+async function submitRp() {
+  var err = document.getElementById('rp-error');
+  var ok  = document.getElementById('rp-success');
+  err.className = 'modal-error'; ok.className = 'modal-success';
+  err.textContent = ''; ok.textContent = '';
+
+  var newPassword = val('rp-password');
+  if (!newPassword || newPassword.length < 4) { err.textContent = 'Password minimal 4 karakter'; err.classList.add('show'); return; }
+
+  try {
+    var r = await fetch('/dev/api/admins/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: _resetUser, newPassword }),
+    });
+    var d = await r.json();
+    if (d.error) { err.textContent = d.error; err.classList.add('show'); return; }
+    ok.textContent = 'Password "' + _resetUser + '" berhasil direset!';
+    ok.classList.add('show');
+    setTimeout(function() { closeRpModal(); }, 1500);
+  } catch (e) {
+    err.textContent = 'Error: ' + e.message;
+    err.classList.add('show');
+  }
+}
+
+// ── FORCE LOGOUT ──
+var _flUser = '';
+
+function openForceLogoutModal(username) {
+  _flUser = username;
+  text('fl-username-display', username);
+  text('fl-error', ''); text('fl-success', '');
+  hide('fl-error'); hide('fl-success');
+  show('fl-modal');
+}
+
+function closeFlModal() { hide('fl-modal'); _flUser = ''; }
+
+async function submitFl() {
+  var err = document.getElementById('fl-error');
+  var ok  = document.getElementById('fl-success');
+  err.className = 'modal-error'; ok.className = 'modal-success';
+  err.textContent = ''; ok.textContent = '';
+
+  try {
+    var r = await fetch('/dev/api/admins/force-logout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: _flUser }),
+    });
+    var d = await r.json();
+    if (d.error) { err.textContent = d.error; err.classList.add('show'); return; }
+    ok.textContent = 'Admin "' + _flUser + '" telah di-logout dari ' + (d.sessionsDeleted || 0) + ' perangkat.';
+    ok.classList.add('show');
+    setTimeout(function() { closeFlModal(); location.reload(); }, 1500);
+  } catch (e) {
+    err.textContent = 'Error: ' + e.message;
+    err.classList.add('show');
+  }
+}
+
+// ── DELETE ADMIN ──
+var _delUser = '';
+
+function deleteAdmin(username) {
+  _delUser = username;
+  text('del-username-display', username);
+  text('del-error', ''); text('del-success', '');
+  hide('del-error'); hide('del-success');
+  show('del-modal');
+}
+
+function closeDelModal() { hide('del-modal'); _delUser = ''; }
+
+async function submitDel() {
+  var err = document.getElementById('del-error');
+  var ok  = document.getElementById('del-success');
+  err.className = 'modal-error'; ok.className = 'modal-success';
+  err.textContent = ''; ok.textContent = '';
+
+  try {
+    var r = await fetch('/dev/api/admins/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: _delUser }),
+    });
+    var d = await r.json();
+    if (d.error) { err.textContent = d.error; err.classList.add('show'); return; }
+    ok.textContent = 'Admin "' + _delUser + '" berhasil dihapus!';
+    ok.classList.add('show');
+    setTimeout(function() { closeDelModal(); location.reload(); }, 1200);
+  } catch (e) {
+    err.textContent = 'Error: ' + e.message;
+    err.classList.add('show');
+  }
+}
+
+// ── CLOSE MODAL ON OVERLAY CLICK ──
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('modal-overlay')) {
+    e.target.style.display = 'none';
+  }
+});
+</script>

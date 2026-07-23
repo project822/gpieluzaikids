@@ -120,7 +120,7 @@ app.use((req, res, next) => {
     "Content-Security-Policy",
     [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' https://vitals.vercel-insights.com https://www.googletagmanager.com",
+      "script-src 'self' 'unsafe-inline' https://vitals.vercel-insights.com https://www.googletagmanager.com https://unpkg.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com",
       "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com",
       "img-src 'self' data: https://maps.googleapis.com https://www.google.com",
@@ -265,7 +265,8 @@ app.use(
 // - Dashboard APIs: sudah terproteksi ensureDevAuth + sameSite:lax cookie
 const CSRF_EXEMPT_PATHS = [
   "/admin/login", "/dev/login", "/login", "/dev/dashboard-mobile",
-  "/api/dev/", "/dev/api/", "/api/events/"
+  "/api/dev/", "/dev/api/", "/api/events/",
+  "/admin/events", "/admin/admins/new"
 ];
 
 app.use((req, res, next) => {
