@@ -64,18 +64,10 @@ if (!fs.existsSync(PUBLIC_ASSETS_DIR)) {
     PUBLIC_ASSETS_DIR = altAssets;
   }
 }
-const UPLOADS_DIR = path.join(PUBLIC_ASSETS_DIR, "uploads");
-
-// Pastikan direktori uploads sudah ada sejak startup (bukan hanya saat upload)
-// untuk menghindari race condition dan error ENOENT di lingkungan serverless.
-try {
-  if (!fs.existsSync(UPLOADS_DIR)) {
-    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-    console.log("[Uploads] Created directory:", UPLOADS_DIR);
-  }
-} catch (dirErr) {
-  console.error("[Uploads] Gagal membuat direktori uploads:", dirErr.message);
-}
+// CATATAN: Poster tidak lagi disimpan ke filesystem (tidak kompatibel dengan
+// Vercel serverless yang read-only). Sebagai gantinya, poster disimpan sebagai
+// Buffer di dalam dokumen event MongoDB (field posterData).
+// Route /api/events/:id/poster melayani image langsung dari DB.
 
 // Fallback jika path tidak ditemukan di process.cwd()
 let viewsDir = PUBLIC_VIEWS_DIR;
@@ -88,9 +80,9 @@ if (!fs.existsSync(path.join(viewsDir, "index.ejs"))) {
 
 // Fallback untuk admin views (per feature)
 let adminViewsDir = ADMIN_DIR;
-if (!fs.existsSync(path.join(adminViewsDir, "login", "login.ejs"))) {
+if (!fs.existsSync(path.join(adminViewsDir, "login", "admin-login.ejs"))) {
   const altAdmin = path.join(__dirname, "..", "admin");
-  if (fs.existsSync(path.join(altAdmin, "login", "login.ejs"))) {
+  if (fs.existsSync(path.join(altAdmin, "login", "admin-login.ejs"))) {
     adminViewsDir = altAdmin;
   }
 }
@@ -120,7 +112,7 @@ app.use((req, res, next) => {
 
 // ============== EXPRESS SETUP ==============
 app.set("view engine", "ejs");
-app.set("views", [viewsDir, adminViewsDir, dashboardDir, dashboardSharedDir]);
+app.set("views", [viewsDir, dashboardDir, adminViewsDir, dashboardSharedDir]);
 
 // Gzip compression for all responses
 app.use(compression());
@@ -132,9 +124,9 @@ app.use(
     maxAge: "7d",
     immutable: true,
     setHeaders: (res, filePath) => {
-      // Aset yang jarang berubah (poster upload selalu dapat nama file baru,
-      // logo/ikon statis) aman di-cache lama di browser -> kunjungan berikutnya
-      // tidak perlu download ulang.
+      // Aset statis (logo, ikon) aman di-cache lama di browser -> kunjungan berikutnya
+    // tidak perlu download ulang. Poster event tidak lagi disajikan lewat sini
+    // (sekarang via /api/events/:id/poster dari MongoDB).
       if (/\.(css|js|png|jpe?g|gif|webp|svg|ico|woff2?|ttf)$/i.test(filePath)) {
         res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
       }
@@ -307,22 +299,11 @@ async function processPosterImage(buffer) {
   }
 }
 
-async function savePosterFile(buffer) {
-  try {
-    if (!fs.existsSync(UPLOADS_DIR)) {
-      fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-    }
-    const filename = `${Date.now()}-${crypto.randomUUID()}.webp`;
-    const filePath = path.join(UPLOADS_DIR, filename);
-    await fs.promises.writeFile(filePath, buffer);
-    return `/uploads/${filename}`;
-  } catch (err) {
-    console.error("[savePosterFile] Gagal menyimpan poster:", err.message);
-    console.error("[savePosterFile] UPLOADS_DIR:", UPLOADS_DIR);
-    console.error("[savePosterFile] PUBLIC_ASSETS_DIR:", PUBLIC_ASSETS_DIR);
-    console.error("[savePosterFile] projectRoot:", projectRoot);
-    throw err;
-  }
+// Poster sekarang disimpan via MongoDB — lihat fungsi di bawah yang
+// menghasilkan URL yang bisa dipakai di <img src="..."> untuk mengambil
+// image langsung dari database.
+function posterUrl(eventId) {
+  return `/api/events/${eventId}/poster`;
 }
 
 // ============== FAVICON ==============
@@ -416,7 +397,9 @@ async function getEventsCached() {
     return eventsCache.data;
   }
   const events = await db.getEvents();
-  eventsCache = { data: events, expiresAt: now + EVENTS_CACHE_TTL_MS };
+  // Strip posterData dari cache (tidak perlu binary di memory server,
+  // cukup URL string-nya saja).
+  eventsCache = { data: events.map(({ posterData, ...rest }) => rest), expiresAt: now + EVENTS_CACHE_TTL_MS };
   return events;
 }
 
@@ -495,25 +478,51 @@ app.get(
   asyncHandler(async (req, res) => {
     const event = await db.getEvent(req.params.id);
     if (!event) return res.status(404).json({ error: "Not found" });
-    res.json(event);
+    // Strip binary poster data from JSON response
+    const { posterData, ...safe } = event;
+    res.json(safe);
+  }),
+);
+
+// ============== SERVE POSTER IMAGE FROM MONGODB ==============
+// Poster tidak lagi disimpan di filesystem (tidak bisa di Vercel serverless).
+// Image diambil langsung dari field posterData (Buffer) di dokumen event.
+app.get(
+  "/api/events/:id/poster",
+  asyncHandler(async (req, res) => {
+    const event = await db.getEvent(req.params.id);
+    if (!event || !event.posterData) {
+      return res.status(404).send("Poster not found");
+    }
+    // posterData bisa berupa Buffer atau BSON Binary — keduanya punya .buffer
+    const buf = Buffer.isBuffer(event.posterData)
+      ? event.posterData
+      : event.posterData.buffer;
+    if (!buf || buf.length === 0) {
+      return res.status(404).send("Poster not found");
+    }
+    res.setHeader("Content-Type", "image/webp");
+    res.setHeader("Cache-Control", "public, max-age=86400");
+    res.setHeader("Content-Length", buf.length);
+    return res.send(buf);
   }),
 );
 
 // ============== ADMIN ROUTES (prefix /admin) ==============
 
 // Login (canonical: /admin/login)
-app.get("/admin/login", (req, res) => res.render("login/login", { error: null }));
+app.get("/admin/login", (req, res) => res.render("login/admin-login", { error: null }));
 
 const handleAdminLogin = asyncHandler(async (req, res) => {
   const { username, password } = req.body;
   const admins = await db.getAdmins();
   const admin = (admins || []).find((a) => a.username === username);
   if (!admin) {
-    return res.render("login/login", { error: "Invalid credentials" });
+    return res.render("login/admin-login", { error: "Invalid credentials" });
   }
   const ok = await bcrypt.compare(password, admin.passwordHash);
   if (!ok) {
-    return res.render("login/login", { error: "Invalid credentials" });
+    return res.render("login/admin-login", { error: "Invalid credentials" });
   }
   req.session.user = { username };
   await db.setAdminOnline(username);
@@ -838,12 +847,14 @@ app.post(
   uploadPoster,
   asyncHandler(async (req, res) => {
     const { title, day, time, location, googleForm } = req.body;
+    const eventId = crypto.randomUUID();
 
     let poster = "";
+    let posterData = null;
     if (req.file) {
       try {
-        const processed = await processPosterImage(req.file.buffer);
-        poster = await savePosterFile(processed);
+        posterData = await processPosterImage(req.file.buffer);
+        poster = posterUrl(eventId);
       } catch (err) {
         console.error("[Poster] Gagal memproses gambar:", err.message);
         console.error("[Poster] Stack:", err.stack);
@@ -853,12 +864,13 @@ app.post(
     }
 
     const event = {
-      id: crypto.randomUUID(),
+      id: eventId,
       title,
       day,
       time,
       location,
       poster,
+      posterData,
       googleForm,
     };
     await db.addEvent(event);
@@ -888,7 +900,8 @@ app.post(
     if (req.file) {
       try {
         const processed = await processPosterImage(req.file.buffer);
-        patch.poster = await savePosterFile(processed);
+        patch.posterData = processed;
+        patch.poster = posterUrl(req.params.id);
       } catch (err) {
         console.error("[Poster] Gagal memproses gambar:", err.message);
         console.error("[Poster] Stack:", err.stack);
@@ -965,7 +978,7 @@ app.post(
 );
 
 // Admin panel at /admin — render login page directly (canonical route)
-app.get("/admin", (req, res) => res.render("login/login", { error: null }));
+app.get("/admin", (req, res) => res.render("login/admin-login", { error: null }));
 
 // ============== SPEED INSIGHTS API ==============
 app.get(
