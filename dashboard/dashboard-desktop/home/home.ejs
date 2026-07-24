@@ -169,6 +169,39 @@
 
           </div>
 
+          <!-- ── BACKUP CARD ── -->
+          <div class="card ov-server-card">
+            <div class="section-header">
+              <span>📦 Backup</span>
+              <span class="sub" id="ov-bk-count">— backups</span>
+            </div>
+            <div class="ov-server-grid">
+              <div class="ov-srow">
+                <span class="ov-skey">Last Backup</span>
+                <span class="ov-sval" id="ov-bk-last" style="font-size:12px;">Loading...</span>
+              </div>
+              <div class="ov-srow">
+                <span class="ov-skey">Events</span>
+                <span class="ov-sval" id="ov-bk-events">—</span>
+              </div>
+              <div class="ov-srow">
+                <span class="ov-skey">Songs</span>
+                <span class="ov-sval" id="ov-bk-songs">—</span>
+              </div>
+              <div class="ov-srow">
+                <span class="ov-skey">Admins</span>
+                <span class="ov-sval" id="ov-bk-admins">—</span>
+              </div>
+            </div>
+            <div class="ov-server-footer">
+              <button class="btn btn-primary" id="ov-bk-btn" onclick="ovCreateBackup()">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                Backup Now
+              </button>
+              <span class="ov-bk-feedback" id="ov-bk-feedback"></span>
+            </div>
+          </div>
+
         </div>
 
       </main>
@@ -277,8 +310,74 @@
     }
   }
 
+  // ── BACKUP ──
+  let _ovBackingUp = false;
+
+  async function ovLoadBackupStatus() {
+    try {
+      const res = await fetch('/api/dev/backup/status');
+      if (res.status === 401) {
+        showSessionExpired();
+        return;
+      }
+      if (!res.ok) return;
+      const d = await res.json();
+      document.getElementById('ov-bk-count').textContent = d.totalBackups + ' backup' + (d.totalBackups !== 1 ? 's' : '');
+
+      if (d.hasBackup && d.latestBackup) {
+        const lb = d.latestBackup;
+        const dt = new Date(lb.createdAt);
+        document.getElementById('ov-bk-last').textContent = dt.toLocaleDateString('id-ID', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+        document.getElementById('ov-bk-events').textContent = lb.summary?.events ?? '—';
+        document.getElementById('ov-bk-songs').textContent = lb.summary?.songs ?? '—';
+        document.getElementById('ov-bk-admins').textContent = lb.summary?.admins ?? '—';
+      } else {
+        document.getElementById('ov-bk-last').textContent = 'Never';
+        document.getElementById('ov-bk-events').textContent = '—';
+        document.getElementById('ov-bk-songs').textContent = '—';
+        document.getElementById('ov-bk-admins').textContent = '—';
+      }
+    } catch (_) {}
+  }
+
+  async function ovCreateBackup() {
+    if (_ovBackingUp) return;
+    _ovBackingUp = true;
+    const btn = document.getElementById('ov-bk-btn');
+    const fb = document.getElementById('ov-bk-feedback');
+    const origText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;animation:ov-spin 0.8s linear infinite;"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Backing up...';
+    fb.textContent = '';
+    try {
+      const res = await fetch('/api/dev/backup/create', { method:'POST' });
+      if (res.status === 401) {
+        showSessionExpired();
+        return;
+      }
+      const d = await res.json();
+      if (d.ok) {
+        fb.textContent = '✅ Backup berhasil!';
+        fb.style.color = 'var(--green)';
+        ovLoadBackupStatus();
+      } else {
+        fb.textContent = '❌ ' + (d.error || 'Gagal');
+        fb.style.color = 'var(--red)';
+      }
+    } catch(e) {
+      fb.textContent = '❌ Error: ' + e.message;
+      fb.style.color = 'var(--red)';
+    }
+    setTimeout(() => { fb.textContent = ''; }, 4000);
+    btn.innerHTML = origText;
+    btn.disabled = false;
+    _ovBackingUp = false;
+  }
+
   ovLoadHealth();
+  ovLoadBackupStatus();
   setInterval(ovLoadHealth, 30000);
+  setInterval(ovLoadBackupStatus, 30000);
   </script>
 </body>
 </html>

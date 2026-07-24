@@ -1,11 +1,18 @@
 <div class="section-title">Admin Accounts</div>
-<div class="app-card" id="ac-list"><div class="app-card-loading">Loading accounts...</div></div>
+<div class="app-card" id="ac-admin-list">
+  <div class="app-card-loading">Loading accounts...</div>
+  <div id="ac-admin-list-content" style="display:none;"></div>
+</div>
 
 <div class="section-title">Quick Actions</div>
 <div class="app-card" id="ac-quick-actions">
-  <div style="padding:12px 16px;">
-    <button class="btn-primary" onclick="mobLogoutAll()" style="margin-bottom:8px;">
-      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+  <div style="padding:12px 16px;display:grid;gap:8px;">
+    <button class="btn-primary" onclick="mobShowAddAdmin()" style="display:flex;align-items:center;gap:6px;padding:10px 16px;border-radius:8px;border:none;background:#3B82F6;color:#fff;font-family:'Inter',sans-serif;font-weight:600;font-size:13px;cursor:pointer;width:100%;justify-content:center;">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Admin
+    </button>
+    <button class="btn-primary" onclick="mobLogoutAll()" style="display:flex;align-items:center;gap:6px;padding:10px 16px;border-radius:8px;border:none;background:#DC2626;color:#fff;font-family:'Inter',sans-serif;font-weight:600;font-size:13px;cursor:pointer;width:100%;justify-content:center;">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
       Log Out All Devices
     </button>
   </div>

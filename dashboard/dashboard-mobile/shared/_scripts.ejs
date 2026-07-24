@@ -117,44 +117,30 @@ async function mobRefresh() {
       setBannerVal('mt', mtSt.enabled?'ACTIVE':'Inactive');
     }catch(e){ setBannerDot('mt','warn'); setBannerVal('mt','Error'); }
 
-    // — ACTIVITY TAB —
+    // — Content Stats (for activity tab) —
+    var csData = null;
     try {
-      var acRes=await(await fetch('/api/dev/activity-logs?limit=30')).json();
-      var logs=acRes.logs||[];
+      csData=await(await fetch('/api/dev/content-stats')).json();
+      _('ac-stat-events').textContent=csData.events||0;
+      _('ac-stat-docs').textContent=csData.documentation||0;
+      _('ac-stat-admins').textContent=csData.admins||0;
+    }catch(e){}
+
+    // — ACTIVITY TAB —
+    window._mobLogs = [];
+    try {
+      var acRes=await(await fetch('/api/dev/activity-logs?limit=50')).json();
+      window._mobLogs=acRes.logs||[];
+      _('ac-total-logs').textContent=window._mobLogs.length;
       _('ac-loading').style.display='none';
-      if(logs.length){
-        _('ac-list').style.display='block';
-        var acHtml='';
-        logs.forEach(function(l){
-          var cat=l.action?l.action.split('.')[0]:'other';
-          var iconSvg=cat==='admin'?'<path d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-3-6.65"/>':
-            cat==='event'?'<path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>':
-            cat==='backup'?'<path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>':
-            cat==='security'||cat==='maintenance'?'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>':
-            '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>';
-          var ts=l.timestamp?new Date(l.timestamp).toLocaleString('id-ID'):'—';
-          var detail=l.detail||'';
-          var uname=l.username||'system';
-          acHtml+='<div class="account-item" style="border-left:3px solid '+
-            (cat==='admin'?'#8B5CF6':cat==='event'?'#3B82F6':cat==='backup'?'#6366F1':cat==='security'?'#EF4444':cat==='maintenance'?'#F59E0B':'#94A3B8')+
-            ';padding-left:10px;">'+
-            '<div class="account-item-left" style="flex:1;">'+
-              '<div class="account-item-info">'+
-                '<span style="font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:700;">'+(l.action||'unknown')+'</span>'+
-                '<span class="account-item-name" style="font-size:12px;">'+detail+'</span>'+
-                '<span style="font-size:10px;color:#64748b;margin-top:2px;">👤 '+uname+' · 🕐 '+ts+'</span>'+
-              '</div>'+
-            '</div>'+
-          '</div>';
-        });
-        _('ac-list').innerHTML=acHtml;
-      }else{
-        _('ac-empty').style.display='block';
-      }
+      mobRenderLogs('all');
     }catch(e){ _('ac-loading').style.display='none'; _('ac-empty').style.display='block'; }
 
-    // — ACCOUNT TAB: admin list (reuse data from Home) —
-    _('ac-list').innerHTML=!adms.length?'<div class="app-card-empty">No admins</div>':
+    // — ACCOUNT TAB: admin list —
+    var acLoading=document.querySelector('#ac-admin-list .app-card-loading');
+    if(acLoading) acLoading.style.display='none';
+    _('ac-admin-list-content').style.display='block';
+    _('ac-admin-list-content').innerHTML=!adms.length?'<div class="app-card-empty">No admins</div>':
       adms.map(function(x){
         var s=sts[x.username]||{},io=s.online===true,inl=x.username.charAt(0).toUpperCase();
         var lastOn=s.lastOnline?new Date(s.lastOnline).toLocaleString('id-ID'):'---';
@@ -176,6 +162,9 @@ async function mobRefresh() {
             '</button>'+
             '<button class="account-action-btn danger" onclick="mobForceLogout(\''+x.username+'\')" title="Logout Device">'+
               '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>'+
+            '</button>'+
+            '<button class="account-action-btn danger" onclick="mobShowDelete(\''+x.username+'\')" title="Delete Admin">'+
+              '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>'+
             '</button>'+
           '</div>'+
         '</div>';
@@ -450,6 +439,174 @@ async function mobForceLogout(user) {
   } catch(x) { toast('Gagal: '+x.message); }
 }
 
+/* ════════ ACTIVITY — FILTER LOGS ════════ */
+function mobRenderLogs(filter) {
+  var logs=window._mobLogs||[];
+  var list=_('ac-list'), empty=_('ac-empty');
+  if(!list) return;
+  var filtered = filter==='all'?logs:logs.filter(function(l){return l.action&&l.action.split('.')[0]===filter;});
+  if(filtered.length){
+    list.style.display='block';
+    if(empty) empty.style.display='none';
+    var html='';
+    filtered.forEach(function(l){
+      var cat=l.action?l.action.split('.')[0]:'other';
+      var iconSvg=cat==='admin'?'<path d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-3-6.65"/>':
+        cat==='event'?'<path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>':
+        cat==='backup'?'<path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>':
+        cat==='security'||cat==='maintenance'?'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>':
+        '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>';
+      var ts=l.timestamp?new Date(l.timestamp).toLocaleString('id-ID'):'—';
+      var detail=l.detail||'';
+      var uname=l.username||'system';
+      html+='<div class="account-item" style="border-left:3px solid '+
+        (cat==='admin'?'#8B5CF6':cat==='event'?'#3B82F6':cat==='backup'?'#6366F1':cat==='security'?'#EF4444':cat==='maintenance'?'#F59E0B':'#94A3B8')+
+        ';padding-left:10px;">'+
+        '<div class="account-item-left" style="flex:1;">'+
+          '<div class="account-item-info">'+
+            '<span style="font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:700;">'+(l.action||'unknown')+'</span>'+
+            '<span class="account-item-name" style="font-size:12px;">'+detail+'</span>'+
+            '<span style="font-size:10px;color:#64748b;margin-top:2px;">👤 '+uname+' · 🕐 '+ts+'</span>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+    });
+    list.innerHTML=html;
+  }else{
+    list.style.display='none';
+    if(empty){empty.style.display='block';empty.textContent='Tidak ada log untuk kategori ini.';}
+  }
+}
+
+function mobFilterLogs(filter) {
+  document.querySelectorAll('.al-filter').forEach(function(b){b.style.color='var(--muted)';b.style.background='var(--surface)';});
+  var active=document.querySelector('.al-filter[data-filter="'+filter+'"]');
+  if(active){active.style.color='var(--text)';active.style.background='var(--blue-bg)';}
+  mobRenderLogs(filter);
+}
+
+/* ════════ ACCOUNT — ADD ADMIN ════════ */
+function mobShowAddAdmin() {
+  _('aa-username').value='';
+  _('aa-password').value='';
+  _('aa-err').style.display='none';
+  _('aa-ok').style.display='none';
+  _('aa-modal').classList.add('active');
+}
+
+async function mobAddAdmin() {
+  var user=_('aa-username').value.trim();
+  var pass=_('aa-password').value.trim();
+  if(!user||user.length<2){_('aa-err').textContent='Username minimal 2 karakter';_('aa-err').style.display='block';return;}
+  if(!pass||pass.length<4){_('aa-err').textContent='Password minimal 4 karakter';_('aa-err').style.display='block';return;}
+  try{
+    var r=await fetch('/api/dev/admins/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:user,password:pass})});
+    if(r.status===401){_('aa-err').textContent='Sesi habis, redirect...';_('aa-err').style.display='block';setTimeout(mobRedirectLogin,1500);return;}
+    var d=await r.json();
+    if(!d.ok)throw new Error(d.error||'Gagal');
+    _('aa-ok').textContent='✓ Admin "'+user+'" berhasil ditambahkan!';
+    _('aa-ok').style.display='block';
+    _('aa-err').style.display='none';
+    _('aa-username').value='';
+    _('aa-password').value='';
+    setTimeout(function(){mobCloseModal('aa-modal');mobRefresh();},1500);
+  }catch(x){_('aa-err').textContent=x.message;_('aa-err').style.display='block';_('aa-ok').style.display='none';}
+}
+
+/* ════════ ACCOUNT — DELETE ADMIN ════════ */
+var _deleteUser=null;
+function mobShowDelete(user) {
+  _deleteUser=user;
+  _('da-username-display').textContent=user;
+  _('da-err').style.display='none';
+  _('da-ok').style.display='none';
+  _('da-modal').classList.add('active');
+}
+
+async function mobDeleteAdmin() {
+  if(!_deleteUser)return;
+  try{
+    var r=await fetch('/api/dev/admins/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:_deleteUser})});
+    if(r.status===401){_('da-err').textContent='Sesi habis, redirect...';_('da-err').style.display='block';setTimeout(mobRedirectLogin,1500);return;}
+    var d=await r.json();
+    if(!d.ok)throw new Error(d.error||'Gagal');
+    _('da-ok').textContent='✓ Admin "'+_deleteUser+'" berhasil dihapus';
+    _('da-ok').style.display='block';
+    _('da-err').style.display='none';
+    setTimeout(function(){mobCloseModal('da-modal');mobRefresh();},1500);
+  }catch(x){_('da-err').textContent=x.message;_('da-err').style.display='block';_('da-ok').style.display='none';}
+}
+
+/* ════════ BACKUP ════════ */
+var _mobBackingUp = false;
+
+async function mobLoadBackupStatus() {
+  try {
+    var r = await fetch('/api/dev/backup/status');
+    if (r.status === 401) { toast('Sesi habis, redirect...'); return; }
+    var d = await r.json();
+
+    if (d.hasBackup && d.latestBackup) {
+      var lb = d.latestBackup;
+      var dt = new Date(lb.createdAt);
+      _('hm-bk-last').textContent = dt.toLocaleDateString('id-ID', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+      _('hm-bk-events').textContent = (lb.summary && lb.summary.events) || '—';
+      _('hm-bk-songs').textContent = (lb.summary && lb.summary.songs) || '—';
+      _('hm-bk-admins').textContent = (lb.summary && lb.summary.admins) || '—';
+    } else {
+      _('hm-bk-last').textContent = 'Never';
+      _('hm-bk-events').textContent = '—';
+      _('hm-bk-songs').textContent = '—';
+      _('hm-bk-admins').textContent = '—';
+    }
+  } catch(e) {}
+}
+
+async function mobCreateBackup() {
+  if (_mobBackingUp) return;
+  _mobBackingUp = true;
+  var btn = _('hm-bk-btn');
+  var qbtn = _('hm-bk-qbtn');
+  var fb = _('hm-bk-feedback');
+  var origText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;animation:loading-spin 0.8s linear infinite;"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Backing up...';
+  if (qbtn) { qbtn.style.opacity = '0.5'; qbtn.style.pointerEvents = 'none'; }
+  fb.style.display = 'none';
+  fb.classList.remove('success', 'error');
+  try {
+    var r = await fetch('/api/dev/backup/create', { method:'POST' });
+    if (r.status === 401) {
+      toast('Sesi habis, redirect...');
+      setTimeout(mobRedirectLogin, 1500);
+      return;
+    }
+    var d = await r.json();
+    if (d.ok) {
+      fb.textContent = '✅ Backup berhasil!';
+      fb.className = 'mt-feedback success';
+      fb.style.display = 'block';
+      mobLoadBackupStatus();
+      mobRefresh();
+    } else {
+      fb.textContent = '❌ ' + (d.error || 'Gagal');
+      fb.className = 'mt-feedback error';
+      fb.style.display = 'block';
+    }
+  } catch(e) {
+    fb.textContent = '❌ Error: ' + e.message;
+    fb.className = 'mt-feedback error';
+    fb.style.display = 'block';
+  }
+  setTimeout(function() {
+    fb.style.display = 'none';
+  }, 4000);
+  btn.innerHTML = origText;
+  btn.disabled = false;
+  if (qbtn) { qbtn.style.opacity = '1'; qbtn.style.pointerEvents = 'auto'; }
+  _mobBackingUp = false;
+}
+
 /* ════════ ACCOUNT — LOGOUT ALL ════════ */
 async function mobLogoutAll() {
   if (!confirm('Logout semua perangkat admin?')) return;
@@ -465,6 +622,8 @@ async function mobLogoutAll() {
 /* ════════ INIT ════════ */
 document.addEventListener('DOMContentLoaded', function() {
   mobRefresh();
+  mobLoadBackupStatus();
   setInterval(mobRefresh, 30000);
+  setInterval(mobLoadBackupStatus, 30000);
 });
 </script>

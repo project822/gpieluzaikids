@@ -1,5 +1,35 @@
 <div class="section-title">Activity Log</div>
 
+<div class="stat-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+  <div class="stat-card" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;">
+    <div class="stat-card-label" style="font-size:11px;color:var(--muted);font-weight:700;">Total Logs</div>
+    <div class="stat-card-value" style="font-size:18px;font-weight:800;" id="ac-total-logs">0</div>
+  </div>
+  <div class="stat-card" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;">
+    <div class="stat-card-label" style="font-size:11px;color:var(--muted);font-weight:700;">Events</div>
+    <div class="stat-card-value" style="font-size:18px;font-weight:800;" id="ac-stat-events">0</div>
+  </div>
+  <div class="stat-card" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;">
+    <div class="stat-card-label" style="font-size:11px;color:var(--muted);font-weight:700;">Documentation</div>
+    <div class="stat-card-value" style="font-size:18px;font-weight:800;" id="ac-stat-docs">0</div>
+  </div>
+  <div class="stat-card" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;">
+    <div class="stat-card-label" style="font-size:11px;color:var(--muted);font-weight:700;">Admins</div>
+    <div class="stat-card-value" style="font-size:18px;font-weight:800;" id="ac-stat-admins">0</div>
+  </div>
+</div>
+
+<!-- Filter chips -->
+<div class="hm-filter-row" style="display:flex;gap:4px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;">
+  <button class="al-filter active" data-filter="all" style="padding:5px 12px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer;flex-shrink:0;" onclick="mobFilterLogs('all')">All</button>
+  <button class="al-filter" data-filter="admin" style="padding:5px 12px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer;flex-shrink:0;" onclick="mobFilterLogs('admin')">Admin</button>
+  <button class="al-filter" data-filter="event" style="padding:5px 12px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer;flex-shrink:0;" onclick="mobFilterLogs('event')">Events</button>
+  <button class="al-filter" data-filter="doc" style="padding:5px 12px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer;flex-shrink:0;" onclick="mobFilterLogs('doc')">Docs</button>
+  <button class="al-filter" data-filter="maintenance" style="padding:5px 12px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer;flex-shrink:0;" onclick="mobFilterLogs('maintenance')">Maintenance</button>
+  <button class="al-filter" data-filter="security" style="padding:5px 12px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer;flex-shrink:0;" onclick="mobFilterLogs('security')">Security</button>
+  <button class="al-filter" data-filter="backup" style="padding:5px 12px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer;flex-shrink:0;" onclick="mobFilterLogs('backup')">Backup</button>
+</div>
+
 <div class="app-card">
   <div class="app-card-loading" id="ac-loading">Loading activity log...</div>
   <div class="app-card-empty" id="ac-empty" style="display:none;">Belum ada aktivitas yang tercatat.</div>

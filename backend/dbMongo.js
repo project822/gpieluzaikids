@@ -596,7 +596,7 @@ async function getContentStats() {
 async function createBackup(triggeredBy = "system") {
   const d = await connect();
   
-  const [events, admins, metrics, adminStatus, settings, securityLogs, activityLogs, pageviews] = await Promise.all([
+  const [events, admins, metrics, adminStatus, settings, securityLogs, activityLogs, pageviews, songs, playlists] = await Promise.all([
     d.collection("events").find({}).toArray(),
     d.collection("admins").find({}).toArray(),
     d.collection("metrics").find({}).toArray(),
@@ -605,6 +605,8 @@ async function createBackup(triggeredBy = "system") {
     d.collection("securityLogs").find({}).toArray(),
     d.collection("activityLogs").find({}).toArray(),
     d.collection("pageviews").find({}).sort({ timestamp: -1 }).limit(1000).toArray(),
+    d.collection("songs").find({}).toArray(),
+    d.collection("playlists").find({}).toArray(),
   ]);
 
   const backupDoc = {
@@ -619,6 +621,8 @@ async function createBackup(triggeredBy = "system") {
       securityLogs: securityLogs.length,
       activityLogs: activityLogs.length,
       pageviews: pageviews.length,
+      songs: songs.length,
+      playlists: playlists.length,
     },
     data: JSON.stringify({
       events,
@@ -629,6 +633,8 @@ async function createBackup(triggeredBy = "system") {
       securityLogs,
       activityLogs,
       pageviews,
+      songs,
+      playlists,
     }),
   };
 
@@ -645,9 +651,13 @@ async function createBackup(triggeredBy = "system") {
     await d.collection("backups").deleteMany({ _id: { $in: ids } });
   }
 
+  const totalMp3SizeMB = Math.round(songs.reduce((sum, s) => {
+    const buf = Buffer.isBuffer(s.mp3Data) ? s.mp3Data : (s.mp3Data && s.mp3Data.buffer);
+    return sum + (buf ? buf.length : 0);
+  }, 0) / (1024 * 1024));
   await logActivity({
     action: "backup.create",
-    detail: `Backup created: ${events.length} events, ${admins.length} admins`,
+    detail: `Backup created: ${events.length} events, ${admins.length} admins, ${songs.length} songs (${totalMp3SizeMB}MB MP3), ${playlists.length} playlists`,
     username: triggeredBy,
   });
 
