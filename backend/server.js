@@ -355,7 +355,8 @@ if (!process.env.SESSION_SECRET) {
 const CSRF_EXEMPT_PATHS = [
   "/admin/login", "/dev/login", "/login", "/dev/dashboard-mobile",
   "/api/dev", "/dev/api", "/api/events",
-  "/admin/events", "/admin/admins/new"
+  "/admin/events", "/admin/admins/new",
+  "/admin-playlist"
 ];
 
 app.use((req, res, next) => {
@@ -392,19 +393,16 @@ app.use((req, res, next) => {
 });
 
   // Multer for file uploads
-  // Pakai memoryStorage: file masuk sebagai buffer di req.file.buffer,
-  // supaya bisa diproses (crop 4:5 + resize + convert WebP) via sharp
-  // SEBELUM ditulis ke disk. Ini menghindari nyimpen file mentah yang
-  // besar/berat, sekaligus jadi tempat kita validasi ukuran & tipe file.
+  // Pakai memoryStorage: file masuk sebagai buffer di req.file.buffer
   const MAX_POSTER_SIZE_BYTES = 4 * 1024 * 1024; // 4MB
+  const MAX_MP3_SIZE_BYTES = 15 * 1024 * 1024; // 15MB
   const POSTER_WIDTH = 720;
-  const POSTER_HEIGHT = 900; // rasio 4:5, ukuran moderat (tidak perlu lebih besar untuk web)
+  const POSTER_HEIGHT = 900;
 
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: MAX_POSTER_SIZE_BYTES },
   fileFilter: (req, file, cb) => {
-    // Hanya izinkan format gambar yang spesifik: JPEG, PNG, WebP
     const allowedMimes = ["image/jpeg", "image/png", "image/webp"];
     const allowedExts = /\.(jpe?g|png|webp)$/i;
     
@@ -412,7 +410,6 @@ const upload = multer({
       return cb(new Error("Format file tidak didukung. Hanya JPG, PNG, dan WebP yang diperbolehkan."));
     }
     
-    // Cek juga ekstensi file sebagai lapisan validasi tambahan
     const originalName = file.originalname || "";
     if (!allowedExts.test(originalName)) {
       return cb(new Error("Ekstensi file tidak didukung. Hanya .jpg, .jpeg, .png, dan .webp yang diperbolehkan."));
@@ -422,8 +419,26 @@ const upload = multer({
   },
 });
 
-// Bungkus upload.single("poster") supaya error (file kegedean / bukan gambar)
-// tidak nge-crash request, tapi redirect balik ke form dengan pesan error yang jelas.
+// Upload handler khusus untuk mp3 (ukuran lebih besar, hanya audio)
+const uploadMp3 = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_MP3_SIZE_BYTES },
+  fileFilter: (req, file, cb) => {
+    const allowedMimes = ["audio/mpeg", "audio/mp3", "audio/mpeg3"];
+    const allowedExts = /\.mp3$/i;
+    
+    if (!file.mimetype || !allowedMimes.includes(file.mimetype)) {
+      return cb(new Error("Format file tidak didukung. Hanya file MP3 yang diperbolehkan."));
+    }
+    if (!allowedExts.test(file.originalname || "")) {
+      return cb(new Error("Ekstensi file tidak didukung. Hanya .mp3 yang diperbolehkan."));
+    }
+    
+    cb(null, true);
+  },
+});
+
+// Bungkus upload.single("poster") supaya error tidak nge-crash request
 function uploadPoster(req, res, next) {
   upload.single("poster")(req, res, (err) => {
     if (!err) return next();
@@ -441,18 +456,14 @@ function uploadPoster(req, res, next) {
   });
 }
 
-// Crop ke rasio 4:5 (cover, fokus otomatis ke area paling "menarik" biar tidak
-// asal potong tengah), resize ke ukuran moderat, lalu convert ke WebP.
 async function processPosterImage(buffer) {
   try {
     return await sharp(buffer)
-      .rotate() // auto-orient sesuai EXIF (foto dari HP kadang kesimpen miring)
+      .rotate()
       .resize(POSTER_WIDTH, POSTER_HEIGHT, { fit: "cover", position: "attention" })
       .webp({ quality: 80 })
       .toBuffer();
   } catch (attentionErr) {
-    // Fallback: jika attention crop gagal (misal libvips versi lawas / gambar tertentu),
-    // pakai center crop sebagai cadangan yang lebih stabil.
     try {
       return await sharp(buffer)
         .rotate()
@@ -460,7 +471,6 @@ async function processPosterImage(buffer) {
         .webp({ quality: 80 })
         .toBuffer();
     } catch (centerErr) {
-      // Jika masih gagal, coba tanpa resize sama sekali — cukup konversi ke WebP
       try {
         return await sharp(buffer)
           .rotate()
@@ -476,9 +486,6 @@ async function processPosterImage(buffer) {
   }
 }
 
-// Poster sekarang disimpan via MongoDB — lihat fungsi di bawah yang
-// menghasilkan URL yang bisa dipakai di <img src="..."> untuk mengambil
-// image langsung dari database.
 function posterUrl(eventId) {
   return `/api/events/${eventId}/poster`;
 }
@@ -676,6 +683,266 @@ app.get("/events/:id", (req, res) => res.redirect("/"));
 app.get("/documentation", (req, res) => res.redirect("/"));
 app.get("/contact", (req, res) => res.redirect("/"));
 
+// ══════════════════════════════════════════════════════════════
+// PLAYLIST — Halaman publik musik & lagu
+// ══════════════════════════════════════════════════════════════
+
+app.get("/playlist",
+  asyncHandler(async (req, res) => {
+    const songs = await db.getSongs();
+    const playlists = await db.getPlaylists();
+    const favorites = await db.getFavorites();
+    res.render("playlist", { songs, playlists, favorites });
+  }),
+);
+
+// API: Get all songs (without mp3 data)
+app.get("/api/playlist/songs",
+  asyncHandler(async (req, res) => {
+    const songs = await db.getSongs();
+    res.json(songs);
+  }),
+);
+
+// API: Search songs
+app.get("/api/playlist/songs/search",
+  asyncHandler(async (req, res) => {
+    const q = req.query.q || "";
+    const results = await db.searchSongs(q);
+    res.json(results);
+  }),
+);
+
+// API: Get single song
+app.get("/api/playlist/songs/:id",
+  asyncHandler(async (req, res) => {
+    const song = await db.getSong(req.params.id);
+    if (!song) return res.status(404).json({ error: "Song not found" });
+    const { mp3Data, ...safe } = song;
+    res.json(safe);
+  }),
+);
+
+// API: Serve MP3 file from MongoDB
+app.get("/api/playlist/songs/:id/mp3",
+  asyncHandler(async (req, res) => {
+    const song = await db.getSongMp3(req.params.id);
+    if (!song || !song.mp3Data) {
+      return res.status(404).send("MP3 not found");
+    }
+    const buf = Buffer.isBuffer(song.mp3Data)
+      ? song.mp3Data
+      : song.mp3Data.buffer;
+    if (!buf || buf.length === 0) {
+      return res.status(404).send("MP3 not found");
+    }
+    res.setHeader("Content-Type", "audio/mpeg");
+    res.setHeader("Content-Length", buf.length);
+    res.setHeader("Accept-Ranges", "bytes");
+    // Untuk download: set Content-Disposition jika ada query ?download
+    if (req.query.download === "1") {
+      const filename = encodeURIComponent(song.title.replace(/\s+/g, "_") + ".mp3");
+      res.setHeader("Content-Disposition", `attachment; filename*=UTF-8''${filename}`);
+    }
+    return res.send(buf);
+  }),
+);
+
+// API: Download song
+app.get("/api/playlist/songs/:id/download",
+  asyncHandler(async (req, res) => {
+    return res.redirect(`/api/playlist/songs/${req.params.id}/mp3?download=1`);
+  }),
+);
+
+// API: Toggle favorite
+app.post("/api/playlist/favorites/:id",
+  asyncHandler(async (req, res) => {
+    const isFav = await db.toggleFavorite(req.params.id);
+    res.json({ ok: true, favorite: isFav });
+  }),
+);
+
+// API: Get favorites
+app.get("/api/playlist/favorites",
+  asyncHandler(async (req, res) => {
+    const songs = await db.getFavorites();
+    res.json(songs);
+  }),
+);
+
+// API: Get playlists
+app.get("/api/playlist/playlists",
+  asyncHandler(async (req, res) => {
+    const playlists = await db.getPlaylists();
+    res.json(playlists);
+  }),
+);
+
+// API: Get playlist songs
+app.get("/api/playlist/playlists/:id/songs",
+  asyncHandler(async (req, res) => {
+    const songs = await db.getPlaylistSongs(req.params.id);
+    res.json(songs);
+  }),
+);
+
+// API: Create playlist
+app.post("/api/playlist/playlists",
+  asyncHandler(async (req, res) => {
+    const { name } = req.body || {};
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: "Nama playlist wajib diisi" });
+    }
+    const playlist = await db.createPlaylist(name);
+    res.json({ ok: true, playlist });
+  }),
+);
+
+// API: Add song to playlist
+app.post("/api/playlist/playlists/:id/songs",
+  asyncHandler(async (req, res) => {
+    const { songId } = req.body || {};
+    if (!songId) return res.status(400).json({ error: "songId wajib diisi" });
+    await db.addSongToPlaylist(req.params.id, songId);
+    res.json({ ok: true });
+  }),
+);
+
+// API: Remove song from playlist
+app.delete("/api/playlist/playlists/:id/songs/:songId",
+  asyncHandler(async (req, res) => {
+    await db.removeSongFromPlaylist(req.params.id, req.params.songId);
+    res.json({ ok: true });
+  }),
+);
+
+// API: Delete playlist
+app.delete("/api/playlist/playlists/:id",
+  asyncHandler(async (req, res) => {
+    await db.deletePlaylist(req.params.id);
+    res.json({ ok: true });
+  }),
+);
+
+// ══════════════════════════════════════════════════════════════
+// ADMIN PLAYLIST — CRUD lagu (dilindungi admin)
+// ══════════════════════════════════════════════════════════════
+
+app.get("/admin-playlist",
+  ensureAuth,
+  asyncHandler(async (req, res) => {
+    const songs = await db.getSongs();
+    res.render("playlist/admin-playlist", { songs, error: null });
+  }),
+);
+
+app.get("/admin-playlist/add",
+  ensureAuth,
+  (req, res) => {
+    res.render("playlist/admin-playlist-form", { song: null, error: req.query.error || null });
+  },
+);
+
+app.post("/admin-playlist/add",
+  ensureAuth,
+  (req, res, next) => {
+    uploadMp3.single("mp3")(req, res, (err) => {
+      if (err) {
+        let message = "Gagal mengunggah file MP3.";
+        if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
+          message = "Ukuran file MP3 maksimal 15MB.";
+        } else if (err.message) {
+          message = err.message;
+        }
+        return res.redirect(`/admin-playlist/add?error=${encodeURIComponent(message)}`);
+      }
+      next();
+    });
+  },
+  asyncHandler(async (req, res) => {
+    const { title, lyrics } = req.body || {};
+    if (!title || !title.trim()) {
+      return res.redirect("/admin-playlist/add?error=" + encodeURIComponent("Judul lagu wajib diisi"));
+    }
+    if (!req.file) {
+      return res.redirect("/admin-playlist/add?error=" + encodeURIComponent("File MP3 wajib diupload"));
+    }
+    
+    const songId = crypto.randomUUID();
+    const song = {
+      id: songId,
+      title: title.trim(),
+      lyrics: (lyrics || "").trim(),
+      favorite: false,
+      mp3Data: req.file.buffer,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    
+    await db.addSong(song);
+    db.logActivity({ action: "song.create", detail: `Song "${song.title}" created`, username: req.session.user?.username || "admin" }).catch(() => {});
+    res.redirect("/admin-playlist");
+  }),
+);
+
+app.get("/admin-playlist/:id/edit",
+  ensureAuth,
+  asyncHandler(async (req, res) => {
+    const song = await db.getSong(req.params.id);
+    if (!song) return res.status(404).send("Song not found");
+    res.render("playlist/admin-playlist-form", { song, error: req.query.error || null });
+  }),
+);
+
+app.post("/admin-playlist/:id/edit",
+  ensureAuth,
+  (req, res, next) => {
+    uploadMp3.single("mp3")(req, res, (err) => {
+      if (err) {
+        let message = "Gagal mengunggah file MP3.";
+        if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
+          message = "Ukuran file MP3 maksimal 15MB.";
+        } else if (err.message) {
+          message = err.message;
+        }
+        return res.redirect(`/admin-playlist/${req.params.id}/edit?error=${encodeURIComponent(message)}`);
+      }
+      next();
+    });
+  },
+  asyncHandler(async (req, res) => {
+    const { title, lyrics } = req.body || {};
+    if (!title || !title.trim()) {
+      return res.redirect(`/admin-playlist/${req.params.id}/edit?error=` + encodeURIComponent("Judul lagu wajib diisi"));
+    }
+    
+    const patch = {
+      title: title.trim(),
+      lyrics: (lyrics || "").trim(),
+    };
+    
+    if (req.file) {
+      patch.mp3Data = req.file.buffer;
+    }
+    
+    await db.updateSong(req.params.id, patch);
+    db.logActivity({ action: "song.edit", detail: `Song "${patch.title}" updated`, username: req.session.user?.username || "admin" }).catch(() => {});
+    res.redirect("/admin-playlist");
+  }),
+);
+
+app.post("/admin-playlist/:id/delete",
+  ensureAuth,
+  asyncHandler(async (req, res) => {
+    const song = await db.getSong(req.params.id);
+    if (!song) return res.status(404).json({ error: "Song not found" });
+    await db.deleteSong(req.params.id);
+    db.logActivity({ action: "song.delete", detail: `Song "${song.title}" deleted`, username: req.session.user?.username || "admin" }).catch(() => {});
+    res.redirect("/admin-playlist");
+  }),
+);
+
 app.get(
   "/api/events/:id",
   asyncHandler(async (req, res) => {
@@ -837,12 +1104,10 @@ app.post("/dev/login", asyncHandler(async (req, res) => {
 }));
 
 // ============== DEV DASHBOARD DESKTOP PAGES ==============
-// Halaman sidebar (Overview, Analytics, Monitoring, Admins) masing-masing punya view & route sendiri.
+// Halaman sidebar (Home, Activity, Accounts, System, Security) masing-masing punya view & route sendiri.
 // Route /dev/dashboard dialihkan ke /dev/dashboard-desktop untuk backward compatibility.
 
 app.get("/dev/dashboard", (req, res) => res.redirect("/dev/dashboard-desktop"));
-app.get("/dev/dashboard/analytics", (req, res) => res.redirect("/dev/dashboard-desktop/analytics"));
-app.get("/dev/dashboard/monitoring", (req, res) => res.redirect("/dev/dashboard-desktop/monitoring"));
 app.get("/dev/dashboard/admins", (req, res) => res.redirect("/dev/dashboard-desktop/admins"));
 
 app.get("/dev/dashboard/maintenance", (req, res) => res.redirect("/dev/dashboard-desktop/maintenance"));
@@ -875,43 +1140,6 @@ app.get(
 );
 
 app.get(
-  "/dev/dashboard-desktop/analytics",
-  ensureDevAuth,
-  asyncHandler(async (req, res) => {
-    const timeRange = req.query.range || "7d";
-    const [metrics, pvStats] = await Promise.all([
-      db.getMetrics(),
-      db.getPageViewStats(timeRange),
-    ]);
-    const avgLatencyMs = metrics && metrics.totalRequests
-      ? Math.round((metrics.totalLatencyMsSum || 0) / (metrics.totalRequests || 1))
-      : 0;
-
-    return res.render("dashboard-desktop/overview/overview", {
-      avgLatencyMs,
-      pvStats,
-      timeRange,
-    });
-  }),
-);
-
-app.get(
-  "/dev/dashboard-desktop/monitoring",
-  ensureDevAuth,
-  asyncHandler(async (req, res) => {
-    const metrics = await db.getMetrics();
-    const avgLatencyMs = metrics && metrics.totalRequests
-      ? Math.round((metrics.totalLatencyMsSum || 0) / (metrics.totalRequests || 1))
-      : 0;
-
-    return res.render("dashboard-desktop/monitor/monitor", {
-      metrics,
-      avgLatencyMs,
-    });
-  }),
-);
-
-app.get(
   "/dev/dashboard-desktop/admins",
   ensureDevAuth,
   asyncHandler(async (req, res) => {
@@ -927,20 +1155,7 @@ app.get(
   }),
 );
 
-// Redirect aliases for dashboard monitoring
-app.get("/admin/dashboard-monitoring", ensureDevAuth, (req, res) => {
-  return res.redirect("/dev/dashboard-desktop");
-});
-
 app.get("/admin/dashboard", ensureDevAuth, (req, res) => {
-  return res.redirect("/dev/dashboard-desktop");
-});
-
-app.get("/dashboard-monitoring", ensureDevAuth, (req, res) => {
-  return res.redirect("/dev/dashboard-desktop");
-});
-
-app.get("/admin/events/dashboard-monitoring", ensureDevAuth, (req, res) => {
   return res.redirect("/dev/dashboard-desktop");
 });
 
@@ -1227,7 +1442,7 @@ app.get(
 );
 
 // ============== DEV DASHBOARD: MOBILE V2 ==============
-// Halaman mobile dengan 5 tab: Home, Overview, System, Monitoring, Account
+// Halaman mobile dengan 5 tab: Home, Activity, System, Security, Account
 // Route ini STANDALONE — punya login sendiri, tidak perlu redirect ke /dev/login.
 app.get(
   "/dev/dashboard-mobile",

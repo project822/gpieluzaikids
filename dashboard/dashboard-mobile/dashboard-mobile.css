@@ -827,7 +827,7 @@ html, body {
 .sec-fw-val {
   font-size: 10.5px;
   color: var(--muted);
-  font-family: 'Courier New', monospace;
+  font-family: 'Inter', sans-serif;
   margin-top: 1px;
 }
 .sec-fw-pill {
@@ -853,7 +853,7 @@ html, body {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   font-size: 12px;
-  font-family: 'Courier New', monospace;
+  font-family: 'Inter', sans-serif;
   color: var(--text);
   font-weight: 600;
   outline: none;
@@ -892,7 +892,7 @@ html, body {
 }
 .sec-ip-row:last-child { border-bottom: none; }
 .sec-ip-val {
-  font-family: 'Courier New', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 11px;
   font-weight: 700;
   color: var(--red);
@@ -938,13 +938,13 @@ html, body {
 }
 .sec-table tr:last-child td { border-bottom: none; }
 .sec-ip-cell {
-  font-family: 'Courier New', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 10.5px;
   font-weight: 700;
   color: var(--text);
 }
 .sec-path-cell {
-  font-family: 'Courier New', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 10px;
   max-width: 100px;
   overflow: hidden;

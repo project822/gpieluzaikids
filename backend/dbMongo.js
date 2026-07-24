@@ -46,6 +46,9 @@ async function connect() {
         await database.collection("events").createIndex({ id: 1 }, { unique: true });
         await database.collection("admins").createIndex({ username: 1 }, { unique: true });
         await database.collection("pageviews").createIndex({ timestamp: -1 });
+        await database.collection("songs").createIndex({ id: 1 }, { unique: true });
+        await database.collection("songs").createIndex({ title: "text", lyrics: "text" });
+        await database.collection("playlists").createIndex({ id: 1 }, { unique: true });
       } catch (e) {
         // Index mungkin sudah ada, ignore error
         console.warn("[MongoDB] createIndex warning:", e.message);
@@ -173,21 +176,6 @@ async function getMetrics() {
 }
 
 // ───────────── Admin Status ─────────────
-// FIX: sebelumnya status "online" murni event-based (cuma di-set true saat
-// login, false saat klik Logout). Kalau admin nutup tab / session expire /
-// server restart TANPA klik Logout, status "online: true" itu nyangkut di
-// DB SELAMANYA -> dashboard nampilin admin "online" padahal sudah lama tidak
-// aktif, dan "Last Online" juga cuma nunjuk waktu login (bukan aktivitas
-// terakhir yang sebenarnya).
-//
-// Sekarang dipakai pola heartbeat: setiap request yang admin itu buat (lihat
-// touchAdminActivity, dipanggil dari middleware ensureAuth di server.js)
-// meng-update `lastSeen`. Status "online" DIHITUNG saat dibaca (bukan
-// disimpan sebagai flag statis): admin dianggap online HANYA kalau sesinya
-// masih aktif (belum logout) DAN ada aktivitas dalam beberapa menit terakhir.
-// Ini sama seperti cara "Online Users" pengunjung situs dihitung di
-// getPageViewStats (window 5 menit) -> otomatis "sembuh" sendiri tanpa perlu
-// event logout yang eksplisit.
 const ADMIN_ONLINE_THRESHOLD_MS = 3 * 60 * 1000; // 3 menit tanpa aktivitas = dianggap offline
 
 async function setAdminOnline(username) {
@@ -206,9 +194,6 @@ async function setAdminOnline(username) {
   );
 }
 
-// Dipanggil di setiap request admin yang sudah login (lihat ensureAuth di
-// server.js), fire-and-forget - supaya "Last Online" mencerminkan aktivitas
-// nyata, bukan cuma waktu login.
 async function touchAdminActivity(username) {
   const d = await connect();
   await d.collection("adminStatus").updateOne(
@@ -266,12 +251,6 @@ async function getPageViewStats(timeRange = "7d") {
 
   const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
 
-  // FIX: sebelumnya 6 query Mongo dijalankan berurutan (await satu-satu),
-  // padahal semuanya independen satu sama lain -> total waktu tunggu = jumlah
-  // semua query. Dijalankan paralel via Promise.all, total waktu tunggu jadi
-  // cuma sebesar query PALING LAMBAT (bisa motong latency dashboard drastis).
-  // Query "topPaths" juga dihapus karena section "Top Pages" sudah tidak
-  // dipakai di dashboard.
   const [
     visitorsResult,
     totalCount,
@@ -336,7 +315,6 @@ async function getPageViewStats(timeRange = "7d") {
     : 0;
   const activeOnline = onlineResult[0]?.count || 0;
 
-  // Chart Data
   const chartData = {};
   if (timeRange === "24h") {
     for (let i = 23; i >= 0; i--) {
@@ -379,9 +357,6 @@ async function setMaintenanceMode({ enabled, message }) {
     enabled: Boolean(enabled),
     updatedAt: new Date().toISOString(),
   };
-  // Hanya update message jika dikirim eksplisit (tidak undefined).
-  // Ini penting karena toggle dari overview page tidak mengirim message,
-  // dan kita tidak ingin menimpa custom message yang sudah diset.
   if (message !== undefined) {
     updateFields.message = message || "Website sedang dalam perbaikan. Silakan kembali lagi nanti.";
   }
@@ -407,7 +382,6 @@ async function logSecurityEvent({ type, ip, path, userAgent, detail }) {
     timestamp: new Date(),
   });
 
-  // Keep collection size bounded
   const count = await d.collection("securityLogs").countDocuments();
   if (count > MAX_SECURITY_LOGS) {
     const oldest = await d.collection("securityLogs")
@@ -490,16 +464,9 @@ async function unblockIp(ip) {
 }
 
 // ───────────── Force Admin Logout ─────────────
-// Menghapus session admin tertentu dari collection sessions (connect-mongo)
-// serta mematikan sessionActive di adminStatus. Ini effect-nya mirip dengan
-// "kick" pengguna — sesi yang sekarang akan jadi invalid, sehingga request
-// berikutnya dari admin tsb akan ditolak oleh ensureAuth, redirect ke login.
 
 async function forceLogoutAdmin(username) {
   const d = await connect();
-  // Hapus session dari collection sessions (connect-mongo)
-  // Session doc disimpan dengan key: session:<sid>
-  // Kita perlu cari session yang session JSON-nya mengandung username ini
   const sessionsCol = d.collection("sessions");
   const allSessions = await sessionsCol.find({}).toArray();
   let deleted = 0;
@@ -510,7 +477,6 @@ async function forceLogoutAdmin(username) {
         await sessionsCol.deleteOne({ _id: s._id });
         deleted++;
       }
-      // Also check devUser
       if (data && data.devUser && data.devUser.username === username) {
         await sessionsCol.deleteOne({ _id: s._id });
         deleted++;
@@ -519,7 +485,6 @@ async function forceLogoutAdmin(username) {
       // skip sessions that can't be parsed
     }
   }
-  // Mark admin as offline
   await d.collection("adminStatus").updateOne(
     { username },
     { $set: { sessionActive: false, updatedAt: new Date().toISOString() } },
@@ -529,7 +494,6 @@ async function forceLogoutAdmin(username) {
 
 async function forceLogoutAllAdmins() {
   const d = await connect();
-  // Hapus semua session yang memiliki user (admin) dataset
   const sessionsCol = d.collection("sessions");
   const allSessions = await sessionsCol.find({}).toArray();
   let deleted = 0;
@@ -542,7 +506,6 @@ async function forceLogoutAllAdmins() {
       }
     } catch (_) {}
   }
-  // Mark all admins offline
   await d.collection("adminStatus").updateMany(
     {},
     { $set: { sessionActive: false, updatedAt: new Date().toISOString() } },
@@ -579,19 +542,13 @@ const MAX_ACTIVITY_LOGS = 1000;
 async function logActivity({ action, detail, username, ip }) {
   const d = await connect();
   await d.collection("activityLogs").insertOne({
-    action,      // 'admin.create' | 'admin.delete' | 'admin.reset_password' | 'admin.force_logout' | 'admin.force_logout_all'
-                  // | 'event.create' | 'event.edit' | 'event.delete'
-                  // | 'doc.add'
-                  // | 'maintenance.toggle' | 'maintenance.message'
-                  // | 'security.block_ip' | 'security.unblock_ip'
-                  // | 'backup.create'
+    action,
     detail: detail || "",
     username: username || "system",
     ip: ip || "",
     timestamp: new Date(),
   });
 
-  // Keep collection size bounded
   const count = await d.collection("activityLogs").countDocuments();
   if (count > MAX_ACTIVITY_LOGS) {
     const oldest = await d.collection("activityLogs")
@@ -618,17 +575,19 @@ async function getActivityLogs({ limit = 50, action } = {}) {
 
 async function getContentStats() {
   const d = await connect();
-  const [events, admins, docs, backups] = await Promise.all([
+  const [events, admins, docs, backups, songs] = await Promise.all([
     d.collection("events").countDocuments(),
     d.collection("admins").countDocuments(),
     d.collection("events").countDocuments({ driveLink: { $exists: true, $ne: "" } }),
     d.collection("backups").countDocuments(),
+    d.collection("songs").countDocuments(),
   ]);
   return {
     events,
     admins,
     documentation: docs,
     backups,
+    songs,
   };
 }
 
@@ -637,7 +596,6 @@ async function getContentStats() {
 async function createBackup(triggeredBy = "system") {
   const d = await connect();
   
-  // Export all collections
   const [events, admins, metrics, adminStatus, settings, securityLogs, activityLogs, pageviews] = await Promise.all([
     d.collection("events").find({}).toArray(),
     d.collection("admins").find({}).toArray(),
@@ -662,7 +620,6 @@ async function createBackup(triggeredBy = "system") {
       activityLogs: activityLogs.length,
       pageviews: pageviews.length,
     },
-    // Store data as JSON strings (avoid BSON size limits for large docs)
     data: JSON.stringify({
       events,
       admins,
@@ -677,7 +634,6 @@ async function createBackup(triggeredBy = "system") {
 
   await d.collection("backups").insertOne(backupDoc);
 
-  // Keep max 20 backups, delete oldest
   const count = await d.collection("backups").countDocuments();
   if (count > 20) {
     const oldest = await d.collection("backups")
@@ -689,7 +645,6 @@ async function createBackup(triggeredBy = "system") {
     await d.collection("backups").deleteMany({ _id: { $in: ids } });
   }
 
-  // Log activity
   await logActivity({
     action: "backup.create",
     detail: `Backup created: ${events.length} events, ${admins.length} admins`,
@@ -706,7 +661,7 @@ async function createBackup(triggeredBy = "system") {
 async function getBackups({ limit = 10 } = {}) {
   const d = await connect();
   return d.collection("backups")
-    .find({}, { projection: { data: 0 } }) // exclude large data field
+    .find({}, { projection: { data: 0 } })
     .sort({ createdAt: -1 })
     .limit(limit)
     .toArray();
@@ -721,6 +676,150 @@ async function getLatestBackup() {
   const d = await connect();
   return d.collection("backups")
     .findOne({}, { sort: { createdAt: -1 }, projection: { data: 0 } });
+}
+
+// ════════════════════════════════════════════════
+// ───────────── SONGS & PLAYLISTS ─────────────
+// ════════════════════════════════════════════════
+
+async function getSongs() {
+  const d = await connect();
+  return d.collection("songs").find({}, { projection: { mp3Data: 0 } }).sort({ title: 1 }).toArray();
+}
+
+async function getSong(id) {
+  const d = await connect();
+  return d.collection("songs").findOne({ id });
+}
+
+async function getSongMp3(id) {
+  const d = await connect();
+  return d.collection("songs").findOne({ id }, { projection: { mp3Data: 1, title: 1 } });
+}
+
+async function addSong(song) {
+  const d = await connect();
+  song.createdAt = new Date().toISOString();
+  await d.collection("songs").insertOne(song);
+  return song;
+}
+
+async function updateSong(id, patch) {
+  const d = await connect();
+  patch.updatedAt = new Date().toISOString();
+  await d.collection("songs").updateOne({ id }, { $set: patch });
+}
+
+async function deleteSong(id) {
+  const d = await connect();
+  await d.collection("songs").deleteOne({ id });
+  // Also remove from all playlists
+  await d.collection("playlists").updateMany(
+    {},
+    { $pull: { songIds: id } }
+  );
+}
+
+async function searchSongs(query) {
+  const d = await connect();
+  if (!query || query.trim().length === 0) {
+    return d.collection("songs").find({}, { projection: { mp3Data: 0 } }).sort({ title: 1 }).toArray();
+  }
+  
+  // Text search with priority on title
+  const regex = new RegExp(query.trim(), "i");
+  const results = await d.collection("songs").find(
+    { $or: [{ title: regex }, { lyrics: regex }] },
+    { projection: { mp3Data: 0 } }
+  ).toArray();
+  
+  // Sort: title matches first
+  results.sort((a, b) => {
+    const aTitle = regex.test(a.title) ? 0 : 1;
+    const bTitle = regex.test(b.title) ? 0 : 1;
+    return aTitle - bTitle;
+  });
+  
+  return results;
+}
+
+async function toggleFavorite(id) {
+  const d = await connect();
+  const song = await d.collection("songs").findOne({ id }, { projection: { favorite: 1 } });
+  const newFav = !(song && song.favorite);
+  await d.collection("songs").updateOne({ id }, { $set: { favorite: newFav, updatedAt: new Date().toISOString() } });
+  return newFav;
+}
+
+async function getFavorites() {
+  const d = await connect();
+  return d.collection("songs").find({ favorite: true }, { projection: { mp3Data: 0 } }).sort({ title: 1 }).toArray();
+}
+
+// ───────────── Playlists ─────────────
+
+async function getPlaylists() {
+  const d = await connect();
+  const playlists = await d.collection("playlists").find().sort({ createdAt: -1 }).toArray();
+  // Enrich with song count
+  for (const pl of playlists) {
+    pl.songCount = (pl.songIds || []).length;
+  }
+  return playlists;
+}
+
+async function getPlaylist(id) {
+  const d = await connect();
+  const pl = await d.collection("playlists").findOne({ id });
+  if (pl) {
+    pl.songCount = (pl.songIds || []).length;
+  }
+  return pl;
+}
+
+async function createPlaylist(name) {
+  const d = await connect();
+  const id = require("crypto").randomUUID();
+  const playlist = {
+    id,
+    name: name.trim(),
+    songIds: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  await d.collection("playlists").insertOne(playlist);
+  return playlist;
+}
+
+async function addSongToPlaylist(playlistId, songId) {
+  const d = await connect();
+  await d.collection("playlists").updateOne(
+    { id: playlistId },
+    { $addToSet: { songIds: songId }, $set: { updatedAt: new Date().toISOString() } }
+  );
+}
+
+async function removeSongFromPlaylist(playlistId, songId) {
+  const d = await connect();
+  await d.collection("playlists").updateOne(
+    { id: playlistId },
+    { $pull: { songIds: songId }, $set: { updatedAt: new Date().toISOString() } }
+  );
+}
+
+async function deletePlaylist(id) {
+  const d = await connect();
+  await d.collection("playlists").deleteOne({ id });
+}
+
+async function getPlaylistSongs(playlistId) {
+  const d = await connect();
+  const pl = await d.collection("playlists").findOne({ id: playlistId });
+  if (!pl || !pl.songIds || pl.songIds.length === 0) return [];
+  return d.collection("songs").find(
+    { id: { $in: pl.songIds } },
+    { projection: { mp3Data: 0 } }
+  ).sort({ title: 1 }).toArray();
 }
 
 module.exports = {
@@ -763,4 +862,21 @@ module.exports = {
   getBackups,
   getBackup,
   getLatestBackup,
+  // Songs & Playlists
+  getSongs,
+  getSong,
+  getSongMp3,
+  addSong,
+  updateSong,
+  deleteSong,
+  searchSongs,
+  toggleFavorite,
+  getFavorites,
+  getPlaylists,
+  getPlaylist,
+  createPlaylist,
+  addSongToPlaylist,
+  removeSongFromPlaylist,
+  deletePlaylist,
+  getPlaylistSongs,
 };

@@ -117,20 +117,6 @@ async function mobRefresh() {
       setBannerVal('mt', mtSt.enabled?'ACTIVE':'Inactive');
     }catch(e){ setBannerDot('mt','warn'); setBannerVal('mt','Error'); }
 
-    // Server metrics (monitoring tab)
-    _('mon-uptime').textContent=fmtU(h.uptimeSeconds||0);
-    _('mon-mem').textContent=(h.memHeapUsedMB||0)+' MB';
-    _('mon-node').textContent=h.nodeVersion||'---';
-    _('mon-plat').textContent=h.platform||'---';
-    _('mon-dbping').textContent=(h.dbPingMs||0)+'ms';
-    _('mon-req').textContent=h.totalRequests||0;
-
-    // — OVERVIEW: stats (reuse data from Home) —
-    _('ov-visitors').textContent=pv.visitors||0;
-    _('ov-pageviews').textContent=pv.pageviews||0;
-    _('ov-latency').innerHTML=(s.metrics?(s.metrics.avgLatencyMs||0):0)+'<span class="unit">ms</span>';
-    _('ov-online').textContent=pv.online||0;
-
     // — ACTIVITY TAB —
     try {
       var acRes=await(await fetch('/api/dev/activity-logs?limit=30')).json();
@@ -212,101 +198,7 @@ async function mobRefresh() {
     // — SECURITY TAB — load stats (fire-and-forget, don't block refresh)
     mobLoadSecurity(false).catch(function(e){console.warn('[security]',e);});
 
-    // — PAGE SPEED INSIGHTS (Monitoring tab) — cache 24 jam di localStorage
-    var psiKey=await(await fetch('/api/dev/pagespeed/config')).json();
-    if(psiKey.configured){
-      (function(){
-        var CACHE_KEY = '_psi_cache';
-        var cacheItem = localStorage.getItem(CACHE_KEY);
-        var cache = cacheItem ? JSON.parse(cacheItem) : null;
-        var now = Date.now();
-        var TWENTY_FOUR_HOURS = 86400000;
-        if (cache && cache.data && (now - cache.ts < TWENTY_FOUR_HOURS)) {
-          _('psi-loading').style.display='none';
-          _('psi-empty').style.display='none';
-          _('psi-content').style.display='block';
-          displayPSI(cache.data);
-          _('psi-refresh').textContent='Terakhir diperbarui: '+new Date(cache.ts).toLocaleString('id-ID')+' (auto-refresh 24 jam)';
-          return;
-        }
-        _('psi-loading').style.display='block';
-        _('psi-empty').style.display='none';
-        _('psi-content').style.display='none';
-        try{
-          fetch('/api/dev/pagespeed?url=https://gpieluzaikids.vercel.app&strategy=mobile').then(function(r){return r.json()}).then(function(psi){
-            _('psi-loading').style.display='none';
-            if(psi.error||psi.lighthouseError){
-              _('psi-empty').style.display='block';
-              _('psi-empty').textContent='⚠ '+(psi.error||psi.lighthouseError);
-            }else{
-              localStorage.setItem(CACHE_KEY, JSON.stringify({ts:Date.now(), data:psi}));
-              _('psi-content').style.display='block';
-              displayPSI(psi);
-              _('psi-refresh').textContent='Auto-refresh setiap 24 jam';
-            }
-          }).catch(function(e){
-            _('psi-loading').style.display='none';
-            _('psi-empty').style.display='block';
-            _('psi-empty').textContent='⚠ Gagal memuat PageSpeed data';
-            console.warn('[PSI]',e);
-          });
-        }catch(e){
-          _('psi-loading').style.display='none';
-          _('psi-empty').style.display='block';
-          _('psi-empty').textContent='⚠ Gagal memuat PageSpeed data';
-        }
-      })();
-    }else{
-      _('psi-loading').style.display='none';
-      _('psi-empty').style.display='block';
-    }
-
   }catch(e){console.warn('[mobile-v2]',e);}
-}
-
-/* ════════ GOOGLE PAGE SPEED INSIGHTS ════════ */
-function displayPSI(data) {
-  var ld = data.lighthouseResult || data;
-  var cat = ld.categories || {};
-  var perf = cat.performance || {};
-  var score = perf.score != null ? Math.round(perf.score * 100) : null;
-  var audits = ld.audits || {};
-
-  var circle = _('psi-circle');
-  if(score !== null){
-    _('psi-score').textContent = score;
-    var cls = score >= 90 ? 'good' : score >= 50 ? 'needs-improvement' : 'poor';
-    circle.className = 'psi-score-circle ' + cls;
-    circle.style.setProperty('--pct', score + '%');
-  }
-
-  function fmtMetric(id, unit, div) {
-    var a = audits[id];
-    if(!a || a.score === null || a.score === undefined) { _(div).textContent = '---'; return; }
-    var val = a.numericValue;
-    if(val === undefined || val === null) { _(div).textContent = a.displayValue || '---'; return; }
-    if(unit === 's') _(div).textContent = (val/1000).toFixed(1) + 's';
-    else if(unit === 'ms') _(div).textContent = Math.round(val) + 'ms';
-    else if(unit === 'score') {
-      var sc = Math.round(val);
-      _(div).textContent = sc;
-      _(div).className = 'psi-metric-item-value ' + (sc >= 90 ? 'good' : sc >= 50 ? 'needs-improvement' : 'poor');
-      return;
-    }
-    else _(div).textContent = val.toFixed(2);
-
-    var s = a.score;
-    if(s >= 0.9) _(div).className = 'psi-metric-item-value good';
-    else if(s >= 0.5) _(div).className = 'psi-metric-item-value needs-improvement';
-    else _(div).className = 'psi-metric-item-value poor';
-  }
-
-  fmtMetric('first-contentful-paint', 'ms', 'psi-fcp');
-  fmtMetric('speed-index', 'ms', 'psi-si');
-  fmtMetric('largest-contentful-paint', 'ms', 'psi-lcp');
-  fmtMetric('interactive', 'ms', 'psi-tti');
-  fmtMetric('total-blocking-time', 'ms', 'psi-tbt');
-  fmtMetric('cumulative-layout-shift', 'score', 'psi-cls');
 }
 
 /* ════════ MAINTENANCE — TOGGLE ════════ */

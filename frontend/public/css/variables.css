@@ -4,7 +4,7 @@
   /* ── Typography ── */
   --font-display: 'Hanken Grotesk', system-ui, sans-serif;
   --font-body: 'Inter', system-ui, sans-serif;
-  --font-label: 'Geist', monospace, sans-serif;
+  --font-label: var(--font-body);
   --font-sans: var(--font-body);
 
   /* ── Brand Colors (Deep Ocean palette) ── */

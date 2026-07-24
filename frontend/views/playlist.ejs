@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Playlist — GPI Eluzai Kids</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@600;700;800&family=Inter:wght@400;500;600;700&display=optional" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@600;700;800&family=Inter:wght@400;500;600;700&display=optional"></noscript>
+  <link rel="stylesheet" href="/css/playlist.css">
+</head>
+<body class="pl-body">
+
+  <div class="pl-wrap">
+
+    <!-- ═══ HEADER ═══ -->
+    <div class="pl-header">
+      <h1>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+        </svg>
+        Playlist
+      </h1>
+      <div class="pl-search">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <input type="text" id="pl-search-input" placeholder="Cari judul atau lirik..." autocomplete="off">
+        <div class="pl-search-results" id="pl-search-results"></div>
+      </div>
+    </div>
+
+    <!-- ═══ TABS ═══ -->
+    <div class="pl-tabs">
+      <button class="pl-tab active" data-tab="library">📚 Library</button>
+      <button class="pl-tab" data-tab="favorites">⭐ Favorit</button>
+      <button class="pl-tab" data-tab="playlists">📋 Playlist</button>
+    </div>
+
+    <!-- ═══ LYRICS PANEL (shown when a song is playing) ═══ -->
+    <div class="pl-lyrics-panel" id="pl-lyrics-panel" style="display:none;">
+      <h3 id="pl-lyrics-title">📝 Lirik</h3>
+      <div class="pl-lyrics-text" id="pl-lyrics-text"></div>
+    </div>
+
+    <!-- ═══ TAB: LIBRARY ═══ -->
+    <div class="pl-tab-content" id="pl-tab-library" style="display:block;">
+      <% if (!songs || songs.length === 0) { %>
+        <div class="pl-empty">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/></svg>
+          <p>Belum ada lagu. Admin belum menambahkan lagu.</p>
+        </div>
+      <% } else { %>
+        <div class="pl-section-title">Semua Lagu <span class="badge"><%= songs.length %></span></div>
+        <div class="pl-song-list">
+          <% songs.forEach((song, i) => { %>
+            <div class="pl-song-row" data-song-id="<%= song.id %>" onclick="playSong('<%= song.id %>')">
+              <div class="pl-song-row-num"><%= i + 1 %></div>
+              <div class="pl-song-row-info">
+                <div class="pl-song-row-title"><%= song.title %></div>
+                <div class="pl-song-row-sub"><%= (song.lyrics || '').substring(0, 40) %></div>
+              </div>
+              <div class="pl-song-row-actions">
+                <button class="pl-song-row-btn fav <%= song.favorite ? 'active' : '' %>" data-song-id="<%= song.id %>" onclick="event.stopPropagation();toggleFav('<%= song.id %>', this)" title="Favorite">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="<%= song.favorite ? 'currentColor' : 'none' %>" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                  </svg>
+                </button>
+                <button class="pl-song-row-btn" onclick="event.stopPropagation();addToPlaylist('<%= song.id %>')" title="Tambah ke Playlist">➕</button>
+                <a href="/api/playlist/songs/<%= song.id %>/download" class="pl-song-row-btn download" style="text-decoration:none;display:inline-flex;" title="Download" onclick="event.stopPropagation()">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                  </svg>
+                </a>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- ═══ TAB: FAVORITES ═══ -->
+    <div class="pl-tab-content" id="pl-tab-favorites" style="display:none;">
+      <% var favSongs = (songs || []).filter(s => s.favorite); %>
+      <% if (favSongs.length === 0) { %>
+        <div class="pl-empty">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+          <p>Belum ada lagu favorit. Klik icon hati ♥ untuk menambahkan.</p>
+        </div>
+      <% } else { %>
+        <div class="pl-section-title">Lagu Favorit <span class="badge"><%= favSongs.length %></span></div>
+        <div class="pl-song-list">
+          <% favSongs.forEach((song, i) => { %>
+            <div class="pl-song-row" data-song-id="<%= song.id %>" onclick="playSong('<%= song.id %>')">
+              <div class="pl-song-row-num"><%= i + 1 %></div>
+              <div class="pl-song-row-info">
+                <div class="pl-song-row-title"><%= song.title %></div>
+                <div class="pl-song-row-sub"><%= (song.lyrics || '').substring(0, 40) %></div>
+              </div>
+              <div class="pl-song-row-actions">
+                <button class="pl-song-row-btn fav active" data-song-id="<%= song.id %>" onclick="event.stopPropagation();toggleFav('<%= song.id %>', this)" title="Favorite">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                  </svg>
+                </button>
+                <a href="/api/playlist/songs/<%= song.id %>/download" class="pl-song-row-btn download" style="text-decoration:none;display:inline-flex;" title="Download" onclick="event.stopPropagation()">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                  </svg>
+                </a>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- ═══ TAB: PLAYLISTS ═══ -->
+    <div class="pl-tab-content" id="pl-tab-playlists" style="display:none;">
+      <div class="pl-create-pl">
+        <input type="text" id="pl-new-pl-name" placeholder="Nama playlist baru..." onkeydown="if(event.key==='Enter')createPlaylist()">
+        <button onclick="createPlaylist()">Buat</button>
+      </div>
+      <div class="pl-playlist-grid" id="pl-playlist-grid">
+        <!-- Loaded by JS -->
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══ MUSIC PLAYER ═══ -->
+  <div class="pl-player hidden" id="pl-player">
+    <div class="pl-player-info">
+      <div class="pl-player-cover">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/>
+        </svg>
+      </div>
+      <div class="pl-player-text">
+        <div class="pl-player-title" id="pl-player-title">Pilih lagu</div>
+        <div class="pl-player-sub">GPI Eluzai Kids</div>
+      </div>
+    </div>
+
+    <div class="pl-player-controls">
+      <button class="pl-ctrl-btn" id="pl-prev-btn" title="Sebelumnya">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.333 4zM4.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0011 16V8a1 1 0 00-1.6-.8l-5.334 4z"/></svg>
+      </button>
+      <button class="pl-ctrl-btn play" id="pl-play-btn" title="Play/Pause">
+        <span id="pl-play-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </span>
+      </button>
+      <button class="pl-ctrl-btn" id="pl-next-btn" title="Selanjutnya">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.933 12.8a1 1 0 000-1.6L6.6 7.2A1 1 0 005 8v8a1 1 0 001.6.8l5.333-4zM19.933 12.8a1 1 0 000-1.6l-5.333-4A1 1 0 0013 8v8a1 1 0 001.6.8l5.333-4z"/></svg>
+      </button>
+    </div>
+
+    <div class="pl-player-progress">
+      <span class="pl-progress-time" id="pl-progress-current">0:00</span>
+      <div class="pl-progress-bar" id="pl-progress-bar">
+        <div class="pl-progress-fill" id="pl-progress-fill"></div>
+        <div class="pl-progress-thumb"></div>
+      </div>
+      <span class="pl-progress-time" id="pl-progress-total">0:00</span>
+    </div>
+
+    <div class="pl-player-extra">
+      <button class="pl-xtra-btn fav" id="pl-player-fav" title="Favorite">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="18" height="18">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+        </svg>
+      </button>
+      <button class="pl-xtra-btn download" id="pl-player-dl" title="Download">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="18" height="18">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+        </svg>
+      </button>
+      <div class="pl-player-volume">
+        <button class="pl-ctrl-btn pl-vol-btn" id="pl-vol-btn" title="Volume">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+        </button>
+        <div class="pl-vol-bar" id="pl-vol-bar">
+          <div class="pl-vol-fill" id="pl-vol-fill" style="width:70%;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ PLAYLIST PICKER MODAL ═══ -->
+  <div class="pl-modal-overlay" id="pl-playlist-modal">
+    <div class="pl-modal">
+      <button class="pl-modal-close" onclick="document.getElementById('pl-playlist-modal').classList.remove('show')">&times;</button>
+      <h3>Pilih Playlist</h3>
+      <div id="pl-playlist-list"></div>
+    </div>
+  </div>
+
+  <!-- ═══ TOAST ═══ -->
+  <div class="pl-toast" id="pl-toast"></div>
+
+  <script>
+    // Pass songs data from EJS to JS
+    window.__playlistSongs = <%- JSON.stringify(songs || []) %>;
+  </script>
+  <script src="/js/playlist.js"></script>
+  <script>
+    // Init songs from server-rendered data
+    (function() {
+      var songsData = window.__playlistSongs || [];
+      // Remove mp3Data from any songs that might have it (shouldn't happen)
+      songsData = songsData.map(function(s) {
+        var clean = {};
+        for (var k in s) {
+          if (k !== 'mp3Data' && s.hasOwnProperty(k)) clean[k] = s[k];
+        }
+        return clean;
+      });
+      // Set songs in playlist.js scope
+      if (typeof setSongs === 'function') {
+        setSongs(songsData);
+      } else {
+        // Wait for playlist.js to load
+        var check = setInterval(function() {
+          if (typeof setSongs === 'function') {
+            setSongs(songsData);
+            clearInterval(check);
+          }
+        }, 50);
+        setTimeout(function() { clearInterval(check); }, 3000);
+      }
+    })();
+  </script>
+
+</body>
+</html>

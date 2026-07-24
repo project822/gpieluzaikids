@@ -47,7 +47,7 @@
 .sec-fw-val {
   font-size: 11.5px;
   color: var(--muted);
-  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-family: 'Inter', sans-serif;
   margin-top: 1px;
 }
 
@@ -66,7 +66,7 @@
   border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 12.5px;
-  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-family: 'Inter', sans-serif;
   color: var(--text);
   font-weight: 600;
   outline: none;
@@ -107,7 +107,7 @@
 .sec-ip-row:last-child { border-bottom: none; }
 
 .sec-ip-val {
-  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 12px;
   font-weight: 700;
   color: var(--red);
@@ -156,14 +156,14 @@
 .sec-table tr:hover td { background: var(--bg); }
 
 .sec-ip-cell {
-  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 12px;
   font-weight: 700;
   color: var(--text);
 }
 
 .sec-path-cell {
-  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 11px;
   max-width: 160px;
   overflow: hidden;
