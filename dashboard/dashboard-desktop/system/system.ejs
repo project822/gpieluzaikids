@@ -145,6 +145,10 @@
   </div>
 
   <script>
+  function redirectLogin() {
+    window.location.href = '/dev/login';
+  }
+
   async function toggleMaintenance(enabled) {
     const pill = document.getElementById('mt-status-pill');
     const icon = document.getElementById('mt-hero-icon');
@@ -157,6 +161,15 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ enabled, message: msg }),
       });
+
+      // Jika 401 (session expired), redirect ke login
+      if (res.status === 401) {
+        document.getElementById('mt-toggle-input').checked = !enabled;
+        showFeedback('Sesi telah berakhir. Mengarahkan ke login...', 'error');
+        setTimeout(redirectLogin, 1500);
+        return;
+      }
+
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || 'Gagal');
 
@@ -186,6 +199,14 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ enabled, message: msg }),
       });
+
+      // Jika 401 (session expired), redirect ke login
+      if (res.status === 401) {
+        showFeedback('Sesi telah berakhir. Mengarahkan ke login...', 'error');
+        setTimeout(redirectLogin, 1500);
+        return;
+      }
+
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || 'Gagal');
       document.getElementById('mt-preview-msg').textContent = msg;

@@ -125,6 +125,11 @@ document.addEventListener('keydown', function(e) {
 (async function() {
   try {
     const res = await fetch('/api/dev/maintenance/status');
+    // Jika 401 (session expired), redirect ke login page
+    if (res.status === 401) {
+      window.location.href = '/dev/login';
+      return;
+    }
     if (!res.ok) return;
     const data = await res.json();
     const badge = document.getElementById('sidebar-mt-badge');

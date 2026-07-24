@@ -28,12 +28,24 @@ document.addEventListener('click',function(e){
   if(e.target.classList.contains('modal-overlay')){e.target.classList.remove('active');}
 });
 
+/* ════════ SESSION CHECK / REDIRECT ════════ */
+function mobRedirectLogin() {
+  window.location.href = '/dev/login';
+}
+
 /* ════════ REFRESH ════════ */
 async function mobRefresh() {
   var ri=_('ri'); if(ri)ri.classList.add('app-btn-spin');
   setTimeout(function(){if(ri)ri.classList.remove('app-btn-spin')},500);
   try {
-    var h=await(await fetch('/api/dev/health')).json();
+    var healthRes = await fetch('/api/dev/health');
+    // Jika 401 (session expired), redirect ke login
+    if (healthRes.status === 401) {
+      toast('Sesi telah berakhir. Mengarahkan ke login...');
+      setTimeout(mobRedirectLogin, 1500);
+      return;
+    }
+    var h=await healthRes.json();
 
     // — HOME: 4-item status banner —
     function setBannerDot(id, status) {
@@ -302,6 +314,7 @@ async function mobToggleMt(e){
   try{
     var msg = _('sys-mt-message').value.trim();
     var r=await fetch('/api/dev/maintenance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:e, message:msg || undefined})});
+    if(r.status===401){_('sys-mt-toggle').checked=!e;toast('Sesi habis, redirect...');setTimeout(mobRedirectLogin,1500);return;}
     var d=await r.json();if(!d.ok)throw new Error(d.error);
     toast(e?'Maintenance ON':'Maintenance OFF');
     var icon=_('sys-mt-icon');
@@ -320,6 +333,7 @@ async function mobSaveMtMsg() {
   var enabled = _('sys-mt-toggle').checked;
   try {
     var r = await fetch('/api/dev/maintenance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:enabled, message:msg})});
+    if(r.status===401){showMtFeedback('Sesi habis, redirect...','error');setTimeout(mobRedirectLogin,1500);return;}
     var d = await r.json();
     if (!d.ok) throw new Error(d.error || 'Gagal');
     showMtFeedback('✓ Pesan berhasil disimpan', 'success');
@@ -452,6 +466,7 @@ async function mobBlockIp() {
 async function mobBlockIpDirect(ip) {
   try {
     var r = await fetch('/api/dev/security/block-ip', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ip:ip})});
+    if(r.status===401){toast('Sesi habis, redirect...');setTimeout(mobRedirectLogin,1500);return;}
     var d = await r.json();
     if (!d.ok) throw new Error(d.error || 'Gagal');
     _('sec-ip-input').value = '';
@@ -475,6 +490,7 @@ async function mobBlockIpDirect(ip) {
 async function mobUnblockIp(ip) {
   try {
     var r = await fetch('/api/dev/security/unblock-ip', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ip:ip})});
+    if(r.status===401){toast('Sesi habis, redirect...');setTimeout(mobRedirectLogin,1500);return;}
     var d = await r.json();
     if (!d.ok) throw new Error(d.error || 'Gagal');
     toast('✓ IP '+ip+' dihapus');
@@ -516,6 +532,7 @@ async function mobResetPass() {
   if (!pass) { _('rp-err').textContent = 'Password tidak boleh kosong.'; _('rp-err').style.display = 'block'; return; }
   try {
     var r = await fetch('/api/dev/admins/reset-password', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username:user, newPassword:pass})});
+    if(r.status===401){_('rp-err').textContent='Sesi habis, redirect...';_('rp-err').style.display='block';setTimeout(mobRedirectLogin,1500);return;}
     var d = await r.json();
     if (!d.ok) throw new Error(d.error || 'Gagal');
     _('rp-ok').textContent = '✓ Password berhasil direset untuk '+user;
@@ -534,6 +551,7 @@ async function mobForceLogout(user) {
   if (!confirm('Logout perangkat '+user+'?')) return;
   try {
     var r = await fetch('/api/dev/admins/force-logout', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username:user})});
+    if(r.status===401){toast('Sesi habis, redirect...');setTimeout(mobRedirectLogin,1500);return;}
     var d = await r.json();
     if (!d.ok) throw new Error(d.error || 'Gagal');
     toast('✓ '+user+' telah di-logout');
@@ -545,6 +563,7 @@ async function mobLogoutAll() {
   if (!confirm('Logout semua perangkat admin?')) return;
   try {
     var r = await fetch('/api/dev/admins/force-logout-all', {method:'POST'});
+    if(r.status===401){toast('Sesi habis, redirect...');setTimeout(mobRedirectLogin,1500);return;}
     var d = await r.json();
     if (!d.ok) throw new Error(d.error || 'Gagal');
     toast('✓ Semua perangkat telah di-logout');

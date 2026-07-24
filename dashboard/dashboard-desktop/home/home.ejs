@@ -212,11 +212,40 @@
     if (val)  val.textContent = valText;
   }
 
+  function redirectLogin() {
+    window.location.href = '/dev/login';
+  }
+
+  function showSessionExpired() {
+    setOvStatus('website','error','Session Expired','—');
+    setOvStatus('db','error','Session Expired','—');
+    document.getElementById('ov-s-db').textContent = '✗ Session expired';
+    document.getElementById('ov-s-db').style.color = 'var(--red)';
+    document.getElementById('ov-s-uptime').textContent = '—';
+    document.getElementById('ov-s-mem').textContent = '—';
+    document.getElementById('ov-s-requests').textContent = '—';
+    document.getElementById('ov-s-latency').textContent = '—';
+  }
+
   async function ovLoadHealth() {
     try {
       const t0 = performance.now();
       const res = await fetch('/api/dev/health');
       const ping = Math.round(performance.now() - t0);
+
+      // Jika 401 (session expired), redirect ke login
+      if (res.status === 401) {
+        showSessionExpired();
+        setTimeout(redirectLogin, 2000);
+        return;
+      }
+
+      if (!res.ok) {
+        setOvStatus('website','error','Error','Check failed');
+        setOvStatus('db','error','Unknown','Check failed');
+        return;
+      }
+
       const d = await res.json();
       setOvStatus('website', d.website === 'ok' ? 'ok' : 'error',
         d.website === 'ok' ? 'Online' : 'Error',
@@ -244,6 +273,15 @@
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ enabled }),
       });
+
+      // Jika 401 (session expired), redirect ke login
+      if (res.status === 401) {
+        document.getElementById('ov-mt-toggle').checked = !enabled;
+        alert('Sesi telah berakhir. Anda akan diarahkan ke halaman login.');
+        window.location.href = '/dev/login';
+        return;
+      }
+
       const d = await res.json();
       if (!d.ok) throw new Error(d.error);
       if (dot) dot.className = 'ov-status-dot ' + (enabled ? 'warn' : 'ok');
@@ -252,7 +290,10 @@
       if (badge) badge.style.display = enabled ? 'inline-flex' : 'none';
     } catch(e) {
       document.getElementById('ov-mt-toggle').checked = !enabled;
-      alert('Gagal toggle maintenance: ' + e.message);
+      // Jangan tampilkan alert untuk error yang sudah di-handle (401)
+      if (!e.message.includes('Sesi telah berakhir')) {
+        alert('Gagal toggle maintenance: ' + e.message);
+      }
     }
   }
 
