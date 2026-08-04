@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" width="1200" height="900">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#134e4a"/>
+      <stop offset="50%" stop-color="#0f766e"/>
+      <stop offset="100%" stop-color="#0369a1"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="70%" cy="20%" r="60%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="900" fill="url(#bg)"/>
+  <rect width="1200" height="900" fill="url(#glow)"/>
+  <!-- Bookshelf / classroom -->
+  <g>
+    <rect x="100" y="180" width="1000" height="220" rx="16" fill="#1e1b4b" opacity="0.6"/>
+    <rect x="100" y="180" width="1000" height="16" fill="#0f172a" opacity="0.7"/>
+    <g font-size="70">
+      <text x="160" y="330" fill="#f87171">📖</text>
+      <text x="290" y="330" fill="#fbbf24">✏️</text>
+      <text x="430" y="330" fill="#4ade80">🎨</text>
+      <text x="560" y="330" fill="#60a5fa">📚</text>
+      <text x="700" y="330" fill="#f472b6">🧩</text>
+      <text x="840" y="330" fill="#a78bfa">🎵</text>
+    </g>
+  </g>
+  <!-- Round table -->
+  <ellipse cx="600" cy="640" rx="330" ry="90" fill="#92400e" opacity="0.9"/>
+  <ellipse cx="600" cy="630" rx="330" ry="90" fill="#b45309"/>
+  <!-- Kids around table -->
+  <g>
+    <circle cx="360" cy="560" r="36" fill="#fde68a"/><rect x="328" y="596" width="64" height="80" rx="22" fill="#f472b6"/>
+    <circle cx="520" cy="520" r="36" fill="#fbcfe8"/><rect x="488" y="556" width="64" height="80" rx="22" fill="#a5f3fc"/>
+    <circle cx="700" cy="520" r="36" fill="#bbf7d0"/><rect x="668" y="556" width="64" height="80" rx="22" fill="#fbbf24"/>
+    <circle cx="850" cy="560" r="36" fill="#e9d5ff"/><rect x="818" y="596" width="64" height="80" rx="22" fill="#6ee7b7"/>
+  </g>
+  <!-- Crayons on table -->
+  <g>
+    <rect x="530" y="600" width="24" height="70" rx="6" fill="#ef4444" transform="rotate(12 542 635)"/>
+    <rect x="590" y="600" width="24" height="70" rx="6" fill="#3b82f6" transform="rotate(-8 602 635)"/>
+    <rect x="640" y="600" width="24" height="70" rx="6" fill="#22c55e" transform="rotate(5 652 635)"/>
+  </g>
+  <text x="600" y="420" text-anchor="middle" font-family="Arial, sans-serif" font-size="64" font-weight="bold" fill="#ffffff">Kelas Kelompok</text>
+  <text x="600" y="478" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" fill="#e0e7ff">Gantilah dengan foto asli suasana gereja</text>
+</svg>

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" width="1200" height="900">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7c2d12"/>
+      <stop offset="50%" stop-color="#d97706"/>
+      <stop offset="100%" stop-color="#dc2626"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="15%" r="55%">
+      <stop offset="0%" stop-color="#fef3c7" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#fef3c7" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="900" fill="url(#bg)"/>
+  <rect width="1200" height="900" fill="url(#glow)"/>
+  <!-- Confetti -->
+  <g>
+    <circle cx="200" cy="180" r="12" fill="#fde68a"/><circle cx="360" cy="120" r="10" fill="#fbcfe8"/>
+    <circle cx="880" cy="140" r="12" fill="#bbf7d0"/><circle cx="1020" cy="230" r="10" fill="#c4b5fd"/>
+    <rect x="520" y="110" width="16" height="16" rx="4" fill="#fca5a5" transform="rotate(30 528 118)"/>
+    <rect x="700" y="90" width="14" height="14" rx="4" fill="#a5f3fc" transform="rotate(-20 707 97)"/>
+  </g>
+  <!-- Family group -->
+  <g>
+    <!-- dad -->
+    <circle cx="400" cy="560" r="44" fill="#fde68a"/><rect x="356" y="604" width="88" height="140" rx="30" fill="#60a5fa"/>
+    <!-- mom -->
+    <circle cx="560" cy="550" r="42" fill="#fbcfe8"/><path d="M560 508 a42 42 0 0 1 42 30 l-84 0 a42 42 0 0 1 42 -30" fill="#f472b6"/>
+    <rect x="520" y="600" width="80" height="140" rx="30" fill="#f472b6"/>
+    <!-- kid -->
+    <circle cx="700" cy="600" r="34" fill="#bbf7d0"/><rect x="668" y="634" width="64" height="90" rx="24" fill="#fbbf24"/>
+    <!-- baby -->
+    <circle cx="830" cy="620" r="26" fill="#e9d5ff"/><rect x="804" y="646" width="52" height="70" rx="20" fill="#6ee7b7"/>
+  </g>
+  <!-- Hearts -->
+  <g font-size="60">
+    <text x="300" y="760" fill="#fecaca">💖</text>
+    <text x="840" y="740" fill="#fecaca">💛</text>
+  </g>
+  <text x="600" y="380" text-anchor="middle" font-family="Arial, sans-serif" font-size="64" font-weight="bold" fill="#ffffff">Keluarga Eluzai</text>
+  <text x="600" y="440" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" fill="#fef3c7">Gantilah dengan foto asli suasana gereja</text>
+</svg>

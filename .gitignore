@@ -1,0 +1,7 @@
+node_modules/
+.env
+*.log
+# Kredensial admin (hash bcrypt) — dibuat otomatis oleh bootstrap di server
+# (PRD FR-10). Jangan di-commit; tiap environment punya admin sendiri.
+database/admins.json
+docs/

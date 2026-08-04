@@ -1,0 +1,12 @@
+{
+  "ibadah": {
+    "ada": true,
+    "jam": "07.30 – 10.30",
+    "keterangan": "Ibadah Sekolah Minggu & Kelas Baby"
+  },
+  "latihan": {
+    "ada": false,
+    "jam": "10.30 – 13.30",
+    "keterangan": "Latihan Praise & Worship & Drama"
+  }
+}

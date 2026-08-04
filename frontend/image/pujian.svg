@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" width="1200" height="900">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0e7490"/>
+      <stop offset="55%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="30%" cy="25%" r="60%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="900" fill="url(#bg)"/>
+  <rect width="1200" height="900" fill="url(#glow)"/>
+  <!-- Floating notes -->
+  <g font-size="80" opacity="0.8">
+    <text x="180" y="220" fill="#fbbf24">♪</text>
+    <text x="980" y="180" fill="#f472b6">♫</text>
+    <text x="900" y="420" fill="#a5f3fc">♪</text>
+    <text x="250" y="480" fill="#c4b5fd">♬</text>
+  </g>
+  <!-- Stage -->
+  <rect x="160" y="560" width="880" height="150" rx="14" fill="#1e1b4b" opacity="0.85"/>
+  <rect x="160" y="560" width="880" height="24" rx="12" fill="#312e81"/>
+  <!-- Microphone stands -->
+  <g stroke="#cbd5e1" stroke-width="8" stroke-linecap="round" fill="none">
+    <line x1="520" y1="560" x2="520" y2="470"/><line x1="480" y1="560" x2="560" y2="560"/>
+  </g>
+  <ellipse cx="520" cy="465" rx="16" ry="26" fill="#94a3b8"/>
+  <g stroke="#cbd5e1" stroke-width="8" stroke-linecap="round" fill="none">
+    <line x1="680" y1="560" x2="680" y2="470"/><line x1="640" y1="560" x2="720" y2="560"/>
+  </g>
+  <ellipse cx="680" cy="465" rx="16" ry="26" fill="#94a3b8"/>
+  <!-- Drums -->
+  <circle cx="360" cy="500" r="52" fill="#f472b6"/><circle cx="360" cy="500" r="26" fill="#f9a8d4"/>
+  <rect x="800" y="480" width="130" height="80" rx="10" fill="#fbbf24"/>
+  <!-- Guitar emoji-ish -->
+  <text x="850" y="640" font-size="90">🎸</text>
+  <!-- Kids in front -->
+  <g>
+    <circle cx="300" cy="660" r="34" fill="#fde68a"/><rect x="268" y="694" width="64" height="96" rx="24" fill="#a5f3fc"/>
+    <circle cx="470" cy="660" r="34" fill="#fbcfe8"/><rect x="438" y="694" width="64" height="96" rx="24" fill="#c4b5fd"/>
+    <circle cx="640" cy="660" r="34" fill="#bbf7d0"/><rect x="608" y="694" width="64" height="96" rx="24" fill="#fde68a"/>
+  </g>
+  <text x="600" y="420" text-anchor="middle" font-family="Arial, sans-serif" font-size="64" font-weight="bold" fill="#ffffff">Pujian &amp; Penyembahan</text>
+  <text x="600" y="480" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" fill="#e0e7ff">Gantilah dengan foto asli suasana gereja</text>
+</svg>

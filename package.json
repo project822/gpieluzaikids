@@ -1,0 +1,30 @@
+{
+  "name": "gpi-eluzai-kids",
+  "version": "2.0.0",
+  "description": "Landing page GPI Eluzai Kids - Home, Schedule, Class, Event (full-stack JavaScript)",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node --watch backend/server.js",
+    "seed": "node backend/seed.js"
+  },
+  "keywords": [
+    "gereja",
+    "kids",
+    "sekolah-minggu",
+    "gpi-eluzai",
+    "landing-page"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "compression": "^1.8.1",
+    "connect-mongo": "^6.0.0",
+    "dotenv": "^17.4.2",
+    "express": "^4.19.2",
+    "express-session": "^1.19.0",
+    "mongodb": "^7.5.0",
+    "multer": "^2.2.0",
+    "sharp": "^0.35.3"
+  }
+}

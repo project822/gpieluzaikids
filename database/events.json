@@ -1,0 +1,10 @@
+{
+  "judul": "Event GPI Eluzai Kids",
+  "deskripsi": "Lihat jadwal event terbaru, daftar kegiatan, dan dokumentasi acara langsung dari website event GPI Eluzai Kids.",
+  "website": "https://gpieluzaikids-event.vercel.app",
+  "cta": "Kunjungi Website Event",
+  "thumbnail": {
+    "service": "microlink",
+    "fallbacks": ["thumio", "mshots"]
+  }
+}

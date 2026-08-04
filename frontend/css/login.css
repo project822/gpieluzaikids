@@ -1,0 +1,164 @@
+/* ============================================================
+   GPI ELUZAI KIDS — Halaman Login Admin
+   ------------------------------------------------------------
+   Sesuai PRD docs/PRD-ADMIN-LOGIN.md:
+   7.2 design tokens Deep Ocean, 8.2 login.css, 8.3 komponen.
+   ============================================================ */
+
+:root {
+  --font-display: 'Hanken Grotesk', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+
+  --bg: #0f172a;
+  --bg-gradient: linear-gradient(170deg, #0a1628 0%, #0f172a 20%, #152240 50%, #1a2d5a 80%, #0f172a 100%);
+
+  --glass-bg: rgba(30, 41, 59, 0.5);
+  --glass-border: rgba(51, 65, 85, 0.5);
+  --glass-blur: 12px;
+
+  --radius-lg: 1.125rem; /* 18px */
+  --radius-sm: 0.5rem;   /* 8px  */
+  --radius-md: 0.875rem; /* 14px */
+
+  --on-surface: #ffffff;
+  --on-surface-variant: #94a3b8;
+  --electric-blue: #3b82f6;
+  --primary-strong: #2563eb;
+  --primary-strong-hover: #1d4ed8;
+  --error: #ffb4ab;
+  --muted: var(--on-surface-variant);
+  --accent: #3b82f6;
+  /* Dipakai inline style error pada markup PRD (quirk PRD 14.1) */
+  --accent-2: #ffb4ab;
+}
+
+/* base (PRD 8.3 base.css) */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { min-height: 100%; scroll-behavior: smooth; background-color: var(--bg); }
+[id] { scroll-margin-top: 80px; }
+body {
+  min-height: 100%;
+  font-family: var(--font-body);
+  color: var(--on-surface);
+  background: var(--bg-gradient);
+  background-attachment: scroll;
+  overscroll-behavior-y: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.container { width: min(100% - 32px, 1280px); margin: 0 auto; padding: 30px 0; }
+
+/* buttons (PRD 8.3 components.css) */
+.btn, .submit-btn {
+  display: inline-flex; min-height: 42px; align-items: center; justify-content: center;
+  gap: 8px; border: 1px solid var(--glass-border); border-radius: var(--radius-md);
+  padding: 10px 22px; color: var(--on-surface); background: var(--glass-bg);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  font-family: var(--font-body); font-weight: 500; letter-spacing: 0.01em; line-height: 1.1;
+  text-decoration: none; cursor: pointer;
+  transition: background 180ms ease, transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+.btn:hover, .submit-btn:hover { transform: translateY(-1px); border-color: rgba(59, 130, 246, 0.3); box-shadow: 0 0 20px rgba(59, 130, 246, 0.12); }
+.btn:active, .submit-btn:active { transform: translateY(0); }
+.btn.primary, .submit-btn { color: #ffffff; background: var(--primary-strong, #2563eb); border-color: transparent; box-shadow: 0 0 20px rgba(59, 130, 246, 0.2); }
+.btn.primary:hover, .submit-btn:hover { background: var(--primary-strong-hover, #1d4ed8); box-shadow: 0 0 30px rgba(59, 130, 246, 0.35); }
+
+/* auth card (PRD 7.3, 8.3) */
+.hero-card, .auth-card {
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+.auth-card {
+  width: min(100%, 440px);
+  padding: clamp(24px, 5vw, 36px);
+  border-radius: var(--radius-lg);
+  position: relative;
+  overflow: hidden;
+}
+.auth-card.hover-expand {
+  transform: scale(1);
+  transition: transform 320ms cubic-bezier(0.2, 0.9, 0.2, 1), box-shadow 320ms ease;
+}
+.auth-card.hover-expand:hover,
+.auth-card.hover-expand:focus-within {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 0 40px rgba(59, 130, 246, 0.12);
+}
+.auth-card h1 { margin: 0 0 12px; font-family: var(--font-display); color: var(--on-surface); text-align: center; }
+.logo-wrap { text-align: center; }
+
+/* error (PRD 7.3, 8.3) */
+.error {
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  color: var(--error);
+  background: rgba(239, 68, 68, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-family: var(--font-body);
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+/* forms (PRD 8.3 components.css) */
+label {
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--on-surface);
+  font-weight: 600;
+  display: block;
+}
+input, select, textarea {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 11px 13px;
+  font-family: var(--font-body);
+  color: var(--on-surface);
+  background: rgba(15, 23, 42, 0.4);
+  outline: none;
+  transition: border-color 200ms ease, box-shadow 200ms ease, background 200ms ease;
+}
+input::placeholder, textarea::placeholder { color: color-mix(in srgb, var(--on-surface-variant), transparent 18%); }
+input:focus, select:focus, textarea:focus {
+  border-color: var(--electric-blue);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15), 0 0 20px rgba(59, 130, 246, 0.08);
+  background: rgba(15, 23, 42, 0.6);
+}
+.form-group { margin-bottom: 14px; }
+.input-with-icon { position: relative; }
+.input-icon {
+  position: absolute; left: 12px; top: 50%;
+  transform: translateY(-50%);
+  width: 20px; height: 20px;
+  opacity: 0.9; pointer-events: none;
+}
+.input-with-icon > input { padding-left: 42px; }
+.submit-btn { width: 100%; border: 0; }
+
+/* animasi masuk kartu (PRD 8.2) — backwards supaya hover-expand tetap bekerja */
+.auth-card {
+  animation: admin-auth-fade-in 560ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+@keyframes admin-auth-fade-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* aksesibilitas: matikan animasi (PRD NFR-4) */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .auth-card { animation: none; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

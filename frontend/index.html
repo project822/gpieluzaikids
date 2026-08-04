@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="id" class="no-js">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GPI Eluzai Kids — One Team, One Family</title>
+  <meta name="description" content="GPI Eluzai Kids — Gereja Pantekosta di Surabaya. Ibadah & latihan setiap hari Minggu, kelas kelompok, dan event anak." />
+  <link rel="icon" type="image/webp" href="/image/logo-placeholder.webp" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body data-theme="dark">
+
+  <!-- ============ NAVBAR (PRD docs/PRD-Navbar-Hamburger-Mobile.md) ============ -->
+  <nav class="nav" aria-label="Navigasi utama">
+    <div class="container nav-inner">
+      <a href="#home" class="logo" aria-label="Halaman utama">
+        <span class="logo-badge"><img src="/image/logo-placeholder.webp" alt="" /></span>
+        <span class="clock" id="clock" title="Waktu saat ini">--:--:--</span>
+      </a>
+
+      <button
+        class="nav-toggle"
+        type="button"
+        aria-label="Buka navigasi"
+        aria-expanded="false"
+        aria-controls="nav-links"
+        data-nav-toggle
+      >
+        <span class="hamburger" aria-hidden="true"></span>
+      </button>
+
+      <ul class="nav-links" id="nav-links" data-nav-menu>
+        <li class="nav-links-logo">
+          <a href="#home">
+            <span class="logo-badge"><img src="/image/logo-placeholder.webp" alt="" /></span>
+            <span>GPI Eluzai Kids</span>
+          </a>
+        </li>
+        <li><a href="#home" class="active" data-nav-link>Home</a></li>
+        <li><a href="#schedule" data-nav-link>Schedule</a></li>
+        <li><a href="#class" data-nav-link>Class</a></li>
+        <li><a href="#information" data-nav-link>Information</a></li>
+        <li><a href="#event" data-nav-link>Event</a></li>
+        <li><a href="#contact" data-nav-link>Contact</a></li>
+      </ul>
+
+      <div class="nav-right">
+        <button class="theme-toggle" id="theme-toggle" aria-label="Ganti tema">🌙</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ============ KONTEN UTAMA ============ -->
+  <main>
+  <!-- ============ #HOME — HERO + SLIDER ============ -->
+  <section id="home" class="hero" data-nav-section data-reveal>
+    <div class="hero-blob hero-blob-1"></div>
+    <div class="hero-blob hero-blob-2"></div>
+    <div class="container hero-inner">
+      <div class="hero-text">
+        <h1 class="hero-title">GPI <span class="text-gradient">Eluzai</span> Kids</h1>
+        <p class="hero-tagline" id="hero-tagline">One Team, One Family</p>
+        <p class="hero-sub">Mari beribadah dan bertumbuh bersama kami setiap hari Minggu. Tempat anak-anak diberkati, bermain, dan menjadi keluarga.</p>
+        <div class="hero-actions">
+          <a href="#schedule" class="btn btn-primary">Lihat Jadwal</a>
+          <a href="#event" class="btn btn-ghost">Lihat Event <span class="arrow">→</span></a>
+        </div>
+      </div>
+
+      <!-- Slider foto suasana gereja (gambar dari folder image/) -->
+      <div class="slider" id="slider">
+        <div class="slider-track" id="slider-track"></div>
+        <button class="slider-btn slider-prev" id="slider-prev" aria-label="Sebelumnya">‹</button>
+        <button class="slider-btn slider-next" id="slider-next" aria-label="Berikutnya">›</button>
+        <div class="slider-dots" id="slider-dots"></div>
+        <div class="slider-caption" id="slider-caption">Suasana Ibadah</div>
+      </div>
+    </div>
+    <a href="#schedule" class="scroll-hint">⬇ Scroll untuk menjelajah</a>
+  </section>
+
+  <!-- ============ #SCHEDULE — JADWAL MINGGU ============ -->
+  <section id="schedule" class="section" data-nav-section data-reveal data-reveal-delay="150">
+    <div class="container">
+      <div class="section-head">
+        <h2 class="section-title">Jadwal Ibadah & Latihan</h2>
+        <p class="section-sub">Setiap hari <strong>Minggu</strong> — apakah ada ibadah dan latihan, beserta jam dan keterangannya.</p>
+      </div>
+      <div class="schedule-grid" id="schedule-grid" data-reveal>
+        <!-- 2 kartu status: Ibadah & Latihan (diisi oleh main.js) -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ #CLASS — 4 KELOMPOK KELAS ============ -->
+  <section id="class" class="section section-alt" data-nav-section data-reveal data-reveal-delay="150">
+    <div class="container">
+      <div class="section-head">
+        <h2 class="section-title">4 Kelompok Kelas</h2>
+      </div>
+      <div class="grid-4" id="class-grid" data-stagger></div>
+    </div>
+  </section>
+
+  <!-- ============ #INFORMATION — BANNER / PENGUMUMAN (dari admin) ============ -->
+  <section id="information" class="section" data-nav-section data-reveal data-reveal-delay="150">
+    <div class="container">
+      <div class="section-head">
+        <h2 class="section-title">Banner &amp; Pengumuman</h2>
+        <p class="section-sub">Klik banner untuk langsung menuju informasi selengkapnya.</p>
+      </div>
+      <div class="banners-grid" id="banners-grid" data-reveal></div>
+      <div class="banners-empty" id="banners-empty" hidden>
+        <span>📭</span> Belum ada pengumuman. Kelola banner melalui <a href="/admin">panel admin</a>.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ #EVENT — THUMBNAIL REAL-TIME ============ -->
+  <section id="event" class="section" data-nav-section data-reveal data-reveal-delay="150">
+    <div class="container">
+      <div class="section-head">
+        <h2 class="section-title">Event GPI Eluzai Kids</h2>
+        <p class="section-sub" id="event-desc">Lihat event terbaru langsung dari website event kami.</p>
+      </div>
+
+      <div class="event-preview" data-reveal>
+        <div class="event-browser">
+          <div class="browser-bar">
+            <span class="browser-dot red"></span>
+            <span class="browser-dot yellow"></span>
+            <span class="browser-dot green"></span>
+            <span class="browser-url" id="event-url">gpieluzaikids-event.vercel.app</span>
+            <a class="browser-open" id="event-link" href="#" target="_blank" rel="noopener">↗ Buka</a>
+          </div>
+          <div class="browser-body">
+            <div class="thumb-loading" id="thumb-loading">
+              <div class="spinner"></div>
+              <p>Mengambil gambar real-time…</p>
+            </div>
+            <img id="event-thumb" class="event-thumb" alt="Thumbnail real-time website event GPI Eluzai Kids" />
+            <div class="thumb-fallback" id="thumb-fallback" hidden>
+              <div class="fallback-emoji">🌐</div>
+              <h3>Thumbnail tidak dapat dimuat</h3>
+              <p>Kunjungi langsung website event kami melalui tombol di bawah.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="event-actions">
+          <a class="btn btn-primary" id="event-cta" href="#" target="_blank" rel="noopener">🎉 Kunjungi Website Event</a>
+          <button class="btn btn-ghost" id="thumb-refresh">🔄 Muat Ulang Thumbnail</button>
+        </div>
+        <p class="event-note">🖼️ Thumbnail diambil secara <em>real-time</em> dari <a id="event-note-link" href="#" target="_blank" rel="noopener">gpieluzaikids-event.vercel.app</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ #CONTACT — HUBUNGI KAMI ============ -->
+  <section id="contact" class="section section-alt" data-nav-section data-reveal data-reveal-delay="150">
+    <div class="container">
+      <div class="section-head">
+        <h2 class="section-title">Hubungi Kami</h2>
+        <p class="section-sub">Mari terhubung dengan GPI Eluzai Kids melalui media sosial berikut.</p>
+      </div>
+
+      <div class="contact-grid" data-stagger>
+        <!-- Kartu WhatsApp — fade masuk/keluar dari kiri -->
+        <article class="contact-card contact-card-wa" data-reveal="left">
+          <div class="contact-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91C21.95 6.45 17.5 2 12.04 2m0 1.67c4.56 0 8.24 3.69 8.24 8.24s-3.68 8.24-8.24 8.24c-1.44 0-2.83-.38-4.05-1.1l-.29-.17-3.12.82.83-3.04-.19-.3a8.17 8.17 0 0 1-1.28-4.45c0-4.55 3.69-8.24 8.24-8.24M8.53 7.33c-.16 0-.43.06-.66.31-.22.25-.87.86-.87 2.07 0 1.22.89 2.4 1 2.56.14.17 1.76 2.67 4.25 3.73.59.27 1.05.42 1.41.53.59.19 1.13.16 1.56.1.48-.07 1.46-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.07-.1-.23-.16-.48-.27-.25-.14-1.47-.74-1.69-.82-.23-.08-.37-.12-.56.12-.16.25-.64.81-.78.97-.15.17-.29.19-.53.07-.26-.13-1.06-.39-2-1.23-.74-.66-1.23-1.47-1.38-1.72-.12-.24-.01-.39.11-.5.11-.11.27-.29.37-.44.13-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.11-.56-1.35-.77-1.84-.2-.48-.4-.42-.56-.43-.14 0-.3-.01-.47-.01z"/></svg>
+          </div>
+          <h3>WhatsApp</h3>
+          <p>Punya pertanyaan tentang ibadah atau kegiatan anak? Chat kami langsung.</p>
+          <a class="btn btn-primary contact-wa-btn" id="contact-wa-btn" href="#" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91C21.95 6.45 17.5 2 12.04 2m0 1.67c4.56 0 8.24 3.69 8.24 8.24s-3.68 8.24-8.24 8.24c-1.44 0-2.83-.38-4.05-1.1l-.29-.17-3.12.82.83-3.04-.19-.3a8.17 8.17 0 0 1-1.28-4.45c0-4.55 3.69-8.24 8.24-8.24M8.53 7.33c-.16 0-.43.06-.66.31-.22.25-.87.86-.87 2.07 0 1.22.89 2.4 1 2.56.14.17 1.76 2.67 4.25 3.73.59.27 1.05.42 1.41.53.59.19 1.13.16 1.56.1.48-.07 1.46-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.07-.1-.23-.16-.48-.27-.25-.14-1.47-.74-1.69-.82-.23-.08-.37-.12-.56.12-.16.25-.64.81-.78.97-.15.17-.29.19-.53.07-.26-.13-1.06-.39-2-1.23-.74-.66-1.23-1.47-1.38-1.72-.12-.24-.01-.39.11-.5.11-.11.27-.29.37-.44.13-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.11-.56-1.35-.77-1.84-.2-.48-.4-.42-.56-.43-.14 0-.3-.01-.47-.01z"/></svg>
+            Chat WhatsApp
+          </a>
+        </article>
+
+        <!-- Kartu Media Sosial — fade masuk/keluar dari kanan -->
+        <article class="contact-card contact-card-soc" data-reveal="right">
+          <div class="contact-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
+          </div>
+          <h3>Media Sosial</h3>
+          <p>Ikuti perjalanan pelayanan kami di:</p>
+          <div class="contact-socials">
+            <a class="contact-link contact-ig" id="contact-soc-ig" href="#" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41a3.72 3.72 0 0 1-1.38-.9 3.72 3.72 0 0 1-.9-1.38c-.16-.42-.36-1.06-.41-2.23-.06-1.27-.07-1.65-.07-4.85s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41 1.27-.06 1.65-.07 4.85-.07M12 0C8.74 0 8.33.01 7.05.07 5.78.13 4.9.33 4.14.63c-.79.3-1.46.72-2.13 1.38A5.9 5.9 0 0 0 .63 4.14C.33 4.9.13 5.78.07 7.05.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.06 1.27.26 2.15.56 2.91.3.79.72 1.46 1.38 2.13a5.9 5.9 0 0 0 2.13 1.38c.76.3 1.64.5 2.91.56C8.33 23.99 8.74 24 12 24s3.67-.01 4.95-.07c1.27-.06 2.15-.26 2.91-.56a5.9 5.9 0 0 0 2.13-1.38 5.9 5.9 0 0 0 1.38-2.13c.3-.76.5-1.64.56-2.91.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.06-1.27-.26-2.15-.56-2.91a5.9 5.9 0 0 0-1.38-2.13A5.9 5.9 0 0 0 19.86.63c-.76-.3-1.64-.5-2.91-.56C15.67.01 15.26 0 12 0m0 5.84a6.16 6.16 0 1 0 0 12.32 6.16 6.16 0 0 0 0-12.32M12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8m7.85-10.4a1.44 1.44 0 1 1-2.88 0 1.44 1.44 0 0 1 2.88 0"/></svg>
+            </a>
+            <a class="contact-link contact-yt" id="contact-soc-yt" href="#" target="_blank" rel="noopener" aria-label="YouTube" title="YouTube">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.5 3.55 12 3.55 12 3.55s-7.5 0-9.38.5A3.02 3.02 0 0 0 .5 6.19C0 8.07 0 12 0 12s0 3.93.5 5.81a3.02 3.02 0 0 0 2.12 2.14c1.88.5 9.38.5 9.38.5s7.5 0 9.38-.5a3.02 3.02 0 0 0 2.12-2.14C24 15.93 24 12 24 12s0-3.93-.5-5.81M9.55 15.57V8.43L15.82 12l-6.27 3.57z"/></svg>
+            </a>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <h5>Menu</h5>
+          <ul class="footer-links">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#schedule">Schedule</a></li>
+            <li><a href="#class">Class</a></li>
+            <li><a href="#information">Information</a></li>
+            <li><a href="#event">Event</a></li>
+          </ul>
+        </div>
+        <div>
+          <h5>Kelas</h5>
+          <ul class="footer-links">
+            <li><a href="/baby">Kelas Baby</a></li>
+            <li><a href="/samuel">Kelas Samuel</a></li>
+            <li><a href="/yosua">Kelas Yosua</a></li>
+            <li><a href="/musa">Kelas Musa</a></li>
+          </ul>
+        </div>
+        <div>
+          <h5>Alamat</h5>
+          <ul class="footer-links">
+            <li id="footer-address">📍 Jl. Dukuh Kupang Timur XVII No. 28, Surabaya</li>
+          </ul>
+        </div>
+
+      </div>
+      <div class="footer-bottom">© <span id="year"></span> GPI Eluzai Kids · One Team, One Family</div>
+    </div>
+  </footer>
+
+  <button class="scroll-top" id="scroll-top" data-scroll-top aria-label="Kembali ke atas">↑</button>
+
+  <script src="/lib/scroll.js"></script>
+  <script src="js/navbar.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

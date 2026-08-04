@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — GPI Eluzai Kids</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/webp" href="/image/logo-placeholder.webp" />
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body data-theme="dark">
+
+  <!-- ============ DASHBOARD ============ -->
+  <!-- Login dipindah ke halaman terpisah: /admin/login (sesuai PRD docs/PRD-ADMIN-LOGIN.md) -->
+  <div id="dashboard-view" hidden>
+    <header class="admin-nav">
+      <div class="container admin-nav-inner">
+        <a href="/" class="admin-logo" aria-label="Halaman utama"><img class="admin-logo-img" src="/image/logo-placeholder.webp" alt="Logo GPI Eluzai Kids" /></a>
+        <div class="admin-nav-right">
+          <span class="db-badge" id="db-badge" title="Status database">⏳ ...</span>
+          <a href="/" class="btn btn-ghost btn-sm" target="_blank">🌐 Lihat Situs</a>
+          <button class="btn btn-ghost btn-sm" id="logout-btn">🚪 Keluar</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container admin-main">
+      <!-- Tabs -->
+      <nav class="tabs" id="tabs">
+        <button class="tab active" data-tab="info">ℹ️ Informasi</button>
+        <button class="tab" data-tab="members">👥 Anggota</button>
+        <button class="tab" data-tab="absensi">📋 Absensi</button>
+        <button class="tab" data-tab="schedule">🕒 Jadwal</button>
+        <button class="tab" data-tab="banners">📢 Banner</button>
+      </nav>
+
+      <!-- ===== Tab: Informasi ===== -->
+      <section id="tab-info" class="tab-panel">
+        <h2>Informasi & Identitas Gereja</h2>
+        <form id="info-form" class="admin-form">
+          <div class="form-grid">
+            <label><span>Nama</span><input name="nama" type="text" required /></label>
+            <label><span>Tagline</span><input name="tagline" type="text" /></label>
+            <label><span>Moto</span><input name="moto" type="text" /></label>
+            <label><span>Alamat</span><input name="alamat" type="text" /></label>
+            <label><span>Link Google Maps</span><input name="maps" type="url" placeholder="https://" /></label>
+            <label><span>WhatsApp</span><input name="whatsapp" type="url" placeholder="https://wa.me/..." /></label>
+            <label><span>Instagram</span><input name="instagram" type="url" placeholder="https://" /></label>
+            <label><span>YouTube</span><input name="youtube" type="url" placeholder="https://" /></label>
+          </div>
+          <button type="submit" class="btn btn-primary">💾 Simpan Informasi</button>
+          <p class="form-msg" id="info-msg"></p>
+        </form>
+      </section>
+
+      <!-- ===== Tab: Anggota ===== -->
+      <section id="tab-members" class="tab-panel" hidden>
+        <h2>Kelola Anggota Kelas</h2>
+        <p class="tab-note">Tambah atau hapus anggota pada tiap kelas. Anggota tampil saat kartu kelas diklik di situs.</p>
+        <div class="members-toolbar">
+          <label>
+            <span>Pilih Kelas</span>
+            <select id="members-class-select"></select>
+          </label>
+          <span class="members-head" id="members-head">
+            <strong id="members-class-name">—</strong> · <span id="members-count">0 anggota</span>
+          </span>
+        </div>
+        <form id="members-form" class="admin-form members-form">
+          <div class="form-grid">
+            <label><span>Nama Lengkap</span><input id="member-name" type="text" placeholder="Nama lengkap anak" required /></label>
+            <label><span>Tanggal Lahir</span><input id="member-tgl" type="date" /></label>
+          </div>
+          <button type="submit" class="btn btn-primary">➕ Tambah Anggota</button>
+          <p class="form-msg" id="members-msg"></p>
+        </form>
+        <div class="admin-list" id="members-list"></div>
+      </section>
+
+      <!-- ===== Tab: Absensi ===== -->
+      <section id="tab-absensi" class="tab-panel" hidden>
+        <h2>Absensi Anak</h2>
+        <p class="tab-note">Pilih kelas &amp; tanggal, lalu centang anak yang <strong>Hadir</strong> (tidak dicentang = Tidak Hadir). Data anggota diambil dari <code>#class</code> — hanya nama kelas &amp; nama anggota yang tersimpan.</p>
+        <form id="absensi-form" class="admin-form">
+          <div class="form-grid">
+            <label><span>Tanggal</span><input id="absensi-tanggal" name="tanggal" type="date" required /></label>
+            <label><span>Pilih Kelas</span><select id="absensi-class-select" name="kelasId" required></select></label>
+          </div>
+          <div class="absensi-toolbar">
+            <span class="members-head">
+              <strong id="absensi-class-name">—</strong> · <span id="absensi-count">0 anak</span>
+            </span>
+            <span class="spacer"></span>
+            <button type="button" class="btn btn-ghost btn-sm" id="absensi-all">✔ Semua Hadir</button>
+          </div>
+          <div class="absensi-list" id="absensi-members"></div>
+          <div class="absensi-summary" id="absensi-summary"></div>
+          <div class="absensi-editbar" id="absensi-editbar" hidden>
+            <span>✏️ Mengedit absensi <strong id="absensi-edit-info"></strong> — simpan untuk memperbarui data.</span>
+            <span class="spacer"></span>
+            <button type="button" class="btn btn-ghost btn-sm" id="absensi-edit-cancel">✖ Batal</button>
+          </div>
+          <p class="absensi-conflict-note" id="absensi-conflict-note" hidden></p>
+          <button type="submit" class="btn btn-primary" id="absensi-submit-btn">💾 Simpan Absensi</button>
+          <p class="form-msg" id="absensi-msg"></p>
+        </form>
+
+        <div class="absensi-toolbar absensi-export">
+          <span class="members-head">📤 Export <strong>SEMUA</strong> data absensi (jadi 1 file)</span>
+          <span class="spacer"></span>
+          <button type="button" class="btn btn-ghost btn-sm btn-excel" id="absensi-export-excel">📊 Export Excel</button>
+          <button type="button" class="btn btn-ghost btn-sm btn-pdf" id="absensi-export-pdf">📄 Export PDF</button>
+        </div>
+        <h2 style="font-size:1.2rem; margin: 6px 0 14px;">Riwayat Absensi</h2>
+        <div class="admin-list" id="absensi-history"></div>
+      </section>
+
+      <!-- ===== Tab: Jadwal ===== -->
+      <section id="tab-schedule" class="tab-panel" hidden>
+        <h2>Kelola Jadwal Minggu</h2>
+        <p class="tab-note">Atur apakah hari <strong>Minggu</strong> ada ibadah & latihan, beserta jam dan keterangannya.</p>
+        <form id="schedule-form" class="admin-form">
+          <fieldset class="schedule-fieldset" aria-labelledby="fieldset-ibadah">
+            <div class="fieldset-title" id="fieldset-ibadah">⛪ Ibadah</div>
+            <div class="form-grid">
+              <label class="check"><input name="ibadah_ada" type="checkbox" /> Ada ibadah</label>
+              <label><span>Jam Ibadah</span><input name="ibadah_jam" type="text" placeholder="07.30 – 10.30" /></label>
+              <label class="full"><span>Keterangan</span><input name="ibadah_keterangan" type="text" placeholder="Ibadah Sekolah Minggu & Kelas Baby" /></label>
+            </div>
+          </fieldset>
+          <fieldset class="schedule-fieldset" aria-labelledby="fieldset-latihan">
+            <div class="fieldset-title" id="fieldset-latihan">🎸 Latihan</div>
+            <div class="form-grid">
+              <label class="check"><input name="latihan_ada" type="checkbox" /> Ada latihan</label>
+              <label><span>Jam Latihan</span><input name="latihan_jam" type="text" placeholder="10.30 – 13.30" /></label>
+              <label class="full"><span>Keterangan</span><input name="latihan_keterangan" type="text" placeholder="Latihan Praise & Worship & Drama" /></label>
+            </div>
+          </fieldset>
+          <button type="submit" class="btn btn-primary">💾 Simpan Jadwal</button>
+          <p class="form-msg" id="schedule-msg"></p>
+        </form>
+      </section>
+
+      <!-- ===== Tab: Banner ===== -->
+      <section id="tab-banners" class="tab-panel" hidden>
+        <h2>Kelola Banner / Pengumuman</h2>
+        <p class="tab-note">Banner tampil di halaman <strong>#information</strong>. Saat banner diklik, pengunjung langsung diarahkan ke link yang Anda tentukan (mis. <code>gpieluzaikids-event.vercel.app</code>).</p>
+        <form id="banners-form" class="admin-form">
+          <div class="form-grid">
+            <label><span>Judul Banner</span><input name="judul" type="text" placeholder="Ikuti Kids Camp 2026!" required /></label>
+            <label><span>Link Tujuan</span><input name="url" type="url" placeholder="https://gpieluzaikids-event.vercel.app" required /></label>
+            <label class="full"><span>Deskripsi (opsional)</span><textarea name="deskripsi" rows="2"></textarea></label>
+            <label class="full file-label">
+              <span>Gambar Banner (PNG/JPG/WEBP/GIF, maks 5MB)</span>
+              <input name="image" type="file" accept="image/png,image/jpeg,image/webp,image/gif" required />
+              <img id="banner-preview" class="banner-preview" alt="Pratinjau banner" hidden />
+            </label>
+          </div>
+          <button type="submit" class="btn btn-primary">📤 Upload Banner</button>
+          <p class="form-msg" id="banners-msg"></p>
+        </form>
+        <div class="admin-list banner-list" id="banners-list"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>
