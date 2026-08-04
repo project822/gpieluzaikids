@@ -55,7 +55,17 @@ function readJSON(name) {
   }
 }
 function writeJSON(name, data) {
-  fs.writeFileSync(path.join(DATABASE_DIR, `${name}.json`), JSON.stringify(data, null, 2), "utf8");
+  try {
+    fs.writeFileSync(path.join(DATABASE_DIR, `${name}.json`), JSON.stringify(data, null, 2), "utf8");
+  } catch (err) {
+    // Penting untuk Vercel: filesystem serverless READ-ONLY. Bila MongoDB
+    // tidak terhubung lalu ada request write, tampilkan pesan yang jelas
+    // (bukan EROFS mentah) supaya cepat dikenali.
+    throw new Error(
+      `Tidak dapat menulis ${name}.json (${err.code || err.message}). ` +
+        `Filesystem ini read-only — pastikan MONGODB_URI terhubung.`
+    );
+  }
 }
 
 // ============================================================

@@ -660,28 +660,46 @@ app.get("/:slug", (req, res) => {
   res.sendFile(path.join(FRONTEND_DIR, "class.html"));
 });
 
-// ---------- Jalankan server ----------
-(async () => {
-  await store.connect();
-
-  // Bootstrap default admin (PRD FR-10): saat collection admins kosong &
-  // DISABLE_DEFAULT_ADMIN tidak diset, buat admin default (bcrypt cost 10).
-  try {
-    const admins = await store.getAdmins();
-    if (!process.env.DISABLE_DEFAULT_ADMIN && (!admins || admins.length === 0)) {
-      const username = process.env.DEFAULT_ADMIN_USERNAME || "admin";
-      const password = process.env.DEFAULT_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD || "admin123";
-      const passwordHash = await bcrypt.hash(password, 10);
-      await store.addAdmin({ username, passwordHash });
-      console.log("");
-      console.log(`  🔑 Admin default dibuat: ${username} / ${process.env.DEFAULT_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD ? "<dari env>" : "admin123"}`);
-      console.log("  ⚠️  AMAN: Set DISABLE_DEFAULT_ADMIN=1 setelah deploy untuk menonaktifkan fitur ini.");
-      console.log("");
+// ============================================================
+// INISIALISASI — koneksi DB + bootstrap admin default
+// ------------------------------------------------------------
+// Dijalankan fire-and-forget (tanpa await) supaya module selesai
+// dimuat dengan cepat. Ini PENTING untuk Vercel serverless:
+// handler harus langsung siap, dan store otomatis memakai fallback
+// JSON bila MongoDB belum terhubung pada request pertama.
+// ============================================================
+store
+  .connect()
+  .then(async () => {
+    // Bootstrap default admin (PRD FR-10): saat collection admins kosong &
+    // DISABLE_DEFAULT_ADMIN tidak diset, buat admin default (bcrypt cost 10).
+    try {
+      const admins = await store.getAdmins();
+      if (!process.env.DISABLE_DEFAULT_ADMIN && (!admins || admins.length === 0)) {
+        const username = process.env.DEFAULT_ADMIN_USERNAME || "admin";
+        const password = process.env.DEFAULT_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD || "admin123";
+        const passwordHash = await bcrypt.hash(password, 10);
+        await store.addAdmin({ username, passwordHash });
+        console.log("");
+        console.log(`  🔑 Admin default dibuat: ${username} / ${process.env.DEFAULT_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD ? "<dari env>" : "admin123"}`);
+        console.log("  ⚠️  AMAN: Set DISABLE_DEFAULT_ADMIN=1 setelah deploy untuk menonaktifkan fitur ini.");
+        console.log("");
+      }
+    } catch (err) {
+      console.error("[DB] Gagal bootstrap admin default:", err.message);
     }
-  } catch (err) {
-    console.error("[DB] Gagal bootstrap admin default:", err.message);
-  }
+  })
+  .catch((err) => {
+    console.error("[DB] Gagal terhubung MongoDB:", err.message);
+  });
 
+// Export aplikasi Express — dipakai Vercel sebagai serverless function
+// (lihat api/index.js).
+module.exports = app;
+
+// Jalankan server langsung HANYA saat dieksekusi lokal (npm start),
+// bukan saat module ini di-import oleh serverless function Vercel.
+if (require.main === module) {
   app.listen(PORT, () => {
     console.log("");
     console.log("  🎈 GPI Eluzai Kids — Backend");
@@ -693,4 +711,4 @@ app.get("/:slug", (req, res) => {
     console.log("  Tekan Ctrl+C untuk menghentikan server.");
     console.log("");
   });
-})();
+}
