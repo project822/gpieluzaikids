@@ -126,7 +126,21 @@ export async function POST(request) {
       );
     }
 
-    const token = await issueToken({ sub: identity.username });
+    let token;
+    try {
+      token = await issueToken({ sub: identity.username });
+    } catch (err) {
+      // Konfigurasi produksi belum lengkap (ADMIN_SECRET) — pesan jelas,
+      // bukan 500 generik yang membingungkan.
+      console.error('[api/login] Gagal menerbitkan token:', err.message);
+      return NextResponse.json(
+        {
+          error:
+            'Konfigurasi server belum lengkap: ADMIN_SECRET belum diatur atau masih memakai nilai default. Tambahkan env ADMIN_SECRET (hex acak) di Vercel lalu redeploy.',
+        },
+        { status: 500, headers: { 'Cache-Control': 'no-store' } }
+      );
+    }
     logActivity({
       username: identity.username,
       module: 'auth',
