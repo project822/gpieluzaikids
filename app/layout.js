@@ -8,9 +8,37 @@ export const metadata = {
     default: 'GPI Eluzai Kids — Tempat Anak Bertumbuh dalam Iman & Sukacita',
     template: '%s · GPI Eluzai Kids',
   },
-  description:
-    'Situs resmi GPI Eluzai: informasi, jadwal event, lokasi, dan kontak. Ibadah, pengajaran Firman, dan persekutuan yang hangat bagi seluruh keluarga.',
+  description: 'Situs resmi GPI Eluzai Kids — informasi ibadah, jadwal, event, dan kontak.',
   keywords: ['GPI Eluzai', 'Eluzai Kids', 'Gereja', 'Ibadah', 'Event', 'Depok'],
+  ...(process.env.NEXT_PUBLIC_SITE_URL
+    ? { metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL) }
+    : {}),
+  icons: {
+    icon: '/image/logo-placeholder.webp',
+    apple: '/image/logo-placeholder.webp',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'id_ID',
+    siteName: 'GPI Eluzai Kids',
+    title: 'GPI Eluzai Kids — Tempat Anak Bertumbuh dalam Iman & Sukacita',
+    description: 'Informasi ibadah, jadwal, event, dan kontak GPI Eluzai Kids.',
+    images: ['/image/logo-placeholder.webp'],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'GPI Eluzai Kids',
+    description: 'Informasi ibadah, jadwal, event, dan kontak GPI Eluzai Kids.',
+    images: ['/image/logo-placeholder.webp'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
+
+export const viewport = {
+  themeColor: '#1d4ed8',
 };
 
 // Variabel tema: 'eluzai-public-theme' untuk situs publik,

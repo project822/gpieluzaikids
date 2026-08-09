@@ -16,7 +16,7 @@ const CARDS = [
   {
     icon: 'instagram',
     title: 'Instagram',
-    lines: ['Ikuti kabar terbaru, jadwal, dan momen kegiatan jemaat.'],
+    lines: ['Kabar & momen kegiatan jemaat.'],
     href: CHURCH.instagram,
     hrefLabel: 'Buka Instagram',
     chip: 'icon-chip-ig',
@@ -24,7 +24,7 @@ const CARDS = [
   {
     icon: 'youtube',
     title: 'YouTube',
-    lines: ['Tonton rekaman ibadah, pujian, dan renungan singkat.'],
+    lines: ['Rekaman ibadah & renungan singkat.'],
     href: CHURCH.youtube,
     hrefLabel: 'Buka YouTube',
     chip: 'icon-chip-yt',
@@ -39,7 +39,7 @@ export default function ContactSection() {
           <SectionHeading
             center
             title="Kontak GPI Eluzai"
-            sub="Terhubung dengan kami melalui WhatsApp, Instagram, atau YouTube — kami siap membantu Anda."
+            sub="Terhubung dengan kami — kami siap membantu Anda."
           />
         </Reveal>
 

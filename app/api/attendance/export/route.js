@@ -34,7 +34,8 @@ export async function GET(request) {
       );
     }
 
-    const buffer = type === 'excel' ? buildExcel(filled, date) : buildPdf(filled, date);
+    const buffer =
+      type === 'excel' ? await buildExcel(filled, date) : buildPdf(filled, date);
     const ext = type === 'excel' ? 'xlsx' : 'pdf';
     const filename = `rekap-kehadiran-${date}.${ext}`;
     const contentType =

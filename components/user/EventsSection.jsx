@@ -47,7 +47,7 @@ export default function EventsSection({ events }) {
           <SectionHeading
             center
             title="Event Jemaat"
-            sub="Ikut serta dalam ibadah dan kegiatan jemaat — pendaftaran ditutup otomatis pada H-2, setelah itu foto kegiatan tersedia di Google Drive."
+            sub="Ikut serta dalam ibadah dan kegiatan jemaat."
           />
         </Reveal>
 

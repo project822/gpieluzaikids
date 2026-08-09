@@ -1,6 +1,6 @@
 import { updateEvent, deleteEvent, getEventById, slugify, logActivity } from '@/lib/repo';
 import { requireAdmin } from '@/lib/auth';
-import { requiredFieldsError } from '@/lib/eventValidation';
+import { requiredFieldsError, invalidUrlsError } from '@/lib/eventValidation';
 import { sanitizePayload, isValidImage } from '@/lib/sanitize';
 
 // Field wajib — hanya dicek saat payload berupa form lengkap (ada title).
@@ -11,6 +11,10 @@ export async function PUT(request, { params }) {
   try {
     const { id } = await params;
     const body = sanitizePayload(await request.json());
+    const badUrls = invalidUrlsError(body);
+    if (badUrls) {
+      return Response.json({ error: badUrls }, { status: 400 });
+    }
     // Form lengkap (dari modal ubah) → field wajib dicek.
     if ('title' in body) {
       const missingError = requiredFieldsError(body);
@@ -18,7 +22,12 @@ export async function PUT(request, { params }) {
         return Response.json({ error: missingError }, { status: 400 });
       }
     }
-    if (body.image && !isValidImage(body.image)) {
+    // Validasi gambar hanya bila NILAINYA BERUBAH: gambar lama (mis. data
+    // demo SVG yang sudah disimpan) tidak diunggah ulang — memblokirnya akan
+    // membuat edit event lama gagal. Gambar baru wajib PNG/JPG/WebP.
+    const existing = await getEventById(id);
+    if (!existing) return Response.json({ error: 'Event tidak ditemukan.' }, { status: 404 });
+    if (body.image && body.image !== existing.image && !isValidImage(body.image)) {
       return Response.json(
         { error: 'Gambar event tidak valid (PNG/JPG/WebP, maks 4MB).' },
         { status: 400 }

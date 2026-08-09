@@ -145,7 +145,7 @@ img, svg {
 
 /* ---------- Layout helpers ---------- */
 .section {
-  padding: 5.5rem 0;
+  padding: 4.75rem 0;
 }
 
 .section-alt {
@@ -535,20 +535,7 @@ img, svg {
   padding: 0.6rem 0;
 }
 
-.brand-logo {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  background: var(--eluzai-gradient);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(29, 78, 216, 0.28);
-}
-
 .navbar-eluzai .nav-link {
-  position: relative;
   font-weight: 500;
   color: var(--eluzai-muted);
   padding: 0.5rem 0.85rem;
@@ -563,17 +550,6 @@ img, svg {
 .navbar-eluzai .nav-link.active {
   color: var(--eluzai-blue);
   font-weight: 600;
-}
-
-.navbar-eluzai .nav-link.active::after {
-  content: '';
-  position: absolute;
-  left: 0.85rem;
-  right: 0.85rem;
-  bottom: 0.3rem;
-  height: 2.5px;
-  border-radius: 3px;
-  background: var(--eluzai-blue);
 }
 
 .navbar-toggler-eluzai {
@@ -608,13 +584,13 @@ img, svg {
 /* ---------- Hero ---------- */
 .hero {
   position: relative;
-  padding: 5.5rem 0 5rem;
+  padding: 4.75rem 0 4.5rem;
   background: var(--eluzai-bg);
 }
 
 @media (max-width: 991.98px) {
   .hero {
-    padding: 3rem 0 3.5rem;
+    padding: 2.75rem 0 3rem;
   }
 }
 
@@ -650,8 +626,8 @@ img, svg {
 .footer-eluzai {
   background: #0b1220;
   color: #94a3b8;
-  padding: 4rem 0 0;
-  margin-top: 4rem;
+  padding: 3.5rem 0 0;
+  margin-top: 3rem;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
@@ -681,10 +657,6 @@ img, svg {
 
 .footer-eluzai p {
   color: #94a3b8;
-}
-
-.footer-eluzai .brand-logo {
-  box-shadow: 0 4px 12px rgba(29, 78, 216, 0.4);
 }
 
 .footer-bottom {
@@ -793,7 +765,7 @@ img, svg {
 .page-header {
   background: var(--eluzai-surface);
   border-bottom: 1px solid var(--eluzai-border);
-  padding: 4rem 0 3.25rem;
+  padding: 3.25rem 0 2.5rem;
 }
 
 /* ---------- Badges ---------- */
@@ -1229,7 +1201,8 @@ img, svg {
   border-bottom: none;
 }
 
-/* Form absensi: daftar anggota + toggle Hadir (hijau) / Tidak (merah) */
+/* Form absensi: daftar anggota + 2 kotak per anak — Hadir (hijau) / Tidak (merah).
+   Default: keduanya tidak dipilih (belum dicatat). */
 .attendance-form-list {
   list-style: none;
   margin: 0;
@@ -1260,40 +1233,54 @@ img, svg {
   background: var(--eluzai-surface);
 }
 
-.att-toggle {
+.att-options {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  border: 1.5px solid transparent;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.att-opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: 1.5px solid var(--eluzai-border-strong);
+  background: var(--eluzai-surface);
+  color: var(--eluzai-muted);
   border-radius: 999px;
-  padding: 0.32rem 0.9rem;
-  font-size: 0.8rem;
+  padding: 0.26rem 0.7rem;
+  font-size: 0.76rem;
   font-weight: 700;
   cursor: pointer;
-  flex-shrink: 0;
   transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
-.att-toggle.hadir {
+.att-opt:hover {
+  border-color: var(--eluzai-muted);
+  color: var(--eluzai-ink);
+}
+
+.att-opt.hadir.on {
   background: var(--eluzai-green-soft);
-  color: var(--eluzai-green);
   border-color: var(--eluzai-green);
+  color: var(--eluzai-green);
 }
 
-.att-toggle.tidak {
+.att-opt.tidak.on {
   background: var(--eluzai-rose-soft);
-  color: var(--eluzai-rose);
   border-color: var(--eluzai-rose);
+  color: var(--eluzai-rose);
 }
 
-.att-toggle.hadir:hover {
-  background: var(--eluzai-green);
-  color: #fff;
+.att-opt.hadir:hover {
+  border-color: var(--eluzai-green);
+  color: var(--eluzai-green);
 }
 
-.att-toggle.tidak:hover {
-  background: var(--eluzai-rose);
-  color: #fff;
+.att-opt.tidak:hover {
+  border-color: var(--eluzai-rose);
+  color: var(--eluzai-rose);
 }
 
 /* Bar kehadiran di riwayat */
@@ -1522,10 +1509,6 @@ a:focus-visible {
   color: #93c5fd;
 }
 
-[data-bs-theme='dark'] .navbar-eluzai .nav-link.active::after {
-  background: #93c5fd;
-}
-
 /* Hero: hapus titik cahaya biru/hijau (gelap cukup bersih) */
 [data-bs-theme='dark'] .hero {
   background: var(--eluzai-bg);
@@ -1593,10 +1576,10 @@ a:focus-visible {
 /* Responsive micro-tuning */
 @media (max-width: 575.98px) {
   .section {
-    padding: 4rem 0;
+    padding: 3.5rem 0;
   }
   .page-header {
-    padding: 2.75rem 0 2.25rem;
+    padding: 2.5rem 0 2rem;
   }
   .admin-main {
     padding-left: 0.75rem !important;

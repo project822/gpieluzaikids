@@ -1,6 +1,6 @@
 import { getEvents, createEvent, slugify, logActivity } from '@/lib/repo';
 import { requireAdmin } from '@/lib/auth';
-import { requiredFieldsError } from '@/lib/eventValidation';
+import { requiredFieldsError, invalidUrlsError } from '@/lib/eventValidation';
 import { sanitizePayload, isValidImage } from '@/lib/sanitize';
 
 export async function GET() {
@@ -21,6 +21,10 @@ export async function POST(request) {
     const missingError = requiredFieldsError(body);
     if (missingError) {
       return Response.json({ error: missingError }, { status: 400 });
+    }
+    const badUrls = invalidUrlsError(body);
+    if (badUrls) {
+      return Response.json({ error: badUrls }, { status: 400 });
     }
     if (!isValidImage(body.image)) {
       return Response.json(

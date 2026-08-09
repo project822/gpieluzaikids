@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Icon from '../ui/Icons';
+import ChurchLogo from '../ui/ChurchLogo';
 import AdminThemeToggle from './AdminThemeToggle';
 import useSiteTheme from '../ui/useSiteTheme';
 import { csrfFetch } from '@/lib/csrfClient';
@@ -45,9 +46,7 @@ export default function AdminLoginForm() {
         <AdminThemeToggle compact />
       </div>
       <div className="text-center mb-4">
-        <span className="brand-logo mx-auto mb-3" style={{ display: 'flex', width: 56, height: 56 }}>
-          <Icon name="cross" size={26} />
-        </span>
+        <ChurchLogo size={56} className="mx-auto mb-3" style={{ width: 56, height: 56 }} />
         <h4 className="mb-1">Admin Eluzai Kids</h4>
         <p className="text-sm text-secondary mb-0">
           {searchParams.get('from') ? 'Silakan login untuk melanjutkan.' : 'Masuk untuk mengelola situs.'}

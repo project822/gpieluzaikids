@@ -34,7 +34,7 @@ export default function AdminInformasiPage() {
     <ResourceManager
       endpoint="/api/banners"
       title="Kelola Banner Informasi"
-      subtitle="Hanya 1 banner yang dapat tampil di halaman Informasi agar fokus — mengunggah banner baru akan menggantikan banner yang ada. Format PNG/JPG/WebP, maks 4MB, rasio 16:9."
+      subtitle="Hanya 1 banner yang tampil — PNG/JPG/WebP, rasio 16:9."
       addLabel="Unggah Banner"
       fields={FIELDS}
       columns={COLUMNS}

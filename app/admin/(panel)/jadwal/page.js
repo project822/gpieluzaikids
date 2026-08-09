@@ -95,7 +95,7 @@ export default function AdminJadwalPage() {
     <ResourceManager
       endpoint="/api/schedules"
       title="Kelola Jadwal"
-      subtitle="Atur jadwal mingguan (Ibadah Sekolah Minggu & Latihan) secara real time. Tanggal hanya boleh Hari Minggu; centang 'Ada' bila kegiatan berlangsung, isi waktu mulai (tanpa rentang)."
+      subtitle="Atur jadwal ibadah & latihan setiap Hari Minggu."
       addLabel="Tambah Jadwal"
       fields={FIELDS}
       columns={COLUMNS}

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Icon from '../ui/Icons';
+import ChurchLogo from '../ui/ChurchLogo';
 import LogoutButton from './LogoutButton';
 import AdminThemeToggle from './AdminThemeToggle';
 import useSiteTheme from '../ui/useSiteTheme';
@@ -15,8 +16,15 @@ const NAV = [
     href: '/admin/absensi',
     label: 'Absensi',
     icon: 'users',
-    // Tetap aktif di halaman kelas: /admin/{baby,samuel,yosua,musa}
-    match: (p) => p === '/admin/absensi' || /^\/admin\/(baby|samuel|yosua|musa)$/.test(p),
+    // Tetap aktif di halaman kelas: /admin/absensi/{baby,samuel,yosua,musa}
+    match: (p) => p.startsWith('/admin/absensi'),
+  },
+  {
+    href: '/admin/anggota',
+    label: 'Anggota',
+    icon: 'user',
+    // Tetap aktif di halaman kelas: /admin/anggota/{baby,samuel,yosua,musa}
+    match: (p) => p.startsWith('/admin/anggota'),
   },
   { href: '/admin/events', label: 'Event', icon: 'calendar' },
 ];
@@ -38,9 +46,7 @@ export default function AdminShell({ children }) {
     <div className="admin-shell d-flex">
       <aside className="admin-sidebar d-none d-md-flex flex-column p-3" style={{ width: 260 }}>
         <Link href="/admin" className="d-flex align-items-center gap-2 text-decoration-none mb-4 px-2 pt-2">
-          <span className="brand-logo" style={{ width: 38, height: 38, borderRadius: 10 }}>
-            <Icon name="cross" size={20} />
-          </span>
+          <ChurchLogo size={38} style={{ borderRadius: 10 }} />
           <span className="fw-bold text-dark">Eluzai Admin</span>
         </Link>
 
@@ -78,9 +84,7 @@ export default function AdminShell({ children }) {
           style={{ background: 'var(--eluzai-surface)', borderBottom: '1px solid var(--eluzai-border)' }}
         >
           <Link href="/admin" className="d-flex align-items-center gap-2 text-decoration-none">
-            <span className="brand-logo" style={{ width: 34, height: 34, borderRadius: 9 }}>
-              <Icon name="cross" size={18} />
-            </span>
+            <ChurchLogo size={34} style={{ borderRadius: 9 }} />
             <span className="fw-bold text-dark" style={{ fontSize: '0.95rem' }}>Eluzai Admin</span>
           </Link>
           <div className="d-flex gap-2">

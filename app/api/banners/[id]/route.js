@@ -8,7 +8,13 @@ export async function PUT(request, { params }) {
   try {
     const { id } = await params;
     const body = sanitizePayload(await request.json());
-    if (!isValidImage(body.image)) {
+    // Validasi gambar hanya bila NILAINYA BERUBAH — gambar lama (mis. data
+    // demo SVG yang sudah tersimpan) tidak diunggah ulang. Gambar baru wajib
+    // PNG/JPG/WebP (SVG diblokir, lihat lib/sanitize.js); mengosongkan gambar
+    // banner tetap ditolak (banner wajib punya gambar).
+    const existing = await getBannerById(id);
+    if (!existing) return Response.json({ error: 'Banner tidak ditemukan.' }, { status: 404 });
+    if ('image' in body && body.image !== existing.image && !isValidImage(body.image)) {
       return Response.json(
         { error: 'Gambar banner wajib diisi (PNG/JPG/WebP, maks 4MB).' },
         { status: 400 }

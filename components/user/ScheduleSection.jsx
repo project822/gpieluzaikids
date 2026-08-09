@@ -55,7 +55,7 @@ export default function ScheduleSection({ date, schedule }) {
           <SectionHeading
             center
             title="Jadwal Minggu Ini"
-            sub={`Kegiatan ${CHURCH.shortName} setiap Hari Minggu — pantau jadwal terbaru di sini.`}
+            sub={`Kegiatan ${CHURCH.shortName} setiap Hari Minggu.`}
           />
         </Reveal>
 

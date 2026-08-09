@@ -90,6 +90,20 @@ const nextConfig = {
         source: '/api/:path*',
         headers: [{ key: 'Cache-Control', value: 'no-store' }],
       },
+      // Gambar publik (/img/*): netralkan eksekusi skrip pada SVG warisan
+      // (data demo lama) bila file dibuka langsung di browser — sandbox tanpa
+      // allow-scripts memblokir semua skrip. Rule ini MENIMPA CSP global di
+      // atas untuk jalur /img (rule terakhir yang menang). Tidak memengaruhi
+      // gambar raster (PNG/JPG/WebP).
+      {
+        source: '/img/:path*',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: "default-src 'none'; sandbox",
+          },
+        ],
+      },
     ];
   },
 };

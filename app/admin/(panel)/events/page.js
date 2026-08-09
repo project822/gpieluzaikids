@@ -36,7 +36,7 @@ const QUICK_EDIT = {
   modalTitle: 'Link Foto Kegiatan',
   label: 'Link Google Drive (foto kegiatan)',
   placeholder: 'https://drive.google.com/drive/folders/...',
-  hint: 'Diisi setelah acara berlangsung. Saat link tersedia, tombol pendaftaran di halaman publik (H-2) berubah menjadi "Foto"; selama masih kosong, tombol tetap terkunci (kursor terblokir).',
+  hint: 'Diisi setelah acara berlangsung — tombol pendaftaran publik berubah menjadi "Foto".',
 };
 
 const COLUMNS = [
@@ -108,7 +108,7 @@ export default function AdminEventsPage() {
     <ResourceManager
       endpoint="/api/events"
       title="Kelola Event"
-      subtitle="Atur event: nama, tema, foto (rasio 4:5), tanggal, open gate, waktu mulai, lokasi, tautan Google Form & Maps — semuanya wajib diisi. Link foto Google Drive dikelola terpisah (ikon tautan di tiap baris)."
+      subtitle="Atur event jemaat — semua field wajib diisi."
       addLabel="Tambah Event"
       fields={FIELDS}
       columns={COLUMNS}

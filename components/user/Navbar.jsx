@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Icon from '../ui/Icons';
+import ChurchLogo from '../ui/ChurchLogo';
 import ThemeToggle from '../ui/ThemeToggle';
 import useSiteTheme from '../ui/useSiteTheme';
 import { scrollToAnchor } from '../ui/scrollToAnchor';
@@ -87,9 +88,7 @@ export default function Navbar() {
       <nav className="container">
         <div className="d-flex align-items-center justify-content-between gap-3">
           <Link href="/" className="d-flex align-items-center gap-2 text-decoration-none">
-            <span className="brand-logo">
-              <Icon name="cross" size={22} />
-            </span>
+            <ChurchLogo size={42} />
             <span className="fw-bold fs-5 text-dark">
               Eluzai <span style={{ color: 'var(--eluzai-blue)' }}>Kids</span>
             </span>

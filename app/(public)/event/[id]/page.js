@@ -18,8 +18,19 @@ export async function generateStaticParams() {
 }
 
 // Ubah tautan Google Maps biasa menjadi URL embed untuk iframe.
+// HANYA host Google yang diizinkan — tautan lain (termasuk yang memuat
+// 'output=embed') tidak dirender sebagai iframe di halaman publik.
+const EMBED_ALLOW_HOSTS = new Set(['www.google.com', 'maps.google.com', 'google.com']);
+
 function mapsEmbedUrl(link) {
   if (!link) return null;
+  let host;
+  try {
+    host = new URL(link).host;
+  } catch {
+    return null;
+  }
+  if (!EMBED_ALLOW_HOSTS.has(host)) return null;
   if (link.includes('output=embed')) return link;
   const m = link.match(/[?&]query=([^&]+)/);
   if (m) {
@@ -88,13 +99,6 @@ export default async function EventDetailPage({ params }) {
                     </div>
                   ))}
                 </div>
-
-                {item.description && (
-                  <div className="mb-4">
-                    <h6 className="mb-2">Deskripsi</h6>
-                    <p className="text-sm mb-0">{item.description}</p>
-                  </div>
-                )}
 
                 <div className="d-flex gap-2 flex-wrap mt-auto pt-3">
                   <EventActions item={actionsItem} large block={false} />

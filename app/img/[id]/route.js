@@ -69,6 +69,11 @@ function respondImage(parsed) {
       'Content-Length': String(parsed.buf.length),
       // immutable: aman karena ?v= berubah saat gambar diganti admin.
       'Cache-Control': 'public, max-age=31536000, immutable',
+      // Netralkan eksekusi skrip pada SVG warisan/data demo bila file
+      // dibuka langsung di browser (upload SVG baru sudah diblokir di
+      // lib/sanitize.js). Tidak berpengaruh pada gambar raster.
+      'Content-Security-Policy': "default-src 'none'; sandbox",
+      'X-Content-Type-Options': 'nosniff',
     },
   });
 }

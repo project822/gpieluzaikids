@@ -18,7 +18,7 @@ export default async function EventsArchivePage() {
     <>
       <PageHeader
         title="Semua Event"
-        sub="Jelajahi seluruh kegiatan jemaat — cari berdasarkan nama, tahun, atau bulan. Foto kegiatan tetap dapat diakses dari kartu event."
+        sub="Jelajahi seluruh kegiatan jemaat."
       />
       <section className="section pt-4">
         <div className="container">

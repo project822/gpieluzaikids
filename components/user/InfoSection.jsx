@@ -12,7 +12,7 @@ export default function InfoSection({ banners }) {
           <SectionHeading
             center
             title="Kabar Terbaru Gereja"
-            sub={`Pengumuman, jadwal, dan berita dari ${CHURCH.name} — diperbarui secara berkala.`}
+            sub={`Pengumuman dan berita terbaru ${CHURCH.shortName}.`}
           />
         </Reveal>
 
