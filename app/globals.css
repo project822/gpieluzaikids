@@ -1,0 +1,1605 @@
+/* ============================================================
+   GPI Eluzai Kids — Global Theme
+   Desain: Modern Minimal & Clean
+   - Tipografi: Inter (body/UI) + Hanken Grotesk (judul) — font LOKAL
+   - Warna: biru tua profesional (#1d4ed8) + hijau (#15803d)
+   - Default: LIGHT; dark mode (data-bs-theme="dark") berbasis slate.
+   Area admin memakai tema terpisah (kunci localStorage sendiri).
+   ============================================================ */
+
+:root {
+  --eluzai-blue: #1d4ed8;
+  --eluzai-blue-dark: #1e40af;
+  --eluzai-blue-deep: #1e3a8a;
+  --eluzai-blue-soft: #dbeafe;
+  --eluzai-green: #15803d;
+  --eluzai-green-dark: #166534;
+  --eluzai-green-soft: #dcfce7;
+  --eluzai-rose: #dc2626;
+  --eluzai-rose-soft: #fee2e2;
+  --eluzai-ink: #0f172a;
+  --eluzai-ink-soft: #334155;
+  --eluzai-muted: #64748b;
+  --eluzai-bg: #fafaf9;
+  --eluzai-surface: #ffffff;
+  --eluzai-border: #e2e8f0;
+  --eluzai-border-strong: #cbd5e1;
+  --eluzai-radius: 0.75rem;
+  --eluzai-radius-lg: 1rem;
+  --eluzai-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --eluzai-shadow: 0 4px 14px rgba(15, 23, 42, 0.07);
+  --eluzai-shadow-lg: 0 18px 44px rgba(15, 23, 42, 0.12);
+  --eluzai-nav-bg: rgba(255, 255, 255, 0.82);
+  --eluzai-gradient: linear-gradient(120deg, #1d4ed8 0%, #15803d 100%);
+  --eluzai-gradient-soft: linear-gradient(120deg, #dbeafe 0%, #dcfce7 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 92px; /* offset agar anchor tidak tertutup navbar sticky */
+}
+
+/* ---------- Scroll-Triggered Fade (Reveal, dua arah) ---------- */
+.reveal,
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-visible {
+  opacity: 1;
+  transform: none;
+}
+
+html:not(.js) .reveal,
+html:not(.js) [data-reveal] {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* ---------- Back-to-top ---------- */
+.back-to-top {
+  position: fixed;
+  right: 1.4rem;
+  bottom: 1.4rem;
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  border: 1px solid var(--eluzai-border);
+  background: var(--eluzai-surface);
+  color: var(--eluzai-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--eluzai-shadow);
+  z-index: 1150;
+  animation: slideUp 0.25s ease;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.back-to-top:hover {
+  background: var(--eluzai-blue);
+  border-color: var(--eluzai-blue);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+body {
+  font-family: var(--font-inter), 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--eluzai-bg);
+  color: var(--eluzai-ink);
+  font-size: 1rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+  scroll-padding-top: 92px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-hanken), var(--font-inter), system-ui, sans-serif;
+  font-weight: 700;
+  color: var(--eluzai-ink);
+  letter-spacing: -0.02em;
+}
+
+p {
+  color: var(--eluzai-muted);
+  line-height: 1.65;
+}
+
+a {
+  color: var(--eluzai-muted);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+a:hover {
+  color: var(--eluzai-blue);
+}
+
+img, svg {
+  max-width: 100%;
+}
+
+::selection {
+  background: var(--eluzai-blue);
+  color: #fff;
+}
+
+/* ---------- Layout helpers ---------- */
+.section {
+  padding: 5.5rem 0;
+}
+
+.section-alt {
+  background: var(--eluzai-surface);
+  border-top: 1px solid var(--eluzai-border);
+  border-bottom: 1px solid var(--eluzai-border);
+}
+
+.section-title {
+  font-size: clamp(1.75rem, 3.2vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  font-family: var(--font-hanken), var(--font-inter), system-ui, sans-serif;
+}
+
+.section-sub {
+  max-width: 640px;
+  color: var(--eluzai-muted);
+  font-size: 1rem;
+}
+
+.text-gradient {
+  color: var(--eluzai-blue);
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  font-weight: 500;
+  border-radius: 10px;
+  padding: 0.65rem 1.4rem;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease,
+    box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.btn-lg {
+  padding: 0.8rem 1.7rem;
+  font-size: 1rem;
+}
+
+.btn-sm {
+  border-radius: 8px;
+}
+
+.btn-eluzai {
+  background: var(--eluzai-blue);
+  color: #fff;
+  border: 1px solid var(--eluzai-blue);
+  box-shadow: none;
+}
+
+.btn-eluzai:hover, .btn-eluzai:focus {
+  background: var(--eluzai-blue-dark);
+  border-color: var(--eluzai-blue-deep);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.btn-eluzai-green {
+  background: var(--eluzai-green);
+  color: #fff;
+  border: 1px solid var(--eluzai-green);
+  box-shadow: none;
+}
+
+.btn-eluzai-green:hover, .btn-eluzai-green:focus {
+  background: var(--eluzai-green-dark);
+  border-color: var(--eluzai-green-dark);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.btn-eluzai-outline {
+  background: var(--eluzai-surface);
+  color: var(--eluzai-ink-soft);
+  border: 1px solid var(--eluzai-border-strong);
+  box-shadow: none;
+}
+
+.btn-eluzai-outline:hover {
+  color: var(--eluzai-blue);
+  border-color: var(--eluzai-blue);
+  background: var(--eluzai-surface);
+  transform: translateY(-1px);
+  box-shadow: var(--eluzai-shadow-sm);
+}
+
+/* ---------- Cards ---------- */
+.card-lift {
+  border: 1px solid var(--eluzai-border);
+  border-radius: var(--eluzai-radius-lg);
+  background: var(--eluzai-surface);
+  box-shadow: var(--eluzai-shadow-sm);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  height: 100%;
+}
+
+.card-lift:hover {
+  transform: translateY(-3px);
+  border-color: var(--eluzai-border-strong);
+  box-shadow: var(--eluzai-shadow);
+}
+
+.icon-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--eluzai-blue-soft);
+  color: var(--eluzai-blue);
+  flex-shrink: 0;
+}
+
+.icon-chip-green {
+  background: var(--eluzai-green-soft);
+  color: var(--eluzai-green);
+}
+
+.icon-chip-ig {
+  background: #f3e8ff;
+  color: #9333ea;
+}
+
+.icon-chip-yt {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* ---------- Slider beranda (foto suasana gereja) ---------- */
+.home-slider {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid var(--eluzai-border);
+  background: var(--eluzai-surface);
+  box-shadow: var(--eluzai-shadow);
+  aspect-ratio: 10 / 7;
+  touch-action: pan-y;
+}
+
+.slider-track {
+  display: flex;
+  height: 100%;
+  transition: transform 0.6s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.slider-slide {
+  position: relative;
+  min-width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.slider-slide img,
+.slider-slide svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.slider-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 2.4rem 1.4rem 1.15rem;
+  background: linear-gradient(to top, rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0));
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.slider-title {
+  font-weight: 700;
+  font-size: 1.05rem;
+  line-height: 1.3;
+  font-family: var(--font-hanken), var(--font-inter), system-ui, sans-serif;
+}
+
+.slider-sub {
+  font-size: 0.82rem;
+  opacity: 0.9;
+}
+
+.slider-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(15, 23, 42, 0.35);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, opacity 0.15s ease;
+  opacity: 0;
+  backdrop-filter: blur(4px);
+}
+
+.home-slider:hover .slider-arrow,
+.home-slider:focus-within .slider-arrow {
+  opacity: 1;
+}
+
+.slider-arrow:hover {
+  background: rgba(15, 23, 42, 0.6);
+}
+
+.slider-arrow.prev { left: 0.85rem; }
+.slider-arrow.next { right: 0.85rem; }
+
+.slider-dots {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0.7rem;
+  display: flex;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.slider-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.55);
+  padding: 0;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.slider-dot.active {
+  background: #fff;
+  transform: scale(1.25);
+}
+
+@media (max-width: 991.98px) {
+  .home-slider {
+    aspect-ratio: 16 / 9;
+    border-radius: 16px;
+  }
+}
+
+/* ---------- Banner informasi (16:9) ---------- */
+.banner-block {
+  margin: 0;
+  position: relative;
+  border-radius: var(--eluzai-radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--eluzai-border);
+  background: var(--eluzai-surface);
+  box-shadow: var(--eluzai-shadow);
+  aspect-ratio: 16 / 9;
+}
+
+.banner-block img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.banner-block figcaption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 2.2rem 1.4rem 1.1rem;
+  background: linear-gradient(to top, rgba(15, 23, 42, 0.82), rgba(15, 23, 42, 0));
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.banner-title {
+  font-weight: 700;
+  font-size: 1.05rem;
+  font-family: var(--font-hanken), var(--font-inter), system-ui, sans-serif;
+}
+
+.banner-caption {
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+/* ---------- Event card ---------- */
+.event-card {
+  position: relative;
+}
+
+.event-card:hover {
+  transform: translateY(-4px);
+}
+
+.event-cover {
+  display: block;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: var(--eluzai-gradient-soft);
+  position: relative;
+}
+
+.event-cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.event-card:hover .event-cover img {
+  transform: scale(1.05);
+}
+
+.event-cover-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(29, 78, 216, 0.45);
+  background: var(--eluzai-gradient-soft);
+}
+
+.event-title a:hover {
+  color: var(--eluzai-blue);
+}
+
+.event-hidden-badge {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-weight: 600;
+  font-size: 0.72rem;
+  padding: 0.28rem 0.6rem;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.82);
+  color: #fff;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* ---------- Detail event ---------- */
+.detail-photo {
+  border-radius: var(--eluzai-radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--eluzai-border);
+  background: var(--eluzai-surface);
+  min-height: 320px;
+  display: flex;
+  box-shadow: var(--eluzai-shadow-sm);
+}
+
+.detail-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ---------- Navbar ---------- */
+.navbar-eluzai {
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+  background: var(--eluzai-nav-bg);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  padding: 0.85rem 0;
+}
+
+.navbar-eluzai.is-scrolled {
+  border-bottom-color: var(--eluzai-border);
+  box-shadow: var(--eluzai-shadow-sm);
+  padding: 0.6rem 0;
+}
+
+.brand-logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--eluzai-gradient);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(29, 78, 216, 0.28);
+}
+
+.navbar-eluzai .nav-link {
+  position: relative;
+  font-weight: 500;
+  color: var(--eluzai-muted);
+  padding: 0.5rem 0.85rem;
+  transition: color 0.15s ease;
+  font-size: 0.95rem;
+}
+
+.navbar-eluzai .nav-link:hover {
+  color: var(--eluzai-ink);
+}
+
+.navbar-eluzai .nav-link.active {
+  color: var(--eluzai-blue);
+  font-weight: 600;
+}
+
+.navbar-eluzai .nav-link.active::after {
+  content: '';
+  position: absolute;
+  left: 0.85rem;
+  right: 0.85rem;
+  bottom: 0.3rem;
+  height: 2.5px;
+  border-radius: 3px;
+  background: var(--eluzai-blue);
+}
+
+.navbar-toggler-eluzai {
+  background: var(--eluzai-surface);
+  border: 1px solid var(--eluzai-border);
+  border-radius: 10px;
+  color: var(--eluzai-ink);
+  padding: 0.45rem 0.7rem;
+}
+
+.nav-mobile-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1045;
+  background: var(--eluzai-surface);
+  border-bottom: 1px solid var(--eluzai-border);
+  box-shadow: var(--eluzai-shadow-lg);
+  padding: 0.6rem 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  animation: slideDown 0.18s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Hero ---------- */
+.hero {
+  position: relative;
+  padding: 5.5rem 0 5rem;
+  background: var(--eluzai-bg);
+}
+
+@media (max-width: 991.98px) {
+  .hero {
+    padding: 3rem 0 3.5rem;
+  }
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: var(--eluzai-surface);
+  border: 1px solid var(--eluzai-border);
+  border-radius: 999px;
+  padding: 0.4rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--eluzai-blue);
+  box-shadow: var(--eluzai-shadow-sm);
+}
+
+.hero-title {
+  font-size: clamp(2.2rem, 4.4vw, 3.1rem);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  font-family: var(--font-hanken), var(--font-inter), system-ui, sans-serif;
+}
+
+.hero-lead {
+  font-size: 1.05rem;
+  max-width: 540px;
+  color: var(--eluzai-muted);
+}
+
+/* ---------- Footer (gelap — anchor profesional) ---------- */
+.footer-eluzai {
+  background: #0b1220;
+  color: #94a3b8;
+  padding: 4rem 0 0;
+  margin-top: 4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.footer-eluzai h6 {
+  color: #e2e8f0;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.footer-eluzai a {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  transition: color 0.15s ease;
+}
+
+.footer-eluzai a:hover {
+  color: #ffffff;
+}
+
+.footer-eluzai .footer-link {
+  display: block;
+  padding: 0.28rem 0;
+}
+
+.footer-eluzai p {
+  color: #94a3b8;
+}
+
+.footer-eluzai .brand-logo {
+  box-shadow: 0 4px 12px rgba(29, 78, 216, 0.4);
+}
+
+.footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 2.5rem;
+  padding: 1.2rem 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.social-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #cbd5e1;
+  transition: all 0.15s ease;
+}
+
+.social-btn:hover {
+  background: var(--eluzai-blue);
+  border-color: var(--eluzai-blue);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+/* Varian warna brand (footer gelap) */
+.social-btn.wa {
+  background: rgba(21, 128, 61, 0.18);
+  border-color: rgba(74, 222, 128, 0.35);
+  color: #86efac;
+}
+
+.social-btn.wa:hover {
+  background: #15803d;
+  border-color: #15803d;
+  color: #fff;
+}
+
+.social-btn.ig {
+  background: rgba(147, 51, 234, 0.18);
+  border-color: rgba(192, 132, 252, 0.35);
+  color: #d8b4fe;
+}
+
+.social-btn.ig:hover {
+  background: #9333ea;
+  border-color: #9333ea;
+  color: #fff;
+}
+
+.social-btn.yt {
+  background: rgba(220, 38, 38, 0.18);
+  border-color: rgba(248, 113, 113, 0.35);
+  color: #fca5a5;
+}
+
+.social-btn.yt:hover {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #fff;
+}
+
+/* ---------- Forms ---------- */
+.form-label {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--eluzai-ink-soft);
+}
+
+.form-control, .form-select {
+  border-radius: 10px;
+  border: 1px solid var(--eluzai-border-strong);
+  padding: 0.65rem 0.9rem;
+  font-size: 0.95rem;
+  background: var(--eluzai-surface);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--eluzai-blue);
+  box-shadow: 0 0 0 0.2rem rgba(29, 78, 216, 0.15);
+}
+
+/* ---------- Map ---------- */
+.map-frame {
+  border: 1px solid var(--eluzai-border);
+  border-radius: var(--eluzai-radius-lg);
+  width: 100%;
+  height: 420px;
+  display: block;
+  box-shadow: var(--eluzai-shadow-sm);
+}
+
+@media (max-width: 575.98px) {
+  .map-frame {
+    height: 300px;
+  }
+}
+
+/* ---------- Page header ---------- */
+.page-header {
+  background: var(--eluzai-surface);
+  border-bottom: 1px solid var(--eluzai-border);
+  padding: 4rem 0 3.25rem;
+}
+
+/* ---------- Badges ---------- */
+.badge-soft {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 600;
+  font-size: 0.76rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.badge-blue { background: var(--eluzai-blue-soft); color: #1e40af; }
+.badge-green { background: var(--eluzai-green-soft); color: #166534; }
+.badge-ink { background: #eef2f7; color: var(--eluzai-ink-soft); }
+.badge-rose { background: var(--eluzai-rose-soft); color: #b91c1c; }
+
+/* ---------- Kartu jadwal mingguan (#schedule) ---------- */
+.schedule-card {
+  height: 100%;
+  border-radius: 16px;
+  padding: 1.5rem 1.5rem;
+  background: var(--eluzai-surface);
+  border: 1px solid var(--eluzai-border);
+  border-top: 4px solid var(--eluzai-border);
+  box-shadow: var(--eluzai-shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.schedule-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--eluzai-shadow);
+}
+.schedule-card.is-ada {
+  border-top-color: var(--eluzai-green);
+}
+.schedule-card.is-tidak {
+  border-top-color: var(--eluzai-rose);
+}
+.schedule-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+.schedule-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.schedule-icon.ok {
+  background: var(--eluzai-green-soft);
+  color: var(--eluzai-green);
+}
+.schedule-icon.no {
+  background: var(--eluzai-rose-soft);
+  color: var(--eluzai-rose);
+}
+.schedule-title {
+  font-weight: 700;
+  font-size: 1.05rem;
+  font-family: var(--font-hanken), var(--font-inter), system-ui, sans-serif;
+}
+.schedule-desc {
+  font-size: 0.9rem;
+}
+.schedule-desc.ok {
+  color: var(--eluzai-green);
+}
+.schedule-desc.no {
+  color: var(--eluzai-rose);
+}
+.schedule-status {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.schedule-status.ok {
+  background: var(--eluzai-green-soft);
+  color: var(--eluzai-green);
+}
+.schedule-status.no {
+  background: var(--eluzai-rose-soft);
+  color: var(--eluzai-rose);
+}
+.schedule-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin-top: 1rem;
+  padding-top: 0.9rem;
+  border-top: 1px dashed var(--eluzai-border);
+}
+.schedule-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.88rem;
+  color: var(--eluzai-muted);
+}
+.schedule-meta-item svg {
+  opacity: 0.75;
+}
+
+/* ---------- Admin ---------- */
+.admin-shell {
+  min-height: 100vh;
+  background: var(--eluzai-bg);
+}
+
+.admin-sidebar {
+  background: var(--eluzai-surface);
+  border-right: 1px solid var(--eluzai-border);
+  min-height: 100vh;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+}
+
+.admin-sidebar .nav-link {
+  position: relative;
+  color: var(--eluzai-muted);
+  padding: 0.65rem 1rem;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.admin-sidebar .nav-link:hover {
+  background: var(--eluzai-bg);
+  color: var(--eluzai-ink);
+}
+
+.admin-sidebar .nav-link.active {
+  background: var(--eluzai-blue-soft);
+  color: var(--eluzai-blue);
+  font-weight: 600;
+}
+
+.admin-card {
+  background: var(--eluzai-surface);
+  border: 1px solid var(--eluzai-border);
+  border-radius: var(--eluzai-radius-lg);
+  box-shadow: var(--eluzai-shadow-sm);
+}
+
+.stat-admin {
+  border-radius: var(--eluzai-radius-lg);
+  padding: 1.4rem 1.5rem;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--eluzai-shadow);
+}
+
+.stat-admin::after {
+  content: '';
+  position: absolute;
+  right: -28px;
+  bottom: -28px;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.stat-admin .num {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.1;
+  font-family: var(--font-hanken), var(--font-inter), system-ui, sans-serif;
+}
+
+.stat-admin .lbl {
+  opacity: 0.9;
+  font-size: 0.88rem;
+}
+
+.stat-blue {
+  background: linear-gradient(135deg, #1d4ed8, #2563eb);
+}
+
+.stat-green {
+  background: linear-gradient(135deg, #15803d, #16a34a);
+}
+
+.admin-table th {
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--eluzai-muted);
+  font-weight: 600;
+  border-bottom: 1.5px solid var(--eluzai-border);
+  white-space: nowrap;
+}
+
+.admin-table td {
+  vertical-align: middle;
+  color: var(--eluzai-ink-soft);
+  font-size: 0.92rem;
+}
+
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--eluzai-border);
+  background: var(--eluzai-surface);
+  color: var(--eluzai-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.icon-btn:hover {
+  color: var(--eluzai-blue);
+  border-color: var(--eluzai-blue);
+  background: var(--eluzai-blue-soft);
+}
+
+.icon-btn.danger {
+  color: var(--eluzai-rose);
+  border-color: #fecaca;
+  background: var(--eluzai-rose-soft);
+}
+
+.icon-btn.danger:hover {
+  color: #fff;
+  border-color: var(--eluzai-rose);
+  background: var(--eluzai-rose);
+}
+
+.icon-btn.muted {
+  opacity: 0.55;
+}
+
+.icon-btn.muted:hover {
+  opacity: 1;
+  color: var(--eluzai-rose);
+  border-color: var(--eluzai-rose);
+  background: var(--eluzai-rose-soft);
+}
+
+.icon-btn:disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* ---------- Main konten admin ---------- */
+.admin-main {
+  padding-top: 7.5rem !important; /* cukup untuk topbar mobile dua baris */
+}
+
+@media (min-width: 768px) {
+  .admin-main {
+    padding-top: 2rem !important;
+  }
+}
+
+/* ---------- Modal ---------- */
+.modal-backdrop-eluzai {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  z-index: 1050;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 5vh 1rem;
+  overflow-y: auto;
+  animation: fadeIn 0.15s ease;
+}
+
+.modal-card-eluzai {
+  background: var(--eluzai-surface);
+  border-radius: var(--eluzai-radius-lg);
+  border: 1px solid var(--eluzai-border);
+  box-shadow: var(--eluzai-shadow-lg);
+  width: 100%;
+  max-width: 640px;
+  animation: slideUp 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Toast ---------- */
+.toast-eluzai {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 1200;
+  background: var(--eluzai-surface);
+  border: 1px solid var(--eluzai-border);
+  border-left: 4px solid var(--eluzai-green);
+  border-radius: 12px;
+  box-shadow: var(--eluzai-shadow-lg);
+  padding: 0.9rem 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-weight: 500;
+  font-size: 0.92rem;
+  color: var(--eluzai-ink);
+  animation: slideUp 0.25s ease;
+  max-width: 340px;
+}
+
+.toast-eluzai.error {
+  border-left-color: var(--eluzai-rose);
+}
+
+/* ---------- Admin: upload gambar & thumbnail ---------- */
+.image-field-preview {
+  width: 150px;
+  max-width: 100%;
+  border: 1.5px dashed var(--eluzai-border-strong);
+  border-radius: 12px;
+  background: var(--eluzai-bg);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--eluzai-muted);
+  font-size: 0.78rem;
+  text-align: center;
+  padding: 0.35rem;
+}
+
+.image-field-preview img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.admin-thumb {
+  width: 46px;
+  border-radius: 9px;
+  overflow: hidden;
+  background: var(--eluzai-gradient-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(29, 78, 216, 0.5);
+  flex-shrink: 0;
+}
+
+.admin-thumb-wide {
+  width: 96px;
+}
+
+.admin-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ---------- Admin: Absensi ---------- */
+.class-card {
+  border: 1px solid var(--eluzai-border);
+  border-radius: var(--eluzai-radius-lg);
+  background: var(--eluzai-surface);
+  box-shadow: var(--eluzai-shadow-sm);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+}
+
+.class-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--eluzai-border-strong);
+  box-shadow: var(--eluzai-shadow);
+}
+
+.class-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 1.05rem;
+  flex-shrink: 0;
+  font-family: var(--font-hanken), var(--font-inter), system-ui, sans-serif;
+}
+
+.class-avatar.baby { background: var(--eluzai-blue-soft); color: var(--eluzai-blue); }
+.class-avatar.samuel { background: var(--eluzai-green-soft); color: var(--eluzai-green); }
+.class-avatar.yosua { background: #ede9fe; color: #6d28d9; }
+.class-avatar.musa { background: #fef3c7; color: #b45309; }
+
+.class-member-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.class-member-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.45rem 0.25rem;
+  border-bottom: 1px dashed var(--eluzai-border);
+  font-size: 0.9rem;
+  min-width: 0;
+}
+
+.class-member-list li:last-child {
+  border-bottom: none;
+}
+
+/* Form absensi: daftar anggota + toggle Hadir (hijau) / Tidak (merah) */
+.attendance-form-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 46vh;
+  overflow-y: auto;
+  border: 1px solid var(--eluzai-border);
+  border-radius: 12px;
+  background: var(--eluzai-bg);
+}
+
+.attendance-form-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--eluzai-border);
+  min-width: 0;
+  transition: background 0.12s ease;
+}
+
+.attendance-form-list li:last-child {
+  border-bottom: none;
+}
+
+.attendance-form-list li:hover {
+  background: var(--eluzai-surface);
+}
+
+.att-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1.5px solid transparent;
+  border-radius: 999px;
+  padding: 0.32rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.att-toggle.hadir {
+  background: var(--eluzai-green-soft);
+  color: var(--eluzai-green);
+  border-color: var(--eluzai-green);
+}
+
+.att-toggle.tidak {
+  background: var(--eluzai-rose-soft);
+  color: var(--eluzai-rose);
+  border-color: var(--eluzai-rose);
+}
+
+.att-toggle.hadir:hover {
+  background: var(--eluzai-green);
+  color: #fff;
+}
+
+.att-toggle.tidak:hover {
+  background: var(--eluzai-rose);
+  color: #fff;
+}
+
+/* Bar kehadiran di riwayat */
+.attendance-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--eluzai-rose-soft);
+  overflow: hidden;
+  min-width: 90px;
+}
+
+.attendance-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--eluzai-gradient);
+  transition: width 0.25s ease;
+}
+
+/* ---------- Admin: Log Aktivitas ---------- */
+.activity-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.activity-item {
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-start;
+  border: 1px solid var(--eluzai-border);
+  border-radius: 14px;
+  background: var(--eluzai-surface);
+  padding: 0.9rem 1rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.activity-item:hover {
+  border-color: var(--eluzai-border-strong);
+  box-shadow: var(--eluzai-shadow-sm);
+}
+
+.activity-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+
+.activity-icon.mod-event { background: var(--eluzai-blue-soft); color: var(--eluzai-blue); }
+.activity-icon.mod-banner { background: #fef3c7; color: #b45309; }
+.activity-icon.mod-schedule { background: #ede9fe; color: #6d28d9; }
+.activity-icon.mod-member { background: var(--eluzai-green-soft); color: var(--eluzai-green); }
+.activity-icon.mod-attendance { background: #cffafe; color: #0e7490; }
+.activity-icon.mod-auth { background: #eef2f7; color: var(--eluzai-ink-soft); }
+
+.activity-detail {
+  font-size: 0.95rem;
+  color: var(--eluzai-ink-soft);
+  line-height: 1.45;
+}
+
+.activity-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.85rem;
+  margin-top: 0.35rem;
+  font-size: 0.78rem;
+  color: var(--eluzai-muted);
+}
+
+.activity-username {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-weight: 600;
+  color: var(--eluzai-ink);
+}
+
+.activity-time {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Chip filter modul aktivitas */
+.filter-chip {
+  border: 1px solid var(--eluzai-border-strong);
+  background: var(--eluzai-surface);
+  color: var(--eluzai-muted);
+  border-radius: 999px;
+  padding: 0.32rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.filter-chip:hover {
+  border-color: var(--eluzai-blue);
+  color: var(--eluzai-blue);
+}
+
+.filter-chip.active {
+  background: var(--eluzai-blue);
+  border-color: var(--eluzai-blue);
+  color: #fff;
+}
+
+/* ---------- Admin: Arsip Absensi (kartu bulan) ---------- */
+.month-card {
+  border: 1px solid var(--eluzai-border);
+  border-radius: var(--eluzai-radius-lg);
+  background: var(--eluzai-surface);
+  padding: 1rem 1.1rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.month-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--eluzai-border-strong);
+  box-shadow: var(--eluzai-shadow);
+}
+
+.month-card.is-empty {
+  opacity: 0.55;
+}
+
+.month-card.is-empty:hover {
+  transform: none;
+  border-color: var(--eluzai-border);
+  box-shadow: none;
+}
+
+.month-card-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--eluzai-ink);
+}
+
+.month-card-num {
+  font-size: 1.55rem;
+  font-weight: 700;
+  line-height: 1.05;
+  color: var(--eluzai-blue);
+  font-family: var(--font-hanken), var(--font-inter), system-ui, sans-serif;
+}
+
+/* Zona bahaya: hapus semua data absensi */
+.danger-zone {
+  border: 1px solid #fecaca;
+  border-radius: var(--eluzai-radius-lg);
+  background: var(--eluzai-surface);
+}
+
+[data-bs-theme='dark'] .danger-zone {
+  border-color: #6b2730;
+}
+
+/* ---------- Misc ---------- */
+.hover-arrow {
+  transition: transform 0.15s ease;
+  display: inline-block;
+}
+
+a:hover .hover-arrow {
+  transform: translateX(3px);
+}
+
+.text-sm {
+  font-size: 0.9rem;
+}
+
+.btn:focus-visible,
+.form-control:focus-visible,
+.form-select:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--eluzai-blue);
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   DARK MODE (slate)
+   Dipicu atribut data-bs-theme="dark" pada <html>. Admin memakai
+   kunci tema sendiri (eluzai-admin-theme) — keduanya default light.
+   ============================================================ */
+[data-bs-theme='dark'] {
+  color-scheme: dark;
+
+  --eluzai-blue-soft: #1e3a5f;
+  --eluzai-green-soft: #14532d;
+  --eluzai-rose-soft: #4c1d24;
+  --eluzai-ink: #e2e8f0;
+  --eluzai-ink-soft: #cbd5e1;
+  --eluzai-muted: #94a3b8;
+  --eluzai-bg: #0f172a;
+  --eluzai-surface: #1e293b;
+  --eluzai-border: #334155;
+  --eluzai-border-strong: #475569;
+  --eluzai-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --eluzai-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  --eluzai-shadow-lg: 0 18px 44px rgba(0, 0, 0, 0.6);
+  --eluzai-nav-bg: rgba(15, 23, 42, 0.85);
+  --eluzai-gradient: linear-gradient(120deg, #2563eb 0%, #16a34a 100%);
+  --eluzai-gradient-soft: linear-gradient(120deg, #16233c 0%, #12262c 100%);
+}
+
+[data-bs-theme='dark'] .text-dark {
+  color: var(--eluzai-ink) !important;
+}
+
+/* Navbar & toggler */
+[data-bs-theme='dark'] .navbar-eluzai .nav-link:hover {
+  color: var(--eluzai-ink);
+}
+
+[data-bs-theme='dark'] .navbar-eluzai .nav-link.active {
+  color: #93c5fd;
+}
+
+[data-bs-theme='dark'] .navbar-eluzai .nav-link.active::after {
+  background: #93c5fd;
+}
+
+/* Hero: hapus titik cahaya biru/hijau (gelap cukup bersih) */
+[data-bs-theme='dark'] .hero {
+  background: var(--eluzai-bg);
+}
+
+/* Footer tetap gelap di kedua mode (anchor profesional) */
+[data-bs-theme='dark'] .footer-eluzai {
+  background: #0b1220;
+  border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Badge & chip */
+[data-bs-theme='dark'] .badge-ink {
+  background: rgba(255, 255, 255, 0.09);
+  color: var(--eluzai-ink-soft);
+}
+
+[data-bs-theme='dark'] .badge-blue { color: #93c5fd; }
+[data-bs-theme='dark'] .badge-green { color: #86efac; }
+[data-bs-theme='dark'] .badge-rose { color: #fca5a5; }
+[data-bs-theme='dark'] .event-hidden-badge {
+  background: rgba(220, 38, 38, 0.92);
+  color: #fff;
+}
+
+[data-bs-theme='dark'] .event-cover-fallback {
+  color: rgba(147, 197, 253, 0.55);
+}
+
+/* Admin */
+[data-bs-theme='dark'] .admin-sidebar .nav-link:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+[data-bs-theme='dark'] .admin-sidebar .nav-link.active {
+  background: var(--eluzai-blue-soft);
+  color: #93c5fd;
+}
+
+[data-bs-theme='dark'] .activity-icon.mod-banner { background: #45371a; color: #fcd34d; }
+[data-bs-theme='dark'] .activity-icon.mod-schedule { background: #2d2350; color: #c4b5fd; }
+[data-bs-theme='dark'] .activity-icon.mod-attendance { background: #173e4a; color: #67e8f9; }
+[data-bs-theme='dark'] .activity-icon.mod-auth { background: rgba(255, 255, 255, 0.09); color: var(--eluzai-ink-soft); }
+
+[data-bs-theme='dark'] .class-avatar.yosua {
+  background: #2d2350;
+  color: #c4b5fd;
+}
+
+[data-bs-theme='dark'] .class-avatar.musa {
+  background: #45371a;
+  color: #fcd34d;
+}
+
+[data-bs-theme='dark'] .icon-chip-ig {
+  background: #2d2350;
+  color: #c4b5fd;
+}
+
+[data-bs-theme='dark'] .icon-chip-yt {
+  background: #4c1d24;
+  color: #fca5a5;
+}
+
+/* Responsive micro-tuning */
+@media (max-width: 575.98px) {
+  .section {
+    padding: 4rem 0;
+  }
+  .page-header {
+    padding: 2.75rem 0 2.25rem;
+  }
+  .admin-main {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+}
