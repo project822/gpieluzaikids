@@ -91,6 +91,14 @@ export async function POST(request) {
           identity = { source: 'db', id: user.id, username: user.username, role: user.role || 'admin' };
         }
       }
+    } else if (process.env.NODE_ENV === 'production') {
+      // Diagnostik deployment: tanpa MONGODB_URI, user database yang dibuat
+      // dari dashboard /dev tidak akan pernah bisa login (hanya kredensial
+      // env ADMIN_USERNAME/ADMIN_PASSWORD yang berlaku). Log server ini
+      // membantu menemukan penyebab sebelum menyalahkan fitur.
+      console.warn(
+        '[api/login] MONGODB_URI tidak dikonfigurasi (mode demo) — login user database tidak tersedia, hanya kredensial env admin yang berlaku. Set MONGODB_URI di Vercel → Settings → Environment Variables, lalu redeploy.'
+      );
     }
     if (!identity) {
       let creds;
