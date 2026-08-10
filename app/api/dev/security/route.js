@@ -1,5 +1,5 @@
 import { requireDevKey } from '@/lib/devApi';
-import { maintenanceEnabled, getBlockedIps } from '@/lib/runtimeState';
+import { maintenanceEnabled, getBlockedIps, getBlockedDevices } from '@/lib/runtimeState';
 import { getRateLimitedIps } from '@/lib/rateLimit';
 import { getSecurityStats } from '@/lib/securityLog';
 
@@ -14,7 +14,8 @@ export async function GET(request) {
   const isProd = process.env.NODE_ENV === 'production';
   const stats = getSecurityStats();
   const rateLimited = getRateLimitedIps();
-  const blockedIps = getBlockedIps();
+  const blockedIps = await getBlockedIps();
+  const blockedDevices = await getBlockedDevices();
 
   const layers = [
     {
@@ -101,9 +102,9 @@ export async function GET(request) {
     {
       id: 'maintenance_mode',
       name: 'Maintenance Mode',
-      status: maintenanceEnabled() ? 'active' : 'standby',
+      status: await maintenanceEnabled() ? 'active' : 'standby',
       protection: 'Kontrol akses darurat',
-      detail: maintenanceEnabled()
+      detail: await maintenanceEnabled()
         ? 'AKTIF — halaman publik mengembalikan 503; /admin & /api tetap jalan.'
         : 'Nonaktif — situs melayani semua pengunjung.',
     },
@@ -116,6 +117,16 @@ export async function GET(request) {
         blockedIps.length > 0
           ? `${blockedIps.length} IP diblokir: ${blockedIps.join(', ')}.`
           : 'Tidak ada IP di blocklist. IP yang kena rate limit login diblokir otomatis 10 menit.',
+    },
+    {
+      id: 'blocked_device',
+      name: 'Device Blocklist (MAC/Fingerprint)',
+      status: blockedDevices.length > 0 ? 'active' : 'standby',
+      protection: 'Blokir perangkat login (403)',
+      detail:
+        blockedDevices.length > 0
+          ? `${blockedDevices.length} perangkat diblokir (header X-Device-Id).`
+          : 'Tidak ada perangkat di blocklist. ID perangkat dikirim otomatis dari browser admin.',
     },
   ];
 

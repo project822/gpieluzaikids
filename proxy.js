@@ -26,10 +26,21 @@ import {
   csrfMatches,
   getClientIp,
 } from '@/lib/security';
-import { maintenanceEnabled, isIpBlocked, getMaintenanceText } from '@/lib/runtimeState';
+import { maintenanceEnabled, isIpBlocked, isDeviceBlocked, getMaintenanceText } from '@/lib/runtimeState';
 import { logSecurityEvent } from '@/lib/securityLog';
+import { createWriteRateLimit } from '@/lib/rateLimit';
 
 const STATE_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
+
+// Rate limit tulis API: generous (default 120/menit per IP) agar situs tetap
+// normal saat diakses puluhan pengguna bersamaan, tetapi membendung lonjakan
+// tulis dari satu sumber (script/DoS). Bisa diubah via env
+// RATE_LIMIT_WRITES_PER_MIN (0 = nonaktif).
+const writeLimitMax = Number(process.env.RATE_LIMIT_WRITES_PER_MIN);
+const writeRateLimit = createWriteRateLimit({
+  // 0 benar-benar menonaktifkan (Number('0') = 0, bukan falsy → fallback 120).
+  max: Number.isFinite(writeLimitMax) && writeLimitMax >= 0 ? writeLimitMax : 120,
+});
 
 // Batas ukuran body (anti DoS) — SECURITY.md § 3.4.
 // Login kecil; rute gambar menerima data-URL base64 besar.
@@ -177,9 +188,16 @@ export async function proxy(request) {
   const { pathname } = request.nextUrl;
   const method = request.method;
   const ip = getClientIp(request);
+  const deviceId = request.headers.get('x-device-id') || '';
+
+  const isApi = pathname.startsWith('/api/');
+  const isAdmin = pathname.startsWith('/admin');
+  // Endpoint khusus project /dev (mesin-ke-mesin): autentikasi via kunci
+  // bersama DEV_API_KEY (X-Dev-Key), bukan sesi/CSRF browser.
+  const isDevApi = pathname.startsWith('/api/dev/');
 
   // 1) Blocked IP — semua rute ditolak 403 (audit trail §3.11).
-  if (isIpBlocked(ip)) {
+  if (await isIpBlocked(ip)) {
     logSecurityEvent({ type: 'blocked_ip', ip, path: pathname, detail: 'IP diblokir' });
     return statusPage({
       title: '403 — Akses Ditolak',
@@ -189,17 +207,33 @@ export async function proxy(request) {
     });
   }
 
+  // 1b) Blocked device (fingerprint / "MAC") — halaman admin & API.
+  //     ID perangkat dikirim browser via header X-Device-Id (lib/csrfClient)
+  //     pada setiap request admin. Blokir berlaku real-time (cache
+  //     write-through di lib/runtimeState.js).
+  if ((isApi || isAdmin) && deviceId && (await isDeviceBlocked(deviceId))) {
+    logSecurityEvent({
+      type: 'blocked_device',
+      ip,
+      path: pathname,
+      detail: `perangkat diblokir: ${deviceId.slice(0, 16)}…`,
+    });
+    return isApi
+      ? jsonError('Akses dari perangkat ini diblokir.', 403)
+      : statusPage({
+          title: '403 — Akses Ditolak',
+          message: 'Perangkat Anda telah diblokir.',
+          status: 403,
+          icon: '🔒',
+        });
+  }
+
   // 2) Maintenance mode — hanya halaman publik; /admin & /api tetap
   //    diizinkan (SECURITY.md § 3.10). Teks halaman bisa diedit dari
   //    dashboard /dev (data/dev-state.json). Catatan: /img tidak pernah
   //    sampai ke proxy (dikecualikan di matcher), jadi aset gambar jalan.
-  const isApi = pathname.startsWith('/api/');
-  const isAdmin = pathname.startsWith('/admin');
-  // Endpoint khusus project /dev (mesin-ke-mesin): autentikasi via kunci
-  // bersama DEV_API_KEY (X-Dev-Key), bukan sesi/CSRF browser.
-  const isDevApi = pathname.startsWith('/api/dev/');
-  if (maintenanceEnabled() && !isApi && !isAdmin) {
-    const text = getMaintenanceText();
+  if (await maintenanceEnabled() && !isApi && !isAdmin) {
+    const text = await getMaintenanceText();
     return statusPage({
       title: text.title,
       message: text.message,
@@ -248,6 +282,16 @@ export async function proxy(request) {
       if (!(await csrfMatches(cookieToken, headerToken))) {
         logSecurityEvent({ type: 'csrf', ip, path: pathname, detail: 'token CSRF tidak cocok' });
         return jsonError('Token CSRF tidak valid.', 403);
+      }
+    }
+
+    // d) Rate limit tulis per-IP (anti DoS ringan) — login tetap memakai
+    //    rate limit khusus yang lebih ketat di route-nya sendiri.
+    if (pathname !== '/api/auth/login' && writeRateLimit.max > 0) {
+      const check = writeRateLimit(ip);
+      if (!check.allowed) {
+        logSecurityEvent({ type: 'rate_limit_write', ip, path: pathname });
+        return jsonError('Terlalu banyak permintaan. Coba lagi sebentar lagi.', 429);
       }
     }
   }

@@ -5,10 +5,33 @@ import Icon from '@/components/ui/Icons';
 import EventActions from '@/components/user/EventActions';
 import { formatEventDate, imageUrl, publicEvent } from '@/lib/format';
 import { getEventById, getEvents } from '@/lib/repo';
-
-export const metadata = { title: 'Detail Event' };
+import { siteUrl } from '@/lib/siteUrl';
 
 export const revalidate = 60;
+
+// Metadata dinamis per event (SEO): judul, deskripsi, canonical, og:image.
+export async function generateMetadata({ params }) {
+  const { id } = await params;
+  const item = await getEventById(id);
+  if (!item) return { title: 'Event Tidak Ditemukan' };
+  const description = item.theme
+    ? `Tema: ${item.theme} — ${item.date} di ${item.location || 'GPI Eluzai Kids'}.`
+    : `${item.title} — ${item.date} di ${item.location || 'GPI Eluzai Kids'}.`;
+  return {
+    title: item.title,
+    description,
+    alternates: { canonical: `/event/${item.id}` },
+    openGraph: {
+      type: 'article',
+      title: item.title,
+      description,
+      url: `${siteUrl()}/event/${item.id}`,
+      images: item.image
+        ? [{ url: `${siteUrl()}/img/${encodeURIComponent(item.id)}`, alt: item.title }]
+        : [{ url: `${siteUrl()}/images/logo-placeholder.webp`, alt: 'GPI Eluzai Kids' }],
+    },
+  };
+}
 
 // Pre-render halaman detail semua event yang diketahui (ISR) —
 // event baru dirender on-demand lalu ikut di-cache 60 detik.
@@ -62,8 +85,29 @@ export default async function EventDetailPage({ params }) {
     { icon: 'map-pin', label: 'Lokasi / Tempat', value: item.location || '–' },
   ];
 
+  // Structured data (SEO): halaman event → skema Event (rich results).
+  const eventJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Event',
+    name: item.title,
+    description: item.theme || item.title,
+    startDate: item.date || undefined,
+    eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+    location: {
+      '@type': 'Place',
+      name: item.location || 'GPI Eluzai Kids',
+    },
+    image: item.image ? `${siteUrl()}/img/${encodeURIComponent(item.id)}` : `${siteUrl()}/images/logo-placeholder.webp`,
+    organizer: {
+      '@type': 'Organization',
+      name: 'GPI Eluzai Kids',
+      url: siteUrl(),
+    },
+  };
+
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(eventJsonLd) }} />
       <PageHeader title={item.title} sub={item.theme ? `Tema: ${item.theme}` : undefined} />
 
       <section className="section pt-4">

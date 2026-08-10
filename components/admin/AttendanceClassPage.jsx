@@ -15,7 +15,7 @@ import { SundayDateInput, Toast, hadirCount } from './AttendanceShared';
 
 export default function AttendanceClassPage({ className, initialDate = '' }) {
   const [members, setMembers] = useState([]);
-  const [history, setHistory] = useState([]); // sesi kelas ini (5 hari terakhir)
+  const [history, setHistory] = useState([]); // sesi kelas ini (1 bulan terakhir)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [toast, setToast] = useState(null);
@@ -333,12 +333,12 @@ export default function AttendanceClassPage({ className, initialDate = '' }) {
             )}
           </form>
 
-          {/* ---- Riwayat kelas ini (5 hari terakhir) ---- */}
+          {/* ---- Riwayat kelas ini (1 bulan terakhir) ---- */}
           <div className="admin-card p-3 p-md-4">
             <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
               <h6 className="mb-0">Riwayat Absensi Kelas Ini</h6>
               <span className="text-sm text-secondary" style={{ fontSize: '0.78rem' }}>
-                Menampilkan 5 hari terakhir — data lama tetap aman di database
+                Menampilkan 1 bulan terakhir.
               </span>
             </div>
             {history.length === 0 ? (

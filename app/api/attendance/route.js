@@ -14,8 +14,8 @@ import {
 } from '@/lib/attendanceValidation';
 
 // GET /api/attendance — data HANYA untuk admin (tidak tampil di publik) → wajib login.
-// - tanpa query            → riwayat yang TAMPIL: sesi 5 hari terakhir
-// - ?all=1                 → semua sesi (tidak dibatasi 5 hari)
+// - tanpa query            → riwayat yang TAMPIL: sesi 1 bulan terakhir (30 hari)
+// - ?all=1                 → semua sesi (tidak dibatasi jendela waktu)
 // - ?class=baby&date=...   → lookup satu sesi (preload form absensi)
 export async function GET(request) {
   const auth = await requireAdmin(request);
@@ -34,7 +34,8 @@ export async function GET(request) {
     }
 
     const all = sp.get('all') === '1';
-    const days = Math.max(1, Number(sp.get('days')) || 5);
+    // Jendela default 1 bulan (30 hari) — data lama tetap aman di database.
+    const days = Math.min(365, Math.max(1, Number(sp.get('days')) || 30));
     let list = await getAttendance({ recentDays: days, all });
     // Filter per kelas (mis. halaman /admin/baby menampilkan riwayat kelasnya saja).
     if (className) {

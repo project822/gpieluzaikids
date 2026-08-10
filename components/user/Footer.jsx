@@ -16,13 +16,16 @@ export default function Footer() {
     <footer className="footer-eluzai">
       <div className="container">
         <div className="row g-4">
-          <div className="col-lg-6">
+          <div className="col-lg-8">
             <div className="d-flex align-items-center gap-2 mb-3">
               <ChurchLogo size={42} />
               <span className="fw-bold fs-5 text-white">Eluzai Kids</span>
             </div>
             <p className="text-sm mb-3" style={{ maxWidth: 460 }}>
               Melayani jemaat dengan kasih Kristus sejak {CHURCH.established}.
+            </p>
+            <p className="text-sm d-flex align-items-start gap-2 mb-3" style={{ color: '#cbd5e1', maxWidth: 460 }}>
+              <Icon name="map-pin" size={16} className="mt-1 flex-shrink-0" style={{ color: '#60a5fa' }} /> {CHURCH.address}
             </p>
             <div className="d-flex gap-2">
               <a href={`https://wa.me/${CHURCH.whatsapp}`} target="_blank" rel="noreferrer" className="social-btn wa" aria-label="WhatsApp">
@@ -37,34 +40,13 @@ export default function Footer() {
             </div>
           </div>
 
-          <div className="col-6 col-lg-3">
+          <div className="col-6 col-lg-4">
             <h6>Menu</h6>
             {MENU.map((m) => (
               <AnchorLink key={m.id} id={m.id} className="footer-link">
                 {m.label}
               </AnchorLink>
             ))}
-          </div>
-
-          <div className="col-6 col-lg-3">
-            <h6>Lokasi</h6>
-            <p className="text-sm d-flex align-items-start gap-2 mb-3" style={{ color: '#cbd5e1' }}>
-              <Icon name="map-pin" size={16} className="mt-1 flex-shrink-0" style={{ color: '#60a5fa' }} /> {CHURCH.address}
-            </p>
-            <a
-              href={CHURCH.mapsLink}
-              target="_blank"
-              rel="noreferrer"
-              className="btn btn-sm px-3"
-              style={{
-                background: 'rgba(255,255,255,0.08)',
-                border: '1px solid rgba(255,255,255,0.16)',
-                color: '#e2e8f0',
-                borderRadius: 10,
-              }}
-            >
-              <Icon name="external" size={15} className="me-1" /> Buka di Google Maps
-            </a>
           </div>
         </div>
 

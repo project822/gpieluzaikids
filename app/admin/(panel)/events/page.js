@@ -12,7 +12,7 @@ const FIELDS = [
   { name: 'date', label: 'Tanggal (hari-H)', type: 'date', required: true, col: 'col-md-4' },
   { name: 'openGate', label: 'Open Gate', type: 'text', required: true, col: 'col-md-4', placeholder: 'contoh: 07.30 WIB' },
   { name: 'time', label: 'Waktu Mulai', type: 'text', required: true, col: 'col-md-4', placeholder: 'contoh: 09.00 WIB' },
-  { name: 'location', label: 'Lokasi / Tempat', type: 'text', required: true, col: 'col-md-8', placeholder: 'contoh: Gedung Utama GPI Eluzai, Depok' },
+  { name: 'location', label: 'Lokasi / Tempat', type: 'text', required: true, col: 'col-md-8', placeholder: 'contoh: Gedung GPI Eluzai, Surabaya' },
   { name: 'mapsLink', label: 'Link Google Maps (detail)', type: 'url', required: true, col: 'col-md-8', placeholder: 'https://www.google.com/maps/search/?api=1&query=...' },
   { name: 'formLink', label: 'Link Google Form (pendaftaran)', type: 'url', required: true, col: 'col-md-8', placeholder: 'https://forms.gle/...' },
 ];

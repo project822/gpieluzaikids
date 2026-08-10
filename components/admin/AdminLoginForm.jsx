@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Icon from '../ui/Icons';
-import ChurchLogo from '../ui/ChurchLogo';
 import AdminThemeToggle from './AdminThemeToggle';
 import useSiteTheme from '../ui/useSiteTheme';
 import { csrfFetch } from '@/lib/csrfClient';
@@ -46,7 +45,22 @@ export default function AdminLoginForm() {
         <AdminThemeToggle compact />
       </div>
       <div className="text-center mb-4">
-        <ChurchLogo size={56} className="mx-auto mb-3" style={{ width: 56, height: 56 }} />
+        {/* Logo raster resmi (public/images/logo-placeholder.webp) */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/logo-placeholder.webp"
+          alt="Logo GPI Eluzai"
+          width={64}
+          height={64}
+          className="mx-auto mb-3"
+          style={{
+            width: 64,
+            height: 64,
+            objectFit: 'cover',
+            borderRadius: 14,
+            boxShadow: '0 4px 12px rgba(29, 78, 216, 0.25)',
+          }}
+        />
         <h4 className="mb-1">Admin Eluzai Kids</h4>
         <p className="text-sm text-secondary mb-0">
           {searchParams.get('from') ? 'Silakan login untuk melanjutkan.' : 'Masuk untuk mengelola situs.'}

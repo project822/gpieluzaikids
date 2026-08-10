@@ -46,8 +46,8 @@ export default function EventsSection({ events }) {
         <Reveal>
           <SectionHeading
             center
-            title="Event Jemaat"
-            sub="Ikut serta dalam ibadah dan kegiatan jemaat."
+            title="Event"
+            sub="Ikut serta dalam ibadah dan kegiatan gereja."
           />
         </Reveal>
 

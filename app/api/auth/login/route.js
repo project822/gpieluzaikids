@@ -10,6 +10,7 @@ import {
 import { TOKEN_COOKIE } from '@/lib/token';
 import { rateLimitLogin, resetLoginAttempts } from '@/lib/rateLimit';
 import { getClientIp } from '@/lib/security';
+import { isDeviceBlocked } from '@/lib/runtimeState';
 import { logSecurityEvent } from '@/lib/securityLog';
 import { findUserByUsername, isDbEnabled, updateUser, logActivity } from '@/lib/repo';
 
@@ -35,11 +36,29 @@ function withTimeout(promise, ms, onTimeout) {
 export async function POST(request) {
   const ip = getClientIp(request);
   const userAgent = request.headers.get('user-agent') || '';
+  const deviceId = request.headers.get('x-device-id') || '';
   try {
     const body = await request.json();
     // Normalisasi username (trim + huruf kecil) — "Admin", " admin ", dll. tetap masuk.
     const username = String(body?.username || '').trim();
     const password = String(body?.password || '');
+
+    // 0) Perangkat diblokir (defense-in-depth — proxy.js juga memblokir).
+    //    Berlaku sebelum rate limit: perangkat yang diblokir tidak boleh
+    //    mencoba login sama sekali.
+    if (deviceId && (await isDeviceBlocked(deviceId))) {
+      logSecurityEvent({
+        type: 'blocked_device',
+        ip,
+        path: '/api/auth/login',
+        userAgent,
+        detail: `perangkat diblokir: ${deviceId.slice(0, 16)}…`,
+      });
+      return NextResponse.json(
+        { error: 'Akses dari perangkat ini diblokir.' },
+        { status: 403, headers: { 'Cache-Control': 'no-store' } }
+      );
+    }
 
     // 1) Rate limit — sebelum verifikasi (murah) untuk blokir brute-force.
     const { allowed, retryAfter } = loginCheck({ ip, username });

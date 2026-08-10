@@ -11,7 +11,7 @@ export default function LocationSection() {
         <Reveal>
           <SectionHeading
             center
-            title="Di Mana Kami Beribadah"
+            title="Lokasi Gereja"
             sub="Temukan lokasi gereja kami di peta berikut."
           />
         </Reveal>

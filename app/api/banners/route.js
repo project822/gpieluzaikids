@@ -1,6 +1,6 @@
 import { getBanners, createBanner, slugify, logActivity } from '@/lib/repo';
 import { requireAdmin } from '@/lib/auth';
-import { sanitizePayload, isValidImage } from '@/lib/sanitize';
+import { sanitizePayload, isValidImage, isValidRedirectLink } from '@/lib/sanitize';
 
 export async function GET() {
   try {
@@ -20,6 +20,12 @@ export async function POST(request) {
     if (!isValidImage(body.image)) {
       return Response.json(
         { error: 'Gambar banner wajib diisi (PNG/JPG/WebP, maks 4MB).' },
+        { status: 400 }
+      );
+    }
+    if (!isValidRedirectLink(body.link)) {
+      return Response.json(
+        { error: 'Tautan banner tidak valid — gunakan https://..., atau jalur internal seperti /event/...' },
         { status: 400 }
       );
     }

@@ -7,6 +7,8 @@ import {
   getMaintenanceText,
   getBlockedIps,
   getBlockedIpsDetailed,
+  getBlockedDevices,
+  getBlockedDevicesDetailed,
 } from '@/lib/runtimeState';
 import { getRateLimitedIps } from '@/lib/rateLimit';
 import { getSecurityStats } from '@/lib/securityLog';
@@ -37,12 +39,14 @@ export async function GET(request) {
       mode: dbEnabled ? (readyState === 1 ? 'connected' : 'disconnected') : 'demo',
     },
     maintenance: {
-      enabled: maintenanceEnabled(),
-      source: getMaintenanceSource(),
-      ...getMaintenanceText(),
+      enabled: await maintenanceEnabled(),
+      source: await getMaintenanceSource(),
+      ...await getMaintenanceText(),
     },
-    blockedIps: getBlockedIps(),
-    blockedIpsDetail: getBlockedIpsDetailed(),
+    blockedIps: await getBlockedIps(),
+    blockedIpsDetail: await getBlockedIpsDetailed(),
+    blockedDevices: await getBlockedDevices(),
+    blockedDevicesDetail: await getBlockedDevicesDetailed(),
     rateLimitedIps: rateLimited,
     security: getSecurityStats(),
   });

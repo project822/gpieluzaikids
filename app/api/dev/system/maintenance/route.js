@@ -19,18 +19,18 @@ import { getClientIp } from '@/lib/security';
 // Bentuk respons konsisten dengan /api/dev/status (teks di dalam
 // objek "maintenance").
 
-function maintenancePayload() {
+async function maintenancePayload() {
   return {
-    enabled: maintenanceEnabled(),
-    source: getMaintenanceSource(),
-    ...getMaintenanceText(),
+    enabled: await maintenanceEnabled(),
+    source: await getMaintenanceSource(),
+    ...await getMaintenanceText(),
   };
 }
 
 export async function GET(request) {
   const denied = requireDevKey(request, 'GET maintenance');
   if (denied) return denied;
-  return Response.json({ ok: true, maintenance: maintenancePayload() });
+  return Response.json({ ok: true, maintenance: await maintenancePayload() });
 }
 
 export async function POST(request) {
@@ -50,7 +50,7 @@ export async function POST(request) {
       if (typeof body.maintenance !== 'boolean') {
         return Response.json({ error: '"maintenance" harus boolean.' }, { status: 400 });
       }
-      setMaintenanceMode(body.maintenance);
+      await setMaintenanceMode(body.maintenance);
       changed.push(`mode ${body.maintenance ? 'DIAKTIFKAN' : 'dinonaktifkan'}`);
     }
 
@@ -64,7 +64,7 @@ export async function POST(request) {
       }
     }
     if (Object.keys(textPatch).length > 0) {
-      setMaintenanceText(textPatch);
+      await setMaintenanceText(textPatch);
       changed.push('teks diperbarui');
     }
 
@@ -81,7 +81,7 @@ export async function POST(request) {
       path: '/api/dev/system/maintenance',
       detail: changed.join('; '),
     });
-    return Response.json({ ok: true, maintenance: maintenancePayload() });
+    return Response.json({ ok: true, maintenance: await maintenancePayload() });
   } catch (error) {
     console.error('[api/dev/system/maintenance POST]', error);
     return Response.json({ error: 'Gagal mengubah maintenance mode.' }, { status: 500 });

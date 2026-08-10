@@ -1,6 +1,7 @@
 'use client';
 
 import ResourceManager from '@/components/admin/ResourceManager';
+import VerseManager from '@/components/admin/VerseManager';
 
 const IMAGE_HINT = 'PNG/JPG/WebP · maks 4MB · rasio 16:9 landscape (dipotong otomatis)';
 
@@ -8,7 +9,17 @@ const FIELDS = [
   { name: 'image', label: 'Gambar Banner', type: 'file', ratio: '16:9', required: true, hint: IMAGE_HINT, col: 'col-12' },
   { name: 'title', label: 'Judul Banner', type: 'text', col: 'col-md-6', placeholder: 'contoh: Ibadah Raya Minggu' },
   { name: 'caption', label: 'Keterangan Singkat', type: 'textarea', rows: 3, col: 'col-12', placeholder: 'Teks pendamping di bawah banner (opsional)' },
+  {
+    name: 'link',
+    label: 'Tautan Banner (opsional)',
+    type: 'text',
+    col: 'col-md-6',
+    placeholder: 'contoh: /event/evt-kkr atau https://...',
+  },
 ];
+
+const LINK_HINT =
+  'Isi untuk membuat banner dapat diklik (arahkan ke halaman event /event/... atau situs eksternal https://...). Kosongkan bila banner hanya tampil.';
 
 const COLUMNS = [
   {
@@ -27,17 +38,30 @@ const COLUMNS = [
       </div>
     ),
   },
+  {
+    key: 'link',
+    label: 'Tautan',
+    render: (i) =>
+      i.link ? (
+        <span className="badge-soft badge-blue" title={i.link}>Bisa diklik</span>
+      ) : (
+        <span className="text-sm text-secondary">—</span>
+      ),
+  },
 ];
 
 export default function AdminInformasiPage() {
   return (
-    <ResourceManager
-      endpoint="/api/banners"
-      title="Kelola Banner Informasi"
-      subtitle="Hanya 1 banner yang tampil — PNG/JPG/WebP, rasio 16:9."
-      addLabel="Unggah Banner"
-      fields={FIELDS}
-      columns={COLUMNS}
-    />
+    <div className="d-flex flex-column gap-4">
+      <ResourceManager
+        endpoint="/api/banners"
+        title="Kelola Banner Informasi"
+        subtitle={`Hanya 1 banner yang tampil — PNG/JPG/WebP, rasio 16:9. ${LINK_HINT}`}
+        addLabel="Unggah Banner"
+        fields={FIELDS}
+        columns={COLUMNS}
+      />
+      <VerseManager />
+    </div>
   );
 }

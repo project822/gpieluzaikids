@@ -5,7 +5,11 @@ import Icon from '@/components/ui/Icons';
 import { getEvents } from '@/lib/repo';
 import { publicEvent } from '@/lib/format';
 
-export const metadata = { title: 'Arsip Event' };
+export const metadata = {
+  title: 'Arsip Event',
+  description: 'Jelajahi seluruh kegiatan dan ibadah jemaat GPI Eluzai Kids — arsip event.',
+  alternates: { canonical: '/events' },
+};
 
 export const revalidate = 60;
 

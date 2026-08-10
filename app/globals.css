@@ -8,6 +8,13 @@
    ============================================================ */
 
 :root {
+  /* Bootstrap memakai --bs-body-font-family untuk komponennya (form-control,
+     btn, table, dll.). Arahkan ke font LOKAL yang sama dengan body agar area
+     admin (dan seluruh situs) konsisten memakai Inter — tanpa ini input &
+     tombol Bootstrap jatuh ke font sistem. */
+  --bs-body-font-family: var(--font-inter), 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --bs-font-sans-serif: var(--font-inter), 'Segoe UI', system-ui, -apple-system, sans-serif;
+
   --eluzai-blue: #1d4ed8;
   --eluzai-blue-dark: #1e40af;
   --eluzai-blue-deep: #1e3a8a;
@@ -439,6 +446,29 @@ img, svg {
   opacity: 0.9;
 }
 
+/* Banner yang dapat diklik (field "Tautan Banner" diisi admin) */
+.banner-link {
+  display: block;
+  border-radius: var(--eluzai-radius-lg);
+  max-width: 960px;
+  margin-inline: auto;
+}
+
+.banner-link .banner-block {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.banner-link:hover .banner-block {
+  transform: translateY(-3px);
+  border-color: var(--eluzai-blue);
+  box-shadow: var(--eluzai-shadow-lg);
+}
+
+.banner-link:focus-visible {
+  outline: 2px solid var(--eluzai-blue);
+  outline-offset: 4px;
+}
+
 /* ---------- Event card ---------- */
 .event-card {
   position: relative;
@@ -594,20 +624,6 @@ img, svg {
   }
 }
 
-.hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  background: var(--eluzai-surface);
-  border: 1px solid var(--eluzai-border);
-  border-radius: 999px;
-  padding: 0.4rem 1rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--eluzai-blue);
-  box-shadow: var(--eluzai-shadow-sm);
-}
-
 .hero-title {
   font-size: clamp(2.2rem, 4.4vw, 3.1rem);
   font-weight: 700;
@@ -620,6 +636,14 @@ img, svg {
   font-size: 1.05rem;
   max-width: 540px;
   color: var(--eluzai-muted);
+}
+
+.hero-verse-ref {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--eluzai-blue);
+  max-width: 540px;
 }
 
 /* ---------- Footer (gelap — anchor profesional) ---------- */
@@ -880,6 +904,9 @@ img, svg {
 .admin-shell {
   min-height: 100vh;
   background: var(--eluzai-bg);
+  /* Jaminan eksplisit: area admin memakai font lokal yang sama (Inter),
+     tidak bergantung pada nilai Bootstrap. */
+  font-family: var(--font-inter), 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
 
 .admin-sidebar {
@@ -1332,6 +1359,7 @@ img, svg {
 }
 
 .activity-icon.mod-event { background: var(--eluzai-blue-soft); color: var(--eluzai-blue); }
+.activity-icon.mod-verse { background: var(--eluzai-blue-soft); color: var(--eluzai-blue); }
 .activity-icon.mod-banner { background: #fef3c7; color: #b45309; }
 .activity-icon.mod-schedule { background: #ede9fe; color: #6d28d9; }
 .activity-icon.mod-member { background: var(--eluzai-green-soft); color: var(--eluzai-green); }

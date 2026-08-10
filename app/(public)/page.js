@@ -6,6 +6,7 @@ import LocationSection from '@/components/user/LocationSection';
 import ContactSection from '@/components/user/ContactSection';
 import BackToTop from '@/components/ui/BackToTop';
 import { getBanners, getEvents, getNearestSchedule } from '@/lib/repo';
+import { getVerseConfig } from '@/lib/runtimeState';
 import { publicEvent } from '@/lib/format';
 
 export const revalidate = 60;
@@ -13,10 +14,11 @@ export const revalidate = 60;
 export default async function HomePage() {
   // publicEvent: buang data-URL base64 dari RSC payload — HTML tetap
   // ringan; gambar event & banner dimuat lewat /img/[id] (cache immutable).
-  const [banners, events, nearest] = await Promise.all([
+  const [banners, events, nearest, verse] = await Promise.all([
     getBanners(),
     getEvents(),
     getNearestSchedule(),
+    getVerseConfig(),
   ]);
   const lightBanners = banners.map(publicEvent);
   const lightEvents = events.map(publicEvent);
@@ -24,7 +26,7 @@ export default async function HomePage() {
   return (
     <>
       {/* Semua menu tampil dalam satu halaman (single-page landing) */}
-      <HeroSection />
+      <HeroSection verse={verse.verse} verseRef={verse.verseRef} />
       <InfoSection banners={lightBanners} />
       <ScheduleSection date={nearest.date} schedule={nearest.schedule} />
       <EventsSection events={lightEvents} />

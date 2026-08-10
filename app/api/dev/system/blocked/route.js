@@ -13,7 +13,7 @@ const IP_RE = /^[\d.a-fA-F:]+$/;
 export async function GET(request) {
   const denied = requireDevKey(request, 'GET blocked');
   if (denied) return denied;
-  return Response.json({ ok: true, data: getBlockedIps() });
+  return Response.json({ ok: true, data: await getBlockedIps() });
 }
 
 export async function POST(request) {
@@ -26,14 +26,14 @@ export async function POST(request) {
     const ips = (Array.isArray(body?.ips) ? body.ips : [])
       .map((s) => String(s).trim())
       .filter((s) => s && IP_RE.test(s));
-    setBlockedIps(ips);
+    await setBlockedIps(ips);
     logSecurityEvent({
       type: 'dev_api',
       ip,
       path: '/api/dev/system/blocked',
       detail: `blocklist diatur: ${ips.join(', ') || '(kosong)'}`,
     });
-    return Response.json({ ok: true, data: getBlockedIps() });
+    return Response.json({ ok: true, data: await getBlockedIps() });
   } catch (error) {
     console.error('[api/dev/system/blocked POST]', error);
     return Response.json({ error: 'Gagal mengatur blocklist.' }, { status: 500 });
@@ -49,7 +49,7 @@ export async function DELETE(request) {
   if (!target) {
     return Response.json({ error: 'Parameter ?ip= wajib diisi.' }, { status: 400 });
   }
-  const removed = unblockBlockedIp(target);
+  const removed = await unblockBlockedIp(target);
   logSecurityEvent({
     type: 'dev_api',
     ip,

@@ -2,17 +2,21 @@ import Script from 'next/script';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './globals.css';
 import { inter, hankenGrotesk } from '@/fonts';
+import { siteUrl } from '@/lib/siteUrl';
+
+const BASE_URL = siteUrl();
 
 export const metadata = {
+  metadataBase: new URL(BASE_URL),
   title: {
     default: 'GPI Eluzai Kids — Tempat Anak Bertumbuh dalam Iman & Sukacita',
     template: '%s · GPI Eluzai Kids',
   },
   description: 'Situs resmi GPI Eluzai Kids — informasi ibadah, jadwal, event, dan kontak.',
-  keywords: ['GPI Eluzai', 'Eluzai Kids', 'Gereja', 'Ibadah', 'Event', 'Depok'],
-  ...(process.env.NEXT_PUBLIC_SITE_URL
-    ? { metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL) }
-    : {}),
+  keywords: ['GPI Eluzai', 'Eluzai Kids', 'Gereja', 'Ibadah', 'Event', 'Surabaya'],
+  alternates: {
+    canonical: '/',
+  },
   icons: {
     icon: '/image/logo-placeholder.webp',
     apple: '/image/logo-placeholder.webp',
@@ -21,15 +25,16 @@ export const metadata = {
     type: 'website',
     locale: 'id_ID',
     siteName: 'GPI Eluzai Kids',
+    url: BASE_URL,
     title: 'GPI Eluzai Kids — Tempat Anak Bertumbuh dalam Iman & Sukacita',
     description: 'Informasi ibadah, jadwal, event, dan kontak GPI Eluzai Kids.',
-    images: ['/image/logo-placeholder.webp'],
+    images: [{ url: `${BASE_URL}/images/logo-placeholder.webp`, width: 512, height: 512, alt: 'Logo GPI Eluzai' }],
   },
   twitter: {
     card: 'summary',
     title: 'GPI Eluzai Kids',
     description: 'Informasi ibadah, jadwal, event, dan kontak GPI Eluzai Kids.',
-    images: ['/image/logo-placeholder.webp'],
+    images: [`${BASE_URL}/images/logo-placeholder.webp`],
   },
   robots: {
     index: true,

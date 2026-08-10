@@ -40,16 +40,16 @@ export default function EventCard({ item }) {
             <Icon name="calendar" size={16} className="text-primary flex-shrink-0" />
             <span className="text-dark fw-semibold">{dateLabel}</span>
           </span>
-          <span className="d-flex align-items-center gap-2">
-            <Icon name="clock" size={16} className="text-primary flex-shrink-0" />
-            Mulai pukul <span className="text-dark fw-semibold">{item.time || '–'}</span>
-          </span>
           {item.openGate && (
             <span className="d-flex align-items-center gap-2">
               <Icon name="door" size={16} className="text-primary flex-shrink-0" />
               Open gate <span className="text-dark fw-semibold">{item.openGate}</span>
             </span>
           )}
+          <span className="d-flex align-items-center gap-2">
+            <Icon name="clock" size={16} className="text-primary flex-shrink-0" />
+            Mulai pukul <span className="text-dark fw-semibold">{item.time || '–'}</span>
+          </span>
           <span className="d-flex align-items-start gap-2">
             <Icon name="map-pin" size={16} className="text-primary mt-1 flex-shrink-0" />
             <span>{item.location}</span>

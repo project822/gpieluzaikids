@@ -1,6 +1,6 @@
 import { updateBanner, deleteBanner, getBannerById, slugify, logActivity } from '@/lib/repo';
 import { requireAdmin } from '@/lib/auth';
-import { sanitizePayload, isValidImage } from '@/lib/sanitize';
+import { sanitizePayload, isValidImage, isValidRedirectLink } from '@/lib/sanitize';
 
 export async function PUT(request, { params }) {
   const auth = await requireAdmin(request);
@@ -17,6 +17,12 @@ export async function PUT(request, { params }) {
     if ('image' in body && body.image !== existing.image && !isValidImage(body.image)) {
       return Response.json(
         { error: 'Gambar banner wajib diisi (PNG/JPG/WebP, maks 4MB).' },
+        { status: 400 }
+      );
+    }
+    if ('link' in body && !isValidRedirectLink(body.link)) {
+      return Response.json(
+        { error: 'Tautan banner tidak valid — gunakan https://..., atau jalur internal seperti /event/...' },
         { status: 400 }
       );
     }

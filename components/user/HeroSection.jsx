@@ -4,30 +4,27 @@ import AnchorLink from '@/components/ui/AnchorLink';
 import Icon from '@/components/ui/Icons';
 import { CHURCH, HOME_SLIDES } from '@/lib/data';
 
-export default function HeroSection() {
-  const words = CHURCH.tagline.split(' ');
+export default function HeroSection({ verse: verseProp = '', verseRef: verseRefProp = '' }) {
+  // Kutipan ayat bisa diatur dari panel admin (Informasi); bila kosong,
+  // tampilkan ayat bawaan dari data gereja.
+  const verse = verseProp || CHURCH.verse;
+  const verseRef = verseRefProp || CHURCH.verseRef;
   return (
     <section id="beranda" className="hero">
       <div className="container">
         <div className="row align-items-center g-5">
-          {/* Teks hero (tanpa statistik) */}
+          {/* Teks hero */}
           <div className="col-lg-6">
             <Reveal>
-              <div className="hero-badge mb-4">
-                <Icon name="sparkle" size={16} className="text-success" />
-                {CHURCH.fullName}
-              </div>
-            </Reveal>
-
-            <Reveal delay={90}>
-              <h1 className="hero-title mb-3">
-                {words.slice(0, -2).join(' ')}{' '}
-                <span style={{ color: 'var(--eluzai-blue)' }}>{words.slice(-2).join(' ')}</span>
-              </h1>
+              {/* Judul tampil satu warna (ink) — tanpa aksen biru pada bagian akhir */}
+              <h1 className="hero-title mb-3">{CHURCH.tagline}</h1>
             </Reveal>
 
             <Reveal delay={180}>
-              <p className="hero-lead text-secondary mb-4">{CHURCH.description}</p>
+              <p className="hero-lead text-secondary mb-2">
+                “{verse}”
+              </p>
+              <p className="hero-verse-ref mb-4">{verseRef}</p>
             </Reveal>
 
             <Reveal delay={270}>
