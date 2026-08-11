@@ -86,6 +86,27 @@ function statusPage({ title, message, footer = '', status, icon = '⚙️' }) {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${escapeHtml(title)}</title>
 <style>
+  @font-face {
+    font-family: "Inter";
+    src: url("/fonts/inter-400.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Inter";
+    src: url("/fonts/inter-700.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Hanken Grotesk";
+    src: url("/fonts/hanken-grotesk-700.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     min-height: 100vh;
@@ -93,7 +114,7 @@ function statusPage({ title, message, footer = '', status, icon = '⚙️' }) {
     align-items: center;
     justify-content: center;
     background: linear-gradient(160deg, #f6f8f5 0%, #eef3f0 100%);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     color: #22302c;
     -webkit-font-smoothing: antialiased;
     padding: 1.5rem;
@@ -108,13 +129,12 @@ function statusPage({ title, message, footer = '', status, icon = '⚙️' }) {
     max-width: 520px;
     width: 100%;
   }
-  /* Lingkaran penampung — gerigi berputar di tengah tanpa bergeser */
+  /* Penampung transparan — gerigi berputar di tengah tanpa bergeser,
+     tanpa lingkaran background. */
   .gear-wrap {
     width: 92px;
     height: 92px;
     margin: 0 auto 1.5rem;
-    border-radius: 50%;
-    background: #eef4f1;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -128,7 +148,7 @@ function statusPage({ title, message, footer = '', status, icon = '⚙️' }) {
     align-items: center;
     justify-content: center;
     transform-origin: 50% 50%;
-    animation: spin 7s linear infinite;
+    animation: spin 12s linear infinite;
   }
   .static-icon {
     font-size: 3rem;
@@ -140,6 +160,7 @@ function statusPage({ title, message, footer = '', status, icon = '⚙️' }) {
     to { transform: rotate(360deg); }
   }
   h1 {
+    font-family: "Hanken Grotesk", "Inter", sans-serif;
     font-size: 1.7rem;
     font-weight: 700;
     letter-spacing: -0.01em;

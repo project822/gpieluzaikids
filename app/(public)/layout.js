@@ -24,13 +24,15 @@ const organizationJsonLd = {
   },
 };
 
+import { jsonLdHtml } from '@/lib/jsonLd';
+
 export default function PublicLayout({ children }) {
   return (
     <>
       {/* Structured data (SEO): Organisasi — berlaku untuk seluruh halaman publik */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdHtml(organizationJsonLd) }}
       />
       <Navbar />
       <main>{children}</main>

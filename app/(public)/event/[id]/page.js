@@ -66,6 +66,8 @@ function mapsEmbedUrl(link) {
   return null;
 }
 
+import { jsonLdHtml } from '@/lib/jsonLd';
+
 export default async function EventDetailPage({ params }) {
   const { id } = await params;
   const item = await getEventById(id);
@@ -107,7 +109,7 @@ export default async function EventDetailPage({ params }) {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(eventJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml(eventJsonLd) }} />
       <PageHeader title={item.title} sub={item.theme ? `Tema: ${item.theme}` : undefined} />
 
       <section className="section pt-4">
