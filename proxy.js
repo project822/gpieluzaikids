@@ -73,12 +73,15 @@ function escapeHtml(value) {
 }
 
 // Halaman status (maintenance 503 / blocked 403) — desain sederhana &
-// profesional. Emoji gerigi (⚙️/🔧) berputar di tempat (wrap flex +
-// transform-origin di tengah, tanpa bergeser).
+// profesional. Gerigi (⚙️/🔧) digambar sebagai SVG (bukan emoji) agar
+// render identik di semua platform dan benar-benar pas di tengah
+// penampung; berputar pada transform-origin tengah tanpa bergeser.
 function statusPage({ title, message, footer = '', status, icon = '⚙️' }) {
   const footerHtml = footer ? `<p class="footer">${escapeHtml(footer)}</p>` : '';
   const isGear = icon === '⚙️' || icon === '🔧';
-  const iconClass = isGear ? 'gear' : 'static-icon';
+  const iconHtml = isGear
+    ? `<svg class="gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.4"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`
+    : `<span class="static-icon" aria-hidden="true">${escapeHtml(icon)}</span>`;
   const html = `<!doctype html>
 <html lang="id">
 <head>
@@ -129,26 +132,22 @@ function statusPage({ title, message, footer = '', status, icon = '⚙️' }) {
     max-width: 520px;
     width: 100%;
   }
-  /* Penampung transparan — gerigi berputar di tengah tanpa bergeser,
-     tanpa lingkaran background. */
+  /* Penampung transparan — gerigi berputar tepat di tengah tanpa bergeser,
+     tanpa lingkaran background. Jarak ke judul dirapatkan (1.1rem). */
   .gear-wrap {
-    width: 92px;
-    height: 92px;
-    margin: 0 auto 1.5rem;
+    width: 84px;
+    height: 84px;
+    margin: 0 auto 1.1rem;
     display: flex;
     align-items: center;
     justify-content: center;
   }
   .gear {
-    font-size: 3rem;
-    width: 1em;
-    height: 1em;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 46px;
+    height: 46px;
+    display: block;
     transform-origin: 50% 50%;
-    animation: spin 12s linear infinite;
+    animation: spin 10s linear infinite;
   }
   .static-icon {
     font-size: 3rem;
@@ -182,8 +181,9 @@ function statusPage({ title, message, footer = '', status, icon = '⚙️' }) {
   }
   @media (max-width: 480px) {
     .card { padding: 2.2rem 1.5rem; border-radius: 16px; }
-    .gear-wrap { width: 80px; height: 80px; }
-    .gear, .static-icon { font-size: 2.6rem; }
+    .gear-wrap { width: 72px; height: 72px; }
+    .gear { width: 40px; height: 40px; }
+    .static-icon { font-size: 2.6rem; }
     h1 { font-size: 1.4rem; }
   }
 </style>
@@ -191,7 +191,7 @@ function statusPage({ title, message, footer = '', status, icon = '⚙️' }) {
 <body>
   <div class="card">
     <div class="gear-wrap">
-      <span class="${iconClass}" aria-hidden="true">${escapeHtml(icon)}</span>
+      ${iconHtml}
     </div>
     <h1>${escapeHtml(title)}</h1>
     <p class="message">${escapeHtml(message)}</p>
@@ -362,5 +362,5 @@ export const config = {
   // berlaku untuk seluruh situs, dan CSRF/body-limit untuk /api.
   // /img (gambar publik) DILEWATI proxy — setara aset statis, jalur
   // tercepat untuk gambar yang di-cache browser.
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|/img/|.*\\..*).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|/img/|.*\\\\..*).*)'],
 };

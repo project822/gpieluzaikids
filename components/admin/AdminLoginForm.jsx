@@ -16,6 +16,7 @@ export default function AdminLoginForm() {
   useSiteTheme('eluzai-admin-theme');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -40,8 +41,9 @@ export default function AdminLoginForm() {
   }
 
   return (
-    <div className="position-relative card-lift p-4 p-md-5">
-      <div className="position-absolute" style={{ top: 12, right: 12 }}>
+    // Kartu login: gaya identik dengan login dashboard /dev (admin-login-card)
+    <div className="position-relative card-lift admin-login-card">
+      <div className="position-absolute" style={{ top: 14, right: 14 }}>
         <AdminThemeToggle compact />
       </div>
       <div className="text-center mb-4">
@@ -82,20 +84,33 @@ export default function AdminLoginForm() {
             onChange={(e) => setUsername(e.target.value)}
             autoComplete="username"
             required
-            placeholder="admin"
+            placeholder="username"
           />
         </div>
         <div className="mb-4">
           <label className="form-label">Password</label>
-          <input
-            className="form-control"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-            required
-            placeholder="••••••••"
-          />
+          <div className="position-relative">
+            <input
+              className="form-control"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+              required
+              placeholder="••••••••"
+              style={{ paddingRight: 46 }}
+            />
+            <button
+              type="button"
+              className="icon-btn position-absolute"
+              style={{ top: '50%', right: 5, width: 32, height: 32, borderRadius: 9, transform: 'translateY(-50%)' }}
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
+              title={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
+            >
+              <Icon name={showPassword ? 'eye-off' : 'eye'} size={16} />
+            </button>
+          </div>
         </div>
         <button type="submit" className="btn btn-eluzai w-100" disabled={loading}>
           {loading ? (

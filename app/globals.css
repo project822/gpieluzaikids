@@ -1614,3 +1614,47 @@ a:focus-visible {
     padding-right: 0.75rem !important;
   }
 }
+
+/* ---------- Admin: kartu login (identik dengan login dashboard /dev) ---------- */
+.admin-login-card {
+  max-width: 420px;
+  border-radius: 18px;
+  padding: 2.5rem 2.3rem 1.7rem;
+  box-shadow: var(--eluzai-shadow-lg);
+}
+
+/* Nonaktifkan efek hover kartu pada form login */
+.admin-login-card:hover {
+  transform: none;
+  border-color: var(--eluzai-border);
+  box-shadow: var(--eluzai-shadow-lg);
+}
+
+.admin-login-card .form-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.admin-login-card .form-control {
+  padding: 0.62rem 0.9rem;
+  font-size: 0.92rem;
+  border-radius: 10px;
+}
+
+.admin-login-card .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0.68rem;
+  font-size: 0.9rem;
+  border-radius: 10px;
+}
+
+@media (max-width: 480px) {
+  .admin-login-card {
+    padding: 2.1rem 1.5rem 1.4rem;
+    border-radius: 16px;
+  }
+}
