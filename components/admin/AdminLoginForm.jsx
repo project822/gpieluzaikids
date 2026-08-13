@@ -102,13 +102,27 @@ export default function AdminLoginForm() {
             />
             <button
               type="button"
-              className="icon-btn position-absolute"
-              style={{ top: '50%', right: 5, width: 32, height: 32, borderRadius: 9, transform: 'translateY(-50%)' }}
+              className="position-absolute"
+              style={{
+                top: '50%',
+                right: 7,
+                width: 28,
+                height: 28,
+                padding: 0,
+                border: 'none',
+                background: 'transparent',
+                color: 'var(--eluzai-muted)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transform: 'translateY(-50%)',
+                cursor: 'pointer',
+              }}
               onClick={() => setShowPassword((v) => !v)}
               aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
               title={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
             >
-              <Icon name={showPassword ? 'eye-off' : 'eye'} size={16} />
+              <Icon name={showPassword ? 'eye-off' : 'eye'} size={17} />
             </button>
           </div>
         </div>

@@ -36,7 +36,9 @@ function withTimeout(promise, ms, onTimeout) {
 export async function POST(request) {
   const ip = getClientIp(request);
   const userAgent = request.headers.get('user-agent') || '';
-  const deviceId = request.headers.get('x-device-id') || '';
+  // ID perangkat dikunci panjangnya — nilai header dari penyerang tidak boleh
+  // membengkakkan store rate limit / payload log.
+  const deviceId = String(request.headers.get('x-device-id') || '').trim().slice(0, 128);
   try {
     const body = await request.json();
     // Normalisasi username (trim + huruf kecil) — "Admin", " admin ", dll. tetap masuk.
@@ -61,7 +63,9 @@ export async function POST(request) {
     }
 
     // 1) Rate limit — sebelum verifikasi (murah) untuk blokir brute-force.
-    const { allowed, retryAfter } = loginCheck({ ip, username });
+    //    deviceId ikut direkam agar perangkat pelaku bisa diblokir juga
+    //    (blocklist perangkat dashboard /dev) saat IP kena rate limit.
+    const { allowed, retryAfter } = loginCheck({ ip, username, deviceId });
     if (!allowed) {
       logSecurityEvent({
         type: 'rate_limit',

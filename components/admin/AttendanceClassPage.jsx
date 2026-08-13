@@ -6,20 +6,24 @@ import Icon from '../ui/Icons';
 import { csrfFetch } from '@/lib/csrfClient';
 import {
   classLabel,
+  formatDateLabel,
   formatSundayLabel,
   localToday,
   nextSundayDate,
 } from '@/lib/attendanceValidation';
 import { isValidScheduleDate } from '@/lib/scheduleValidation';
-import { SundayDateInput, Toast, hadirCount } from './AttendanceShared';
+import { SundayDateInput, Toast, hadirCount, ExportButtons } from './AttendanceShared';
 
 export default function AttendanceClassPage({ className, initialDate = '' }) {
   const [members, setMembers] = useState([]);
-  const [history, setHistory] = useState([]); // sesi kelas ini (1 bulan terakhir)
+  const [history, setHistory] = useState([]); // SEMUA sesi kelas ini (riwayat lengkap)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [toast, setToast] = useState(null);
   const [reloadKey, setReloadKey] = useState(0);
+
+  // Export per tanggal
+  const [exporting, setExporting] = useState('');
 
   // Form absensi (inline di halaman)
   const [formDate, setFormDate] = useState(() =>
@@ -42,7 +46,10 @@ export default function AttendanceClassPage({ className, initialDate = '' }) {
 
   // Default: kedua kotak tidak dipilih (present: null).
   const buildDefaultEntries = useCallback(
-    (membersList) => membersList.map((m) => ({ memberId: m.id, name: m.name, present: null })),
+    (membersList) =>
+      [...membersList]
+        .sort((a, b) => a.name.localeCompare(b.name, 'id'))
+        .map((m) => ({ memberId: m.id, name: m.name, present: null })),
     []
   );
 
@@ -65,7 +72,8 @@ export default function AttendanceClassPage({ className, initialDate = '' }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Gagal memuat data');
       if (seq !== loadSeq.current) return; // respon basi → abaikan
-      setEntries(data.data?.[0]?.entries || buildDefaultEntries(membersList || members));
+      const saved = data.data?.[0]?.entries || [];
+      setEntries(saved.length > 0 ? saved.slice().sort((a, b) => a.name.localeCompare(b.name, 'id')) : buildDefaultEntries(membersList || members));
     } catch (err) {
       if (seq === loadSeq.current) showToast(err.message, true);
     } finally {
@@ -73,14 +81,15 @@ export default function AttendanceClassPage({ className, initialDate = '' }) {
     }
   }
 
-  // Muat daftar anggota + riwayat kelas, lalu preload entri tanggal aktif.
+  // Muat daftar anggota + riwayat lengkap kelas, lalu preload entri tanggal aktif.
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         const [mRes, hRes] = await Promise.all([
           csrfFetch(`/api/members?class=${className}`, { cache: 'no-store' }),
-          csrfFetch(`/api/attendance?class=${className}`, { cache: 'no-store' }),
+          // all=1 → riwayat TANPA batas waktu 1 bulan (data lama tetap aman di database).
+          csrfFetch(`/api/attendance?class=${className}&all=1`, { cache: 'no-store' }),
         ]);
         const mData = await mRes.json();
         const hData = await hRes.json();
@@ -159,6 +168,36 @@ export default function AttendanceClassPage({ className, initialDate = '' }) {
     }
   }
 
+  // ---------- Export rekap satu tanggal (kelas ini saja) ----------
+  async function downloadExport(type, date) {
+    const key = `${type}-${date}`;
+    setExporting(key);
+    try {
+      const res = await csrfFetch(
+        `/api/attendance/export?type=${type}&date=${date}&class=${encodeURIComponent(className)}`,
+        { cache: 'no-store' }
+      );
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Gagal membuat file export');
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Rekap Kehadiran ${classLabel(className)} ${formatDateLabel(date)}.${type === 'excel' ? 'xlsx' : 'pdf'}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      showToast('Rekap kehadiran berhasil diunduh.');
+    } catch (err) {
+      showToast(err.message, true);
+    } finally {
+      setExporting('');
+    }
+  }
+
   // ---------- Riwayat kelas ini ----------
   async function removeSession(session) {
     if (!window.confirm(`Hapus absensi ${formatSundayLabel(session.date)}?`)) return;
@@ -181,6 +220,9 @@ export default function AttendanceClassPage({ className, initialDate = '' }) {
 
   const hadirNow = entries.filter((en) => en.present === true).length;
   const belumNow = entries.filter((en) => en.present === null).length;
+
+  // Riwayat per tanggal (terbaru dulu) — setiap tanggal berisi list kehadiran.
+  const sortedHistory = [...history].sort((a, b) => String(b.date).localeCompare(String(a.date)));
 
   return (
     <div className="d-flex flex-column gap-4">
@@ -333,15 +375,13 @@ export default function AttendanceClassPage({ className, initialDate = '' }) {
             )}
           </form>
 
-          {/* ---- Riwayat kelas ini (1 bulan terakhir) ---- */}
+          {/* ---- Riwayat kelas ini — per tanggal (seluruh riwayat, tanpa batas 1 bulan) ---- */}
           <div className="admin-card p-3 p-md-4">
-            <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+            <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
               <h6 className="mb-0">Riwayat Absensi Kelas Ini</h6>
-              <span className="text-sm text-secondary" style={{ fontSize: '0.78rem' }}>
-                Menampilkan 1 bulan terakhir.
-              </span>
+              <span className="badge-soft badge-ink">{sortedHistory.length} Minggu</span>
             </div>
-            {history.length === 0 ? (
+            {sortedHistory.length === 0 ? (
               <div className="text-center py-4">
                 <Icon name="clock" size={28} className="text-secondary opacity-50 mb-2" />
                 <p className="text-sm text-secondary mb-0">
@@ -349,62 +389,78 @@ export default function AttendanceClassPage({ className, initialDate = '' }) {
                 </p>
               </div>
             ) : (
-              <div className="table-responsive">
-                <table className="table admin-table align-middle mb-0">
-                  <thead>
-                    <tr>
-                      <th>Tanggal</th>
-                      <th>Kehadiran</th>
-                      <th className="text-end">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {history.map((s) => {
-                      const total = (s.entries || []).length;
-                      const hadir = hadirCount(s);
-                      return (
-                        <tr key={s.id}>
-                          <td>
-                            <span className="text-sm fw-semibold text-dark">{formatSundayLabel(s.date)}</span>
-                          </td>
-                          <td>
-                            <div className="d-flex align-items-center gap-2">
-                              <div className="attendance-bar flex-grow-1" style={{ maxWidth: 180 }}>
-                                <div
-                                  className="attendance-bar-fill"
-                                  style={{ width: `${total ? (hadir / total) * 100 : 0}%` }}
-                                />
-                              </div>
-                              <span className="text-sm text-secondary">
-                                <span className="text-success fw-semibold">{hadir}</span> / {total} hadir
+              <div className="d-flex flex-column gap-3">
+                {sortedHistory.map((s) => {
+                  const total = (s.entries || []).length;
+                  const hadir = hadirCount(s);
+                  const exportLabel = `Rekap Kehadiran ${classLabel(className)} — ${formatSundayLabel(s.date)}`;
+                  return (
+                    <div
+                      key={s.id}
+                      className="border rounded-3 p-3"
+                      style={{ background: 'var(--eluzai-bg)', borderColor: 'var(--eluzai-border)' }}
+                    >
+                      <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
+                        <Icon name="calendar" size={16} className="text-primary" />
+                        <span className="fw-semibold text-dark">{formatSundayLabel(s.date)}</span>
+                        <span className="text-sm text-secondary">
+                          {hadir} hadir / {total} anak
+                        </span>
+                        <div className="ms-auto d-flex gap-1">
+                          <ExportButtons
+                            kind={{ date: s.date }}
+                            title={exportLabel}
+                            exporting={exporting}
+                            onExport={(type) => downloadExport(type, s.date)}
+                          />
+                          <button
+                            className="icon-btn"
+                            onClick={() => editSession(s)}
+                            aria-label="Ubah absensi"
+                            title="Ubah absensi"
+                          >
+                            <Icon name="edit" size={16} />
+                          </button>
+                          <button
+                            className="icon-btn danger"
+                            onClick={() => removeSession(s)}
+                            aria-label="Hapus absensi"
+                            title="Hapus absensi"
+                          >
+                            <Icon name="trash" size={16} />
+                          </button>
+                        </div>
+                      </div>
+
+                      {total === 0 ? (
+                        <p className="text-sm text-secondary mb-0">Belum ada catatan anak.</p>
+                      ) : (
+                        <div className="d-flex flex-column gap-1">
+                          {(s.entries || []).slice().sort((a, b) => a.name.localeCompare(b.name, 'id')).map((e, i) => (
+                            <div
+                              key={i}
+                              className="d-flex align-items-center justify-content-between gap-2 px-3 py-1"
+                              style={{
+                                background: 'var(--eluzai-surface)',
+                                border: '1px solid var(--eluzai-border)',
+                                borderRadius: 8,
+                              }}
+                            >
+                              <span className="text-sm fw-medium">{e.name}</span>
+                              <span
+                                className={`badge-soft ${
+                                  e.present === true ? 'badge-green' : e.present === false ? 'badge-rose' : 'badge-ink'
+                                }`}
+                              >
+                                {e.present === true ? 'Hadir' : e.present === false ? 'Tidak' : 'Belum'}
                               </span>
                             </div>
-                          </td>
-                          <td className="text-end">
-                            <div className="d-flex justify-content-end gap-2">
-                              <button
-                                className="icon-btn"
-                                onClick={() => editSession(s)}
-                                aria-label="Ubah absensi"
-                                title="Ubah absensi"
-                              >
-                                <Icon name="edit" size={16} />
-                              </button>
-                              <button
-                                className="icon-btn danger"
-                                onClick={() => removeSession(s)}
-                                aria-label="Hapus absensi"
-                                title="Hapus absensi"
-                              >
-                                <Icon name="trash" size={16} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

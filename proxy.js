@@ -135,9 +135,9 @@ function statusPage({ title, message, footer = '', status, icon = '⚙️' }) {
   /* Penampung transparan — gerigi berputar tepat di tengah tanpa bergeser,
      tanpa lingkaran background. Jarak ke judul dirapatkan (1.1rem). */
   .gear-wrap {
-    width: 84px;
-    height: 84px;
-    margin: 0 auto 1.1rem;
+    width: 76px;
+    height: 76px;
+    margin: 0 auto 0.6rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -181,8 +181,8 @@ function statusPage({ title, message, footer = '', status, icon = '⚙️' }) {
   }
   @media (max-width: 480px) {
     .card { padding: 2.2rem 1.5rem; border-radius: 16px; }
-    .gear-wrap { width: 72px; height: 72px; }
-    .gear { width: 40px; height: 40px; }
+    .gear-wrap { width: 64px; height: 64px; }
+    .gear { width: 38px; height: 38px; }
     .static-icon { font-size: 2.6rem; }
     h1 { font-size: 1.4rem; }
   }
@@ -362,5 +362,5 @@ export const config = {
   // berlaku untuk seluruh situs, dan CSRF/body-limit untuk /api.
   // /img (gambar publik) DILEWATI proxy — setara aset statis, jalur
   // tercepat untuk gambar yang di-cache browser.
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|/img/|.*\\\\..*).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|/img/|.*\\..*).*)'],
 };

@@ -2,9 +2,11 @@ import { getAttendanceByDate, getAttendanceByMonth } from '@/lib/repo';
 import { requireAdmin } from '@/lib/auth';
 import { isValidScheduleDate } from '@/lib/scheduleValidation';
 import {
+  classLabel,
   formatSundayLabel,
   formatDateLabel,
   formatMonthLabel,
+  isValidClass,
 } from '@/lib/attendanceValidation';
 import { buildExcel, buildPdf, buildMonthExcel, buildMonthPdf } from '@/lib/attendanceExport';
 
@@ -27,6 +29,7 @@ export async function GET(request) {
     const type = sp.get('type');
     const date = sp.get('date') || '';
     const month = sp.get('month') || '';
+    const className = sp.get('class') || '';
 
     if (!['excel', 'pdf'].includes(type)) {
       return Response.json({ error: 'Jenis export tidak valid (excel/pdf).' }, { status: 400 });
@@ -57,12 +60,25 @@ export async function GET(request) {
       title = `Rekap Kehadiran ${label}`;
     }
 
+    // Opsional filter per kelas (dipakai tombol export pada halaman kelas).
+    const exportOpts = {};
+    if (className) {
+      if (!isValidClass(className)) {
+        return Response.json({ error: 'Kelas tidak dikenal.' }, { status: 400 });
+      }
+      sessions = sessions.filter((s) => s.className === className);
+      title = date
+        ? `Rekap Kehadiran ${classLabel(className)} — Minggu, ${label}`
+        : `Rekap Kehadiran ${classLabel(className)} — ${label}`;
+      exportOpts.title = title;
+    }
+
     const filled = sessions.filter((s) => (s.entries || []).length > 0);
     if (filled.length === 0) {
       return Response.json(
         {
           error: date
-            ? `Belum ada data absensi untuk Minggu ${formatSundayLabel(date)}.`
+            ? `Belum ada data absensi untuk ${formatSundayLabel(date)}.`
             : `Belum ada data absensi untuk bulan ${label}.`,
         },
         { status: 404 }
@@ -71,9 +87,11 @@ export async function GET(request) {
 
     let buffer;
     if (type === 'excel') {
-      buffer = date ? await buildExcel(filled, date) : await buildMonthExcel(filled, month);
+      buffer = date
+        ? await buildExcel(filled, date, exportOpts)
+        : await buildMonthExcel(filled, month, exportOpts);
     } else {
-      buffer = date ? buildPdf(filled, date) : buildMonthPdf(filled, month);
+      buffer = date ? buildPdf(filled, date, exportOpts) : buildMonthPdf(filled, month, exportOpts);
     }
     const ext = type === 'excel' ? 'xlsx' : 'pdf';
     const filename = `Rekap Kehadiran ${label}.${ext}`;

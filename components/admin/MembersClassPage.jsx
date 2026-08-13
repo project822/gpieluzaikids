@@ -38,7 +38,8 @@ export default function MembersClassPage({ className }) {
         const data = await res.json();
         if (cancelled) return;
         if (!res.ok) throw new Error(data.error || 'Gagal memuat anggota');
-        setMembers(data.data || []);
+        // Urut abjad (Indonesia) — nama anggota di setiap kelas tampil berurutan.
+        setMembers((data.data || []).slice().sort((a, b) => a.name.localeCompare(b.name, 'id')));
         setError('');
       } catch (e) {
         if (!cancelled) setError(e.message);

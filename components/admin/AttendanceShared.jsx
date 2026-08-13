@@ -40,6 +40,50 @@ export function SundayDateInput({ value, onChange, className = '', compact = fal
   );
 }
 
+// Tombol export Excel/PDF — dipakai AbsensiManager (hub) & AttendanceClassPage
+// (riwayat kelas) dengan markup yang SAMA (satu sumber, tanpa duplikasi).
+// Argumen kind = { date: 'YYYY-MM-DD' } atau { month: 'YYYY-MM' };
+// onExport(type, kind) disediakan pemanggil (label file & endpoint bisa beda).
+export function ExportButtons({ kind, title, exporting, onExport }) {
+  const key = kind?.date || kind?.month || '';
+  return (
+    <div className="d-flex gap-1">
+      <button
+        type="button"
+        className="btn btn-sm btn-eluzai-green px-2 py-1"
+        style={{ fontSize: '0.76rem', borderRadius: 8 }}
+        title={`${title} — Excel`}
+        aria-label={`${title} — unduh Excel`}
+        disabled={Boolean(exporting)}
+        onClick={() => onExport('excel', kind)}
+      >
+        {exporting === `excel-${key}` ? (
+          <span className="spinner-border spinner-border-sm" role="status" aria-hidden />
+        ) : (
+          <Icon name="download" size={13} />
+        )}
+        <span className="d-none d-sm-inline ms-1">Excel</span>
+      </button>
+      <button
+        type="button"
+        className="btn btn-sm btn-eluzai px-2 py-1"
+        style={{ fontSize: '0.76rem', borderRadius: 8 }}
+        title={`${title} — PDF`}
+        aria-label={`${title} — unduh PDF`}
+        disabled={Boolean(exporting)}
+        onClick={() => onExport('pdf', kind)}
+      >
+        {exporting === `pdf-${key}` ? (
+          <span className="spinner-border spinner-border-sm" role="status" aria-hidden />
+        ) : (
+          <Icon name="file-text" size={13} />
+        )}
+        <span className="d-none d-sm-inline ms-1">PDF</span>
+      </button>
+    </div>
+  );
+}
+
 export function hadirCount(session) {
   return (session?.entries || []).filter((e) => e.present).length;
 }

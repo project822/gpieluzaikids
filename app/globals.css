@@ -918,7 +918,8 @@ img, svg {
   align-self: flex-start;
 }
 
-.admin-sidebar .nav-link {
+.admin-sidebar .nav-link,
+.admin-drawer .nav-link {
   position: relative;
   color: var(--eluzai-muted);
   padding: 0.65rem 1rem;
@@ -931,12 +932,14 @@ img, svg {
   transition: color 0.15s ease, background-color 0.15s ease;
 }
 
-.admin-sidebar .nav-link:hover {
+.admin-sidebar .nav-link:hover,
+.admin-drawer .nav-link:hover {
   background: var(--eluzai-bg);
   color: var(--eluzai-ink);
 }
 
-.admin-sidebar .nav-link.active {
+.admin-sidebar .nav-link.active,
+.admin-drawer .nav-link.active {
   background: var(--eluzai-blue-soft);
   color: var(--eluzai-blue);
   font-weight: 600;
@@ -1055,7 +1058,7 @@ img, svg {
 
 /* ---------- Main konten admin ---------- */
 .admin-main {
-  padding-top: 7.5rem !important; /* cukup untuk topbar mobile dua baris */
+  padding-top: 4.6rem !important; /* cukup untuk header mobile satu baris */
 }
 
 @media (min-width: 768px) {
@@ -1567,11 +1570,13 @@ a:focus-visible {
 }
 
 /* Admin */
-[data-bs-theme='dark'] .admin-sidebar .nav-link:hover {
+[data-bs-theme='dark'] .admin-sidebar .nav-link:hover,
+[data-bs-theme='dark'] .admin-drawer .nav-link:hover {
   background: rgba(255, 255, 255, 0.06);
 }
 
-[data-bs-theme='dark'] .admin-sidebar .nav-link.active {
+[data-bs-theme='dark'] .admin-sidebar .nav-link.active,
+[data-bs-theme='dark'] .admin-drawer .nav-link.active {
   background: var(--eluzai-blue-soft);
   color: #93c5fd;
 }
@@ -1613,6 +1618,54 @@ a:focus-visible {
     padding-left: 0.75rem !important;
     padding-right: 0.75rem !important;
   }
+}
+
+/* ---------- Sidebar mobile: drawer overlay ---------- */
+.admin-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 15, 22, 0.45);
+  z-index: 1050;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+.admin-drawer-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.admin-drawer {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: min(280px, 82vw);
+  background: var(--eluzai-surface);
+  border-right: 1px solid var(--eluzai-border);
+  box-shadow: 0 18px 50px rgba(15, 40, 35, 0.18);
+  display: flex;
+  flex-direction: column;
+  z-index: 1060;
+  transform: translateX(-105%);
+  visibility: hidden;
+  transition: transform 0.22s ease, visibility 0.22s ease;
+  overflow-y: auto;
+}
+.admin-drawer.open {
+  transform: translateX(0);
+  visibility: visible;
+}
+.admin-drawer .nav-link {
+  position: relative;
+  color: var(--eluzai-muted);
+  padding: 0.7rem 1rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  transition: color 0.15s ease, background-color 0.15s ease;
 }
 
 /* ---------- Admin: kartu login (identik dengan login dashboard /dev) ---------- */

@@ -13,7 +13,7 @@ import {
   localToday,
   nextSundayDate,
 } from '@/lib/attendanceValidation';
-import { SundayDateInput, Toast, hadirCount } from './AttendanceShared';
+import { SundayDateInput, Toast, hadirCount, ExportButtons } from './AttendanceShared';
 import ClassCards from './ClassCards';
 
 const classOrder = (value) => CLASSES.findIndex((c) => c.value === value);
@@ -156,43 +156,6 @@ export default function AbsensiManager() {
       showToast(err.message, true);
     }
   }
-
-  const smallExport = (kind, label, title) => (
-    <div className="d-flex gap-1">
-      <button
-        type="button"
-        className="btn btn-sm btn-eluzai-green px-2 py-1"
-        style={{ fontSize: '0.76rem', borderRadius: 8 }}
-        title={`${title} — Excel`}
-        aria-label={`${title} — unduh Excel`}
-        disabled={Boolean(exporting)}
-        onClick={() => downloadExport('excel', kind, label)}
-      >
-        {exporting === `excel-${kind.date || kind.month}` ? (
-          <span className="spinner-border spinner-border-sm" role="status" aria-hidden />
-        ) : (
-          <Icon name="download" size={13} />
-        )}
-        <span className="d-none d-sm-inline ms-1">Excel</span>
-      </button>
-      <button
-        type="button"
-        className="btn btn-sm btn-eluzai px-2 py-1"
-        style={{ fontSize: '0.76rem', borderRadius: 8 }}
-        title={`${title} — PDF`}
-        aria-label={`${title} — unduh PDF`}
-        disabled={Boolean(exporting)}
-        onClick={() => downloadExport('pdf', kind, label)}
-      >
-        {exporting === `pdf-${kind.date || kind.month}` ? (
-          <span className="spinner-border spinner-border-sm" role="status" aria-hidden />
-        ) : (
-          <Icon name="file-text" size={13} />
-        )}
-        <span className="d-none d-sm-inline ms-1">PDF</span>
-      </button>
-    </div>
-  );
 
   return (
     <div className="d-flex flex-column gap-4">
@@ -369,11 +332,12 @@ export default function AbsensiManager() {
                         {m.dates.length} Minggu
                       </span>
                       <div className="ms-auto">
-                        {smallExport(
-                          { month: m.monthKey },
-                          formatMonthLabel(m.monthKey),
-                          `Rekap Kehadiran ${formatMonthLabel(m.monthKey)}`
-                        )}
+                        <ExportButtons
+                          kind={{ month: m.monthKey }}
+                          title={`Rekap Kehadiran ${formatMonthLabel(m.monthKey)}`}
+                          exporting={exporting}
+                          onExport={(type, k) => downloadExport(type, k, formatMonthLabel(m.monthKey))}
+                        />
                       </div>
                     </div>
 
@@ -396,11 +360,12 @@ export default function AbsensiManager() {
                                 {totalHadir} hadir / {totalEntries} anak
                               </span>
                               <div className="ms-auto">
-                                {smallExport(
-                                  { date: d.date },
-                                  formatDateLabel(d.date),
-                                  `Rekap Kehadiran ${formatSundayLabel(d.date)}`
-                                )}
+                                <ExportButtons
+                                  kind={{ date: d.date }}
+                                  title={`Rekap Kehadiran ${formatSundayLabel(d.date)}`}
+                                  exporting={exporting}
+                                  onExport={(type, k) => downloadExport(type, k, formatDateLabel(d.date))}
+                                />
                               </div>
                             </div>
 

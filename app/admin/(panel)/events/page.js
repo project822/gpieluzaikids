@@ -63,13 +63,21 @@ const COLUMNS = [
   {
     key: 'date',
     label: 'Tanggal',
+    render: (i) => <span className="text-sm text-nowrap fw-medium text-dark">{i.date}</span>,
+  },
+  {
+    key: 'openGate',
+    label: 'Open Gate',
     render: (i) => (
-      <div className="text-sm">
-        <div>{i.date}</div>
-        <div className="text-secondary">Open gate {i.openGate || '–'}</div>
-        <div className="text-secondary">Mulai {i.time || '–'}</div>
-      </div>
+      <span className="text-sm text-nowrap">
+        <span className="badge-soft badge-blue">{i.openGate || '–'}</span>
+      </span>
     ),
+  },
+  {
+    key: 'time',
+    label: 'Waktu',
+    render: (i) => <span className="text-sm text-nowrap">{i.time || '–'}</span>,
   },
   { key: 'location', label: 'Lokasi', render: (i) => <span className="text-sm">{i.location || '–'}</span> },
   {
