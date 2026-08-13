@@ -32,7 +32,11 @@ export default function AdminLoginForm() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Login gagal');
-      router.push('/admin');
+      // Kembali ke halaman yang dituju (dari ?from=...), bukan selalu dashboard.
+      // Dibatasi hanya rute /admin agar tidak bisa diarahkan ke situs luar.
+      const from = searchParams.get('from');
+      const target = from && from.startsWith('/admin') ? from : '/admin';
+      router.push(target);
       router.refresh();
     } catch (err) {
       setError(err.message);

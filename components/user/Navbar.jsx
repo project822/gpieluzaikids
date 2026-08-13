@@ -90,7 +90,7 @@ export default function Navbar() {
           <Link href="/" className="d-flex align-items-center gap-2 text-decoration-none">
             <ChurchLogo size={42} />
             <span className="fw-bold fs-5 text-dark">
-              Eluzai <span style={{ color: 'var(--eluzai-blue)' }}>Kids</span>
+              GPI Eluzai <span>Kids</span>
             </span>
           </Link>
 

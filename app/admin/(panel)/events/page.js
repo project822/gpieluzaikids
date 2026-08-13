@@ -2,6 +2,7 @@
 
 import ResourceManager from '@/components/admin/ResourceManager';
 import Icon from '@/components/ui/Icons';
+import { formatAdminDate } from '@/lib/format';
 
 const IMAGE_HINT = 'PNG/JPG/WebP · maks 4MB · rasio 4:5 (dipotong otomatis)';
 
@@ -63,7 +64,7 @@ const COLUMNS = [
   {
     key: 'date',
     label: 'Tanggal',
-    render: (i) => <span className="text-sm text-nowrap fw-medium text-dark">{i.date}</span>,
+    render: (i) => <span className="text-sm text-nowrap fw-medium text-dark">{formatAdminDate(i.date)}</span>,
   },
   {
     key: 'openGate',
@@ -116,7 +117,7 @@ export default function AdminEventsPage() {
     <ResourceManager
       endpoint="/api/events"
       title="Kelola Event"
-      subtitle="Atur event jemaat — semua field wajib diisi."
+      subtitle="Atur event jemaat."
       addLabel="Tambah Event"
       fields={FIELDS}
       columns={COLUMNS}

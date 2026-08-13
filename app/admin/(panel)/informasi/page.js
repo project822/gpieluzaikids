@@ -18,9 +18,6 @@ const FIELDS = [
   },
 ];
 
-const LINK_HINT =
-  'Isi untuk membuat banner dapat diklik (arahkan ke halaman event /event/... atau situs eksternal https://...). Kosongkan bila banner hanya tampil.';
-
 const COLUMNS = [
   {
     key: 'image',
@@ -56,7 +53,7 @@ export default function AdminInformasiPage() {
       <ResourceManager
         endpoint="/api/banners"
         title="Kelola Banner Informasi"
-        subtitle={`Hanya 1 banner yang tampil — PNG/JPG/WebP, rasio 16:9. ${LINK_HINT}`}
+        subtitle="Kelola banner yang tampil di beranda."
         addLabel="Unggah Banner"
         fields={FIELDS}
         columns={COLUMNS}

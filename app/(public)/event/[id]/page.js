@@ -182,7 +182,7 @@ export default async function EventDetailPage({ params }) {
           )}
 
           <div className="mt-5 text-center">
-            <Link href="/#event" className="btn btn-eluzai-outline">
+            <Link href="/events" className="btn btn-eluzai-outline">
               <Icon name="chevron-left" size={16} className="me-1" /> Kembali ke Semua Event
             </Link>
           </div>

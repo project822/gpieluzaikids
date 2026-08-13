@@ -118,10 +118,6 @@ export default function AdminShell({ children }) {
             >
               <Icon name="menu" size={18} />
             </button>
-            <Link href="/admin" className="d-flex align-items-center gap-2 text-decoration-none">
-              <ChurchLogo size={34} style={{ borderRadius: 9 }} />
-              <span className="fw-bold text-dark" style={{ fontSize: '0.95rem' }}>Eluzai Admin</span>
-            </Link>
           </div>
           <div className="d-flex gap-2">
             <AdminThemeToggle compact />
