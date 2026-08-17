@@ -38,12 +38,24 @@ export async function PUT(request, { params }) {
     if (body.slug || body.title) payload.slug = slugify(body.slug || body.title);
     const item = await updateEvent(id, payload);
     if (!item) return Response.json({ error: 'Event tidak ditemukan.' }, { status: 404 });
-    logActivity({
-      username: auth.username,
-      module: 'event',
-      action: 'update',
-      detail: `Memperbarui event "${item.title}".`,
-    }).catch(() => {});
+    // Log aktivitas: form pendaftaran (aktif/nonaktif) atau update umum.
+    if ('formActive' in body && body.formActive !== existing?.formActive) {
+      logActivity({
+        username: auth.username,
+        module: 'event',
+        action: 'update',
+        detail: body.formActive
+          ? `Mengaktifkan form pendaftaran "${item.title}".`
+          : `Menonaktifkan form pendaftaran "${item.title}".`,
+      }).catch(() => {});
+    } else {
+      logActivity({
+        username: auth.username,
+        module: 'event',
+        action: 'update',
+        detail: `Memperbarui event "${item.title}".`,
+      }).catch(() => {});
+    }
     return Response.json({ data: item });
   } catch (error) {
     console.error('[api/events PUT]', error);

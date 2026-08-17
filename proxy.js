@@ -297,7 +297,7 @@ export async function proxy(request) {
 
     // c) CSRF double-submit — kecuali login (belum punya token) dan
     //    /api/dev (dilindungi kunci DEV_API_KEY, bukan sesi browser).
-    if (!isDevApi && pathname !== '/api/auth/login') {
+    if (!isDevApi && pathname !== '/api/auth/login' && pathname !== '/api/registrations') {
       const cookieToken = request.cookies.get(CSRF_COOKIE)?.value;
       const headerToken = request.headers.get('x-csrf-token');
       if (!(await csrfMatches(cookieToken, headerToken))) {

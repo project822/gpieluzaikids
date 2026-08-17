@@ -28,6 +28,7 @@ const NAV = [
     match: (p) => p.startsWith('/admin/anggota'),
   },
   { href: '/admin/events', label: 'Event', icon: 'calendar' },
+  { href: '/admin/registrations', label: 'Registration', icon: 'users' },
 ];
 
 function isNavActive(n, pathname) {

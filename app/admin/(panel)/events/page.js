@@ -15,7 +15,8 @@ const FIELDS = [
   { name: 'time', label: 'Waktu Mulai', type: 'text', required: true, col: 'col-md-4', placeholder: 'contoh: 09.00 WIB' },
   { name: 'location', label: 'Lokasi / Tempat', type: 'text', required: true, col: 'col-md-8', placeholder: 'contoh: Gedung GPI Eluzai, Surabaya' },
   { name: 'mapsLink', label: 'Link Google Maps (detail)', type: 'url', required: true, col: 'col-md-8', placeholder: 'https://www.google.com/maps/search/?api=1&query=...' },
-  { name: 'formLink', label: 'Link Google Form (pendaftaran)', type: 'url', required: true, col: 'col-md-8', placeholder: 'https://forms.gle/...' },
+  { name: 'formLink', label: 'Link Google Form (opsional)', type: 'url', required: false, col: 'col-md-8', placeholder: 'https://forms.gle/...' },
+  { name: 'formActive', label: 'Aktifkan Form Pendaftaran', type: 'checkbox', required: false, col: 'col-12', switchLabel: 'Aktifkan form pendaftaran internal (buka di /registration/{id})' },
 ];
 
 // Tampil/sembunyikan event dari halaman publik (retensi manual — data tidak dihapus).
@@ -81,6 +82,15 @@ const COLUMNS = [
     render: (i) => <span className="text-sm text-nowrap">{i.time || '–'}</span>,
   },
   { key: 'location', label: 'Lokasi', render: (i) => <span className="text-sm">{i.location || '–'}</span> },
+  {
+    key: 'formActive',
+    label: 'Form',
+    render: (i) => (
+      <span className={`badge-soft ${i.formActive ? 'badge-green' : 'badge-rose'}`}>
+        {i.formActive ? 'Aktif' : 'Nonaktif'}
+      </span>
+    ),
+  },
   {
     key: 'links',
     label: 'Tautan',

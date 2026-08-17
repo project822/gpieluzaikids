@@ -11,6 +11,7 @@ const EventItemSchema = new mongoose.Schema(
     location: { type: String, default: '' },
     mapsLink: { type: String, default: '' },
     formLink: { type: String, default: '' },
+    formActive: { type: Boolean, default: false },
     photoLink: { type: String, default: '' },
     image: { type: String, default: '' },
     description: { type: String, default: '' },

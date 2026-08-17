@@ -15,24 +15,21 @@ export default function EventActions({ item, large = false, block = false }) {
   const closed = isRegistrationClosed(item.date);
   const cls = `${large ? 'btn-lg' : 'btn-sm px-3'} ${block ? 'w-100' : ''}`;
 
-  // Pendaftaran masih terbuka → tombol "Daftar" (Google Form).
+  // Pendaftaran masih terbuka → tombol "Daftar".
   if (!closed) {
-    if (!item.formLink) {
+    if (!item.formActive) {
       return (
         <span
           className={`btn btn-eluzai-outline ${cls}`}
-          // Tanpa class .disabled Bootstrap (yang memakai pointer-events:none,
-          // membuat kursor tidak sempat tampil) — span tidak interaktif,
-          // kursor not-allowed benar-benar terlihat.
           style={{ cursor: 'not-allowed', opacity: 0.65 }}
-          title="Tautan pendaftaran belum tersedia"
+          title="Form pendaftaran belum tersedia"
         >
           Pendaftaran Segera
         </span>
       );
     }
     return (
-      <a href={item.formLink} target="_blank" rel="noreferrer" className={`btn btn-eluzai ${cls}`}>
+      <a href={`/registration/${item.id}`} className={`btn btn-eluzai ${cls}`}>
         Daftar <Icon name="arrow-right" size={15} className="hover-arrow" />
       </a>
     );
@@ -48,8 +45,7 @@ export default function EventActions({ item, large = false, block = false }) {
     );
   }
 
-  // Belum ada link foto → tombol terkunci (kursor terblokir) sampai admin
-  // mengisi link Google Drive.
+  // Belum ada link foto → tombol terkunci sampai admin mengisi link Google Drive.
   return (
     <span
       className={`btn btn-eluzai-outline ${cls}`}
