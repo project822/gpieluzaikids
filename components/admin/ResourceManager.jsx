@@ -400,21 +400,72 @@ export default function ResourceManager({ endpoint, title, subtitle, addLabel, f
         return (
           <ImageField value={value} onChange={setValue} ratio={f.ratio || '16:9'} hint={f.hint} />
         );
-      case 'checkbox':
+      case 'checkbox': {
+        // Mutual exclusion: formActive ↔ formLink
+        const isFormActive = f.name === 'formActive';
+        const isFormLink = f.name === 'formLink';
+        const formLinkVal = isFormActive ? (form.formLink || '') : '';
+        const formActiveVal = isFormLink ? Boolean(form.formActive) : false;
+        const disabledByExclusion = isFormActive && formLinkVal.trim().length > 0;
+
         return (
-          <div className="form-check form-switch mt-2">
-            <input
-              className="form-check-input"
-              type="checkbox"
-              checked={Boolean(value)}
-              onChange={(e) => setValue(e.target.checked)}
-              id={`f-${f.name}`}
-            />
-            <label className="form-check-label text-sm" htmlFor={`f-${f.name}`}>
-              {f.switchLabel || 'Aktif'}
-            </label>
+          <div>
+            <div className="form-check form-switch mt-2">
+              <input
+                className="form-check-input"
+                type="checkbox"
+                checked={Boolean(value)}
+                disabled={disabledByExclusion}
+                onChange={(e) => {
+                  if (isFormActive && e.target.checked) {
+                    setForm((prev) => ({ ...prev, formLink: '' }));
+                  }
+                  setValue(e.target.checked);
+                }}
+                id={`f-${f.name}`}
+              />
+              <label className="form-check-label text-sm" htmlFor={`f-${f.name}`}>
+                {f.switchLabel || 'Aktif'}
+              </label>
+            </div>
+            {isFormActive && disabledByExclusion && (
+              <div className="text-sm text-secondary mt-1" style={{ fontSize: '0.78rem' }}>
+                Nonaktifkan Link Google Form terlebih dahulu untuk mengaktifkan form internal.
+              </div>
+            )}
           </div>
         );
+      }
+      case 'url': {
+        // Mutual exclusion: formLink ↔ formActive
+        const isFormLink = f.name === 'formLink';
+        const formActiveVal = isFormLink ? Boolean(form.formActive) : false;
+        const disabledByExclusion = isFormLink && formActiveVal;
+
+        return (
+          <div>
+            <input
+              className="form-control"
+              type="url"
+              value={value || ''}
+              disabled={disabledByExclusion}
+              onChange={(e) => {
+                if (isFormLink && e.target.value.trim()) {
+                  setForm((prev) => ({ ...prev, formActive: false }));
+                }
+                setValue(e.target.value);
+              }}
+              placeholder={f.placeholder}
+              required={f.required}
+            />
+            {isFormLink && disabledByExclusion && (
+              <div className="text-sm text-secondary mt-1" style={{ fontSize: '0.78rem' }}>
+                Nonaktifkan Form Internal terlebih dahulu untuk mengisi Link Google Form.
+              </div>
+            )}
+          </div>
+        );
+      }
       case 'date':
         // Tanggal dengan pembatasan hari (mis. jadwal wajib hari Minggu).
         if (f.sundayOnly) {

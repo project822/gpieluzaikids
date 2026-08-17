@@ -1,5 +1,16 @@
 import mongoose from 'mongoose';
 
+const CustomFormFieldSchema = new mongoose.Schema(
+  {
+    label: { type: String, required: true, trim: true },
+    type: { type: String, enum: ['text', 'email', 'tel', 'number', 'select', 'checkbox', 'textarea'], default: 'text' },
+    required: { type: Boolean, default: false },
+    options: { type: [String], default: [] },
+    placeholder: { type: String, default: '' },
+  },
+  { _id: false }
+);
+
 const EventItemSchema = new mongoose.Schema(
   {
     slug: { type: String, required: true, unique: true },
@@ -12,11 +23,12 @@ const EventItemSchema = new mongoose.Schema(
     mapsLink: { type: String, default: '' },
     formLink: { type: String, default: '' },
     formActive: { type: Boolean, default: false },
+    formTitle: { type: String, default: '' },
     photoLink: { type: String, default: '' },
     image: { type: String, default: '' },
     description: { type: String, default: '' },
-    // Sembunyikan dari halaman publik tanpa menghapus data (retensi manual).
     active: { type: Boolean, default: true },
+    customFormFields: { type: [CustomFormFieldSchema], default: [] },
   },
   { timestamps: true }
 );

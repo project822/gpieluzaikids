@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import PageHeader from '@/components/ui/PageHeader';
@@ -10,6 +10,9 @@ import { isRegistrationClosed } from '@/components/user/EventActions';
 export default function RegistrationForm() {
   const { id } = useParams();
   const [form, setForm] = useState({ fullName: '', email: '', whatsapp: '' });
+  const [customFields, setCustomFields] = useState({});
+  const [eventData, setEventData] = useState(null);
+  const [eventLoading, setEventLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -17,12 +20,43 @@ export default function RegistrationForm() {
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const PHONE_RE = /^[0-9]{8,15}$/;
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/events', { cache: 'no-store' });
+        const data = await res.json();
+        if (cancelled) return;
+        if (res.ok && data.data) {
+          const ev = data.data.find((e) => e.id === id);
+          if (ev) setEventData(ev);
+        }
+      } catch {
+        // silently fail — form tetap jalan tanpa custom fields
+      } finally {
+        if (!cancelled) setEventLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [id]);
+
+  const eventFields = Array.isArray(eventData?.customFormFields) ? eventData.customFormFields : [];
+  const formTitle = eventData?.formTitle || 'Form Pendaftaran';
+
   function validate() {
     const { fullName, email, whatsapp } = form;
     if (!fullName.trim() || fullName.trim().length < 2) return 'Nama lengkap wajib diisi (minimal 2 karakter).';
     if (fullName.trim().length > 100) return 'Nama lengkap maksimal 100 karakter.';
     if (!email.trim() || !EMAIL_RE.test(email.trim())) return 'Alamat email tidak valid.';
     if (!whatsapp.trim() || !PHONE_RE.test(whatsapp.trim())) return 'Nomor WhatsApp tidak valid (8-15 digit angka).';
+    // Validasi custom fields
+    for (const field of eventFields) {
+      const val = customFields[field.label] || '';
+      const strVal = typeof val === 'string' ? val.trim() : String(val || '').trim();
+      if (field.required && !strVal) return `Field "${field.label}" wajib diisi.`;
+      if (strVal && field.type === 'email' && !EMAIL_RE.test(strVal)) return `Field "${field.label}" harus berupa email yang valid.`;
+      if (strVal && field.type === 'tel' && !/^[0-9]{6,15}$/.test(strVal)) return `Field "${field.label}" harus berupa nomor telepon yang valid.`;
+    }
     return '';
   }
 
@@ -44,6 +78,9 @@ export default function RegistrationForm() {
           fullName: form.fullName.trim(),
           email: form.email.trim().toLowerCase(),
           whatsapp: form.whatsapp.trim(),
+          customFields: Object.fromEntries(
+            Object.entries(customFields).map(([k, v]) => [k, typeof v === 'string' ? v.trim() : String(v || '').trim()])
+          ),
         }),
       });
       const data = await res.json();
@@ -56,9 +93,70 @@ export default function RegistrationForm() {
     }
   }
 
+  function renderCustomField(field) {
+    const value = customFields[field.label] || '';
+    const baseClass = 'form-control';
+    const placeholder = field.placeholder || '';
+
+    switch (field.type) {
+      case 'select':
+        return (
+          <select
+            className="form-select"
+            value={value}
+            onChange={(e) => setCustomFields((p) => ({ ...p, [field.label]: e.target.value }))}
+            required={field.required}
+          >
+            <option value="">{placeholder || '-- Pilih --'}</option>
+            {(field.options || []).map((opt) => (
+              <option key={opt} value={opt}>{opt}</option>
+            ))}
+          </select>
+        );
+      case 'checkbox':
+        return (
+          <div className="form-check form-switch mt-1">
+            <input
+              className="form-check-input"
+              type="checkbox"
+              checked={Boolean(value)}
+              onChange={(e) => setCustomFields((p) => ({ ...p, [field.label]: e.target.checked ? 'true' : '' }))}
+              id={`cf-${field.label}`}
+            />
+            <label className="form-check-label" htmlFor={`cf-${field.label}`}>
+              {field.label}
+            </label>
+          </div>
+        );
+      case 'textarea':
+        return (
+          <textarea
+            className={baseClass}
+            rows={3}
+            placeholder={placeholder}
+            value={value}
+            onChange={(e) => setCustomFields((p) => ({ ...p, [field.label]: e.target.value }))}
+            required={field.required}
+          />
+        );
+      default:
+        return (
+          <input
+            className={baseClass}
+            type={field.type || 'text'}
+            placeholder={placeholder}
+            value={value}
+            onChange={(e) => setCustomFields((p) => ({ ...p, [field.label]: e.target.value }))}
+            required={field.required}
+            maxLength={500}
+          />
+        );
+    }
+  }
+
   return (
     <>
-      <PageHeader title="Form Pendaftaran" sub="Isi data diri Anda untuk mendaftar" />
+      <PageHeader title={eventLoading ? 'Form Pendaftaran' : formTitle} sub={eventData ? `Event: ${eventData.title}` : 'Isi data diri Anda untuk mendaftar'} />
       <section className="section pt-4">
         <div className="container" style={{ maxWidth: 560 }}>
           {success ? (
@@ -106,7 +204,7 @@ export default function RegistrationForm() {
                     required
                   />
                 </div>
-                <div className="mb-4">
+                <div className="mb-3">
                   <label className="form-label fw-semibold">
                     Nomor WhatsApp Aktif <span className="text-danger">*</span>
                   </label>
@@ -123,6 +221,17 @@ export default function RegistrationForm() {
                     8-15 digit angka, tanpa spasi atau simbol
                   </div>
                 </div>
+
+                {eventFields.map((field, i) => (
+                  <div className="mb-3" key={field.label || i}>
+                    {field.type !== 'checkbox' ? (
+                      <label className="form-label fw-semibold">
+                        {field.label} {field.required && <span className="text-danger">*</span>}
+                      </label>
+                    ) : null}
+                    {renderCustomField(field)}
+                  </div>
+                ))}
 
                 {error && (
                   <div className="alert alert-danger py-2 px-3 mb-3" style={{ borderRadius: 10, fontSize: '0.9rem' }}>

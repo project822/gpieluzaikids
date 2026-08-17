@@ -14,28 +14,47 @@ export function isRegistrationClosed(dateStr) {
 export default function EventActions({ item, large = false, block = false }) {
   const closed = isRegistrationClosed(item.date);
   const cls = `${large ? 'btn-lg' : 'btn-sm px-3'} ${block ? 'w-100' : ''}`;
+  const hasFormLink = Boolean(item.formLink && item.formLink.trim());
 
   // Pendaftaran masih terbuka → tombol "Daftar".
   if (!closed) {
-    if (!item.formActive) {
+    // Form internal aktif → langsung daftar.
+    if (item.formActive) {
       return (
-        <span
-          className={`btn btn-eluzai-outline ${cls}`}
-          style={{ cursor: 'not-allowed', opacity: 0.65 }}
-          title="Form pendaftaran belum tersedia"
-        >
-          Pendaftaran Segera
-        </span>
+        <a href={`/registration/${item.id}`} className={`btn btn-eluzai ${cls}`}>
+          Daftar <Icon name="arrow-right" size={15} className="hover-arrow" />
+        </a>
+      );
+    }
+    // Link Google Form tersedia → arahkan ke Google Form.
+    if (hasFormLink) {
+      return (
+        <a href={item.formLink} target="_blank" rel="noreferrer" className={`btn btn-eluzai ${cls}`}>
+          Daftar <Icon name="external" size={13} className="ms-1" />
+        </a>
+      );
+    }
+    // Kedua cara tidak aktif → tampilkan "Foto Kegiatan".
+    if (item.photoLink) {
+      return (
+        <a href={item.photoLink} target="_blank" rel="noreferrer" className={`btn btn-eluzai-green ${cls}`}>
+          <Icon name="folder" size={15} className="me-1" /> Foto Kegiatan
+          <Icon name="external" size={13} className="ms-1" />
+        </a>
       );
     }
     return (
-      <a href={`/registration/${item.id}`} className={`btn btn-eluzai ${cls}`}>
-        Daftar <Icon name="arrow-right" size={15} className="hover-arrow" />
-      </a>
+      <span
+        className={`btn btn-eluzai-red ${cls}`}
+        style={{ cursor: 'not-allowed', opacity: 0.65 }}
+        title="Link foto kegiatan belum tersedia"
+      >
+        <Icon name="folder" size={15} className="me-1" /> Foto Kegiatan
+      </span>
     );
   }
 
-  // Pendaftaran ditutup (H-2) → butuh link foto Google Drive terlebih dahulu.
+  // Pendaftaran ditutup (H-2) → tampilkan "Foto Kegiatan".
   if (item.photoLink) {
     return (
       <a href={item.photoLink} target="_blank" rel="noreferrer" className={`btn btn-eluzai-green ${cls}`}>
@@ -45,14 +64,13 @@ export default function EventActions({ item, large = false, block = false }) {
     );
   }
 
-  // Belum ada link foto → tombol terkunci sampai admin mengisi link Google Drive.
   return (
     <span
-      className={`btn btn-eluzai-outline ${cls}`}
+      className={`btn btn-eluzai-red ${cls}`}
       style={{ cursor: 'not-allowed', opacity: 0.65 }}
-      title="Pendaftaran telah ditutup — link foto belum tersedia"
+      title="Link foto kegiatan belum tersedia"
     >
-      Pendaftaran Ditutup
+      <Icon name="folder" size={15} className="me-1" /> Foto Kegiatan
     </span>
   );
 }

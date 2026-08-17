@@ -1,4 +1,5 @@
 import { getRegistrations, createRegistration, getEventById } from '@/lib/repo';
+import { sanitizeString } from '@/lib/sanitize';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_RE = /^[0-9]{8,15}$/;
@@ -47,12 +48,47 @@ export async function POST(request) {
       return Response.json({ error: 'Form pendaftaran untuk event ini belum aktif.' }, { status: 403 });
     }
 
+    // Validasi custom fields berdasarkan definisi di event
+    const customFields = {};
+    const eventFields = Array.isArray(event.customFormFields) ? event.customFormFields : [];
+    const rawCustom = body.customFields && typeof body.customFields === 'object' ? body.customFields : {};
+
+    for (const field of eventFields) {
+      const value = rawCustom[field.label];
+      const strVal = value !== undefined && value !== null ? String(value).trim() : '';
+
+      if (field.required && !strVal) {
+        return Response.json({ error: `Field "${field.label}" wajib diisi.` }, { status: 400 });
+      }
+
+      if (strVal) {
+        // Validasi tipe
+        if (field.type === 'email' && !EMAIL_RE.test(strVal)) {
+          return Response.json({ error: `Field "${field.label}" harus berupa email yang valid.` }, { status: 400 });
+        }
+        if (field.type === 'tel' && !/^[0-9]{6,15}$/.test(strVal)) {
+          return Response.json({ error: `Field "${field.label}" harus berupa nomor telepon yang valid.` }, { status: 400 });
+        }
+        if (field.type === 'number' && (isNaN(Number(strVal)) || strVal === '')) {
+          return Response.json({ error: `Field "${field.label}" harus berupa angka.` }, { status: 400 });
+        }
+        if (field.type === 'select' && Array.isArray(field.options) && field.options.length > 0 && !field.options.includes(strVal)) {
+          return Response.json({ error: `Field "${field.label}" memiliki pilihan yang tidak valid.` }, { status: 400 });
+        }
+        if (strVal.length > 500) {
+          return Response.json({ error: `Field "${field.label}" maksimal 500 karakter.` }, { status: 400 });
+        }
+        customFields[field.label] = sanitizeString(strVal);
+      }
+    }
+
     const item = await createRegistration({
       eventId,
       eventName: event.title,
       fullName,
       email,
       whatsapp,
+      customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
     });
 
     return Response.json({ data: item }, { status: 201 });

@@ -5,6 +5,19 @@ import Icon from '@/components/ui/Icons';
 import { formatAdminDate } from '@/lib/format';
 import { csrfFetch } from '@/lib/csrfClient';
 
+function formatDateOnly(iso) {
+  if (!iso) return '–';
+  try {
+    return new Date(iso).toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  } catch {
+    return '–';
+  }
+}
+
 export default function AdminRegistrationsPage() {
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState('');
@@ -90,6 +103,7 @@ export default function AdminRegistrationsPage() {
   }
 
   const selectedEventObj = events.find((e) => e.id === selectedEvent);
+  const eventCustomFields = Array.isArray(selectedEventObj?.customFormFields) ? selectedEventObj.customFormFields : [];
 
   return (
     <div className="d-flex flex-column gap-4">
@@ -166,6 +180,12 @@ export default function AdminRegistrationsPage() {
                 <Icon name={selectedEventObj.formActive ? 'check' : 'x'} size={16} style={{ color: selectedEventObj.formActive ? 'var(--eluzai-green)' : 'var(--eluzai-rose)' }} />
                 <span className="text-sm fw-semibold">{selectedEventObj.formActive ? 'Form Aktif' : 'Form Nonaktif'}</span>
               </div>
+              {eventCustomFields.length > 0 && (
+                <div className="d-flex align-items-center gap-2 px-3 py-2" style={{ background: 'var(--eluzai-blue-soft)', borderRadius: 10 }}>
+                  <Icon name="edit" size={16} style={{ color: 'var(--eluzai-blue)' }} />
+                  <span className="text-sm fw-semibold">{eventCustomFields.length} Kolom Custom</span>
+                </div>
+              )}
             </div>
           )}
 
@@ -193,6 +213,9 @@ export default function AdminRegistrationsPage() {
                     <th>Nama Lengkap</th>
                     <th>Email</th>
                     <th>No. WhatsApp</th>
+                    {eventCustomFields.map((f) => (
+                      <th key={f.label}>{f.label}</th>
+                    ))}
                     <th>Tanggal Daftar</th>
                   </tr>
                 </thead>
@@ -203,16 +226,13 @@ export default function AdminRegistrationsPage() {
                       <td className="fw-semibold text-dark text-sm">{r.fullName}</td>
                       <td className="text-sm">{r.email}</td>
                       <td className="text-sm">{r.whatsapp}</td>
+                      {eventCustomFields.map((f) => (
+                        <td key={f.label} className="text-sm">
+                          {(r.customFields || {})[f.label] || '–'}
+                        </td>
+                      ))}
                       <td className="text-sm text-nowrap">
-                        {r.createdAt
-                          ? new Date(r.createdAt).toLocaleDateString('id-ID', {
-                              day: 'numeric',
-                              month: 'long',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })
-                          : '–'}
+                        {formatDateOnly(r.createdAt)}
                       </td>
                     </tr>
                   ))}

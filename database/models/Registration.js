@@ -7,6 +7,7 @@ const RegistrationSchema = new mongoose.Schema(
     fullName: { type: String, required: true, trim: true },
     email: { type: String, required: true, trim: true, lowercase: true },
     whatsapp: { type: String, required: true, trim: true },
+    customFields: { type: mongoose.Schema.Types.Mixed, default: {} },
   },
   { timestamps: true }
 );

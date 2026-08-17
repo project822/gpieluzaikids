@@ -34,11 +34,12 @@ export async function GET(request) {
     }
 
     const eventName = event.title;
+    const customFormFields = Array.isArray(event.customFormFields) ? event.customFormFields : [];
     let buffer;
     if (type === 'excel') {
-      buffer = await buildRegistrationExcel(registrations, eventName);
+      buffer = await buildRegistrationExcel(registrations, eventName, customFormFields);
     } else {
-      buffer = buildRegistrationPdf(registrations, eventName);
+      buffer = buildRegistrationPdf(registrations, eventName, customFormFields);
     }
 
     const ext = type === 'excel' ? 'xlsx' : 'pdf';

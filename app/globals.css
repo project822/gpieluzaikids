@@ -225,6 +225,20 @@ img, svg {
   transform: translateY(-1px);
 }
 
+.btn-eluzai-red {
+  background: var(--eluzai-rose);
+  color: #fff;
+  border: 1px solid var(--eluzai-rose);
+  box-shadow: none;
+}
+
+.btn-eluzai-red:hover, .btn-eluzai-red:focus {
+  background: #b91c1c;
+  border-color: #b91c1c;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
 .btn-eluzai-outline {
   background: var(--eluzai-surface);
   color: var(--eluzai-ink-soft);

@@ -1,7 +1,26 @@
 import { updateEvent, deleteEvent, getEventById, slugify, logActivity } from '@/lib/repo';
 import { requireAdmin } from '@/lib/auth';
 import { requiredFieldsError, invalidUrlsError } from '@/lib/eventValidation';
-import { sanitizePayload, isValidImage } from '@/lib/sanitize';
+import { sanitizePayload, isValidImage, sanitizeString } from '@/lib/sanitize';
+
+const FIELD_TYPES = ['text', 'email', 'tel', 'number', 'select', 'checkbox', 'textarea'];
+
+function sanitizeCustomFormFields(fields) {
+  if (!Array.isArray(fields)) return [];
+  return fields
+    .filter((f) => f && typeof f === 'object' && f.label)
+    .slice(0, 20)
+    .map((f) => ({
+      label: sanitizeString(String(f.label || '').slice(0, 100)),
+      type: FIELD_TYPES.includes(f.type) ? f.type : 'text',
+      required: Boolean(f.required),
+      options: Array.isArray(f.options)
+        ? f.options.map((o) => sanitizeString(String(o || '').slice(0, 200))).filter(Boolean).slice(0, 50)
+        : [],
+      placeholder: sanitizeString(String(f.placeholder || '').slice(0, 200)),
+    }))
+    .filter((f) => f.label);
+}
 
 // Field wajib — hanya dicek saat payload berupa form lengkap (ada title).
 // Quick-edit (mis. hanya mengisi link foto) tidak diwajibkan.
@@ -22,6 +41,14 @@ export async function PUT(request, { params }) {
         return Response.json({ error: missingError }, { status: 400 });
       }
     }
+    // Sanitasi customFormFields bila dikirim
+    if ('customFormFields' in body) {
+      body.customFormFields = sanitizeCustomFormFields(body.customFormFields);
+    }
+    // Sanitasi formTitle
+    if ('formTitle' in body) {
+      body.formTitle = sanitizeString(String(body.formTitle || '').slice(0, 100));
+    }
     // Validasi gambar hanya bila NILAINYA BERUBAH: gambar lama (mis. data
     // demo SVG yang sudah disimpan) tidak diunggah ulang — memblokirnya akan
     // membuat edit event lama gagal. Gambar baru wajib PNG/JPG/WebP.
@@ -32,6 +59,13 @@ export async function PUT(request, { params }) {
         { error: 'Gambar event tidak valid (PNG/JPG/WebP, maks 4MB).' },
         { status: 400 }
       );
+    }
+    // Mutual exclusion: formLink dan formActive tidak boleh aktif bersamaan
+    if ('formLink' in body && body.formLink && body.formLink.trim()) {
+      body.formActive = false;
+    }
+    if ('formActive' in body && body.formActive) {
+      body.formLink = '';
     }
     const payload = { ...body };
     // Jangan timpa slug saat quick-edit (payload tanpa title/slug).

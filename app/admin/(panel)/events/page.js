@@ -86,9 +86,14 @@ const COLUMNS = [
     key: 'formActive',
     label: 'Form',
     render: (i) => (
-      <span className={`badge-soft ${i.formActive ? 'badge-green' : 'badge-rose'}`}>
-        {i.formActive ? 'Aktif' : 'Nonaktif'}
-      </span>
+      <div className="d-flex flex-column gap-1">
+        <span className={`badge-soft ${i.formActive ? 'badge-green' : 'badge-rose'}`}>
+          {i.formActive ? 'Internal' : 'Nonaktif'}
+        </span>
+        {i.formLink && (
+          <span className="badge-soft badge-blue">Google Form</span>
+        )}
+      </div>
     ),
   },
   {
