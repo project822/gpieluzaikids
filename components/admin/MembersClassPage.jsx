@@ -192,7 +192,7 @@ export default function MembersClassPage({ className }) {
               </button>
             </div>
             <p className="text-sm text-secondary mt-2 mb-0" style={{ fontSize: '0.78rem' }}>
-              Data anggota ini yang dipakai saat mengisi absensi di menu Absensi.
+              Data anggota diperlukan agar dapat mengisi absensi di menu Absensi.
             </p>
           </form>
 

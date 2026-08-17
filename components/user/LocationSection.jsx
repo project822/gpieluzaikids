@@ -12,7 +12,7 @@ export default function LocationSection() {
           <SectionHeading
             center
             title="Lokasi Gereja"
-            sub="Temukan lokasi gereja kami di peta berikut."
+            sub="Temukan lokasi gereja kami melalui peta berikut."
           />
         </Reveal>
         <Stagger baseDelay={120} className="row g-4 align-items-stretch">

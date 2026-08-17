@@ -19,8 +19,8 @@ export async function PATCH(request, { params }) {
 
     const patch = {};
     if (body?.password !== undefined && body.password !== '') {
-      if (String(body.password).length < 6) {
-        return Response.json({ error: 'Password minimal 6 karakter.' }, { status: 400 });
+      if (String(body.password).length < 8) {
+        return Response.json({ error: 'Password minimal 8 karakter.' }, { status: 400 });
       }
       patch.passwordHash = await hashPassword(String(body.password));
     }

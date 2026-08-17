@@ -1,10 +1,13 @@
 import { getRegistrations, createRegistration, getEventById } from '@/lib/repo';
+import { requireAdmin } from '@/lib/auth';
 import { sanitizeString } from '@/lib/sanitize';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_RE = /^[0-9]{8,15}$/;
 
 export async function GET(request) {
+  const auth = await requireAdmin(request);
+  if (!auth.ok) return auth.response;
   try {
     const sp = request.nextUrl.searchParams;
     const eventId = sp.get('eventId') || '';

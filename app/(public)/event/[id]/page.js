@@ -120,7 +120,7 @@ export default async function EventDetailPage({ params }) {
               <div className="detail-photo h-100">
                 {item.image ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={imageUrl(item)} alt={item.title} loading="lazy" decoding="async" />
+                  <img src={imageUrl(item)} alt={item.title} width={400} height={500} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
                   <div className="event-cover-fallback h-100" style={{ borderRadius: 'var(--eluzai-radius)' }}>
                     <Icon name="cross" size={48} />

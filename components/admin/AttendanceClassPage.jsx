@@ -269,7 +269,7 @@ export default function AttendanceClassPage({ className, initialDate = '' }) {
             <div className="d-flex flex-wrap align-items-center gap-2 mb-3">
               <h6 className="mb-0">Form Absensi Mingguan</h6>
               <span className="text-sm text-secondary" style={{ fontSize: '0.78rem' }}>
-                hijau = hadir · merah = tidak hadir · default belum dipilih
+                Hijau = Hadir · Merah = Tidak hadir
               </span>
             </div>
 
@@ -293,7 +293,7 @@ export default function AttendanceClassPage({ className, initialDate = '' }) {
                   className="btn btn-eluzai-outline btn-sm flex-grow-1"
                   onClick={() => setAll(false)}
                 >
-                  <Icon name="x" size={14} className="me-1" /> Semua Tidak
+                  <Icon name="x" size={14} className="me-1" /> Semua Tidak Hadir
                 </button>
               </div>
             </div>

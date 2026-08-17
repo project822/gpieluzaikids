@@ -143,7 +143,7 @@ function ImageField({ value, onChange, ratio = '16:9', hint }) {
         <div className="image-field-preview" style={{ aspectRatio: ratio.replace(':', ' / ') }}>
           {value ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={value} alt="Pratinjau gambar" />
+            <img src={value} alt="Pratinjau gambar" width={120} height={120} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
             <span>Belum ada gambar</span>
           )}

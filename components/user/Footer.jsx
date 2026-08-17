@@ -21,7 +21,7 @@ export default function Footer() {
               <ChurchLogo size={42} />
               <span className="fw-bold fs-5 text-white">GPI Eluzai Kids</span>
             </div>
-            <p className="text-sm d-flex align-items-start gap-2 mb-3" style={{ color: '#cbd5e1', maxWidth: 460 }}>
+            <p className="text-sm d-flex align-items-start gap-2 mb-3" style={{ color: '#e2e8f0', maxWidth: 460 }}>
               <Icon name="map-pin" size={16} className="mt-1 flex-shrink-0" style={{ color: '#60a5fa' }} /> {CHURCH.address}
             </p>
             <div className="d-flex gap-2">

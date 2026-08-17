@@ -333,12 +333,21 @@ export async function proxy(request) {
 
   // Halaman login: jika sudah login, arahkan ke dashboard.
   if (pathname === '/admin/login') {
-    response = valid ? NextResponse.redirect(new URL('/admin', request.url)) : NextResponse.next();
+    if (valid) {
+      const from = request.nextUrl.searchParams.get('from');
+      const safePath = from && from.startsWith('/admin') && !from.includes('//') ? from : '/admin';
+      response = NextResponse.redirect(new URL(safePath, request.url));
+    } else {
+      response = NextResponse.next();
+    }
   } else if (pathname.startsWith('/admin')) {
     // Rute admin lainnya: wajib login.
     if (!valid) {
       const url = new URL('/admin/login', request.url);
-      url.searchParams.set('from', pathname);
+      // Validasi from: hanya rute /admin, tidak ada // (protocol-relative)
+      const safeFrom = pathname.startsWith('/admin') && !pathname.includes('//')
+        ? pathname : '/admin';
+      url.searchParams.set('from', safeFrom);
       response = NextResponse.redirect(url);
     } else {
       response = NextResponse.next();

@@ -44,14 +44,14 @@ export default function EventCard({ item }) {
             <span className="d-flex align-items-center gap-2">
               <Icon name="door" size={16} className="text-primary flex-shrink-0" />
               <span>
-                Open gate <span className="text-dark fw-semibold">{item.openGate}</span>
+                Open Gate <span className="text-dark fw-semibold">{item.openGate}</span>
               </span>
             </span>
           )}
           <span className="d-flex align-items-center gap-2">
             <Icon name="clock" size={16} className="text-primary flex-shrink-0" />
             <span>
-              Mulai pukul <span className="text-dark fw-semibold">{item.time || '–'}</span>
+              Mulai Pukul <span className="text-dark fw-semibold">{item.time || '–'}</span>
             </span>
           </span>
           <span className="d-flex align-items-start gap-2">

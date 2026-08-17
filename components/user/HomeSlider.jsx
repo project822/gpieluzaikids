@@ -215,7 +215,7 @@ export default function HomeSlider({ slides }) {
           >
             {s.src ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={s.src} alt={s.title} loading={index === 0 ? 'eager' : 'lazy'} />
+              <img src={s.src} alt={s.title} width={800} height={450} loading={index === 0 ? 'eager' : 'lazy'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
               <SlideScene scene={s.scene} />
             )}

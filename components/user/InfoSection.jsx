@@ -67,7 +67,7 @@ export default function InfoSection({ banners }) {
         <Reveal>
           <SectionHeading
             center
-            title="Kabar Terbaru Gereja"
+            title="Informasi Terbaru Gereja"
             sub={`Pengumuman dan berita terbaru ${CHURCH.shortName}.`}
           />
         </Reveal>
@@ -77,7 +77,7 @@ export default function InfoSection({ banners }) {
             <div className="text-center py-5">
               <Icon name="info" size={38} className="text-secondary opacity-50 mb-3" />
               <p className="text-secondary mb-0">
-                Belum ada banner informasi. Admin dapat mengunggah banner dari panel admin.
+                Belum ada informasi terbaru.
               </p>
             </div>
           </Reveal>

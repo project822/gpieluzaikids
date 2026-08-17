@@ -8,7 +8,7 @@ const CARDS = [
   {
     icon: 'whatsapp',
     title: 'WhatsApp',
-    lines: ['Respons tercepat untuk informasi & pendaftaran event.'],
+    lines: ['Respons tercepat untuk informasi.'],
     href: `https://wa.me/${CHURCH.whatsapp}?text=${encodeURIComponent('Halo, saya ingin bertanya tentang GPI Eluzai.')}`,
     hrefLabel: 'Chat WhatsApp',
     chip: 'icon-chip-green',
@@ -16,7 +16,7 @@ const CARDS = [
   {
     icon: 'instagram',
     title: 'Instagram',
-    lines: ['Kabar & momen kegiatan jemaat.'],
+    lines: ['Kabar & momen kegiatan anak-anak.'],
     href: CHURCH.instagram,
     hrefLabel: 'Buka Instagram',
     chip: 'icon-chip-ig',
@@ -38,8 +38,8 @@ export default function ContactSection() {
         <Reveal>
           <SectionHeading
             center
-            title="Kontak GPI Eluzai"
-            sub="Terhubung dengan kami — kami siap membantu Anda."
+            title="Kontak GPI Eluzai Kids"
+            sub="Terhubung dengan kami - kami siap membantu"
           />
         </Reveal>
 

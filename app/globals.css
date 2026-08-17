@@ -8,12 +8,25 @@
    ============================================================ */
 
 :root {
-  /* Bootstrap memakai --bs-body-font-family untuk komponennya (form-control,
-     btn, table, dll.). Arahkan ke font LOKAL yang sama dengan body agar area
-     admin (dan seluruh situs) konsisten memakai Inter — tanpa ini input &
-     tombol Bootstrap jatuh ke font sistem. */
   --bs-body-font-family: var(--font-inter), 'Segoe UI', system-ui, -apple-system, sans-serif;
   --bs-font-sans-serif: var(--font-inter), 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --bs-body-color: #0f172a;
+  --bs-body-bg: #ffffff;
+  --bs-link-color: #1d4ed8;
+  --bs-link-hover-color: #1e40af;
+  --bs-border-color: #dee2e6;
+  --bs-border-width: 1px;
+  --bs-border-style: solid;
+  --bs-border-radius: 0.375rem;
+  --bs-border-radius-sm: 0.25rem;
+  --bs-border-radius-lg: 0.5rem;
+  --bs-primary: #1d4ed8;
+  --bs-secondary: #64748b;
+  --bs-dark: #0f172a;
+  --bs-danger: #dc2626;
+  --bs-success: #15803d;
+  --bs-secondary-color: #64748b;
+  --bs-table-bg: transparent;
 
   --eluzai-blue: #1d4ed8;
   --eluzai-blue-dark: #1e40af;
@@ -678,7 +691,7 @@ img, svg {
 }
 
 .footer-eluzai a {
-  color: #94a3b8;
+  color: #cbd5e1;
   font-size: 0.95rem;
   transition: color 0.15s ease;
 }
@@ -693,7 +706,7 @@ img, svg {
 }
 
 .footer-eluzai p {
-  color: #94a3b8;
+  color: #cbd5e1;
 }
 
 .footer-bottom {
@@ -701,7 +714,7 @@ img, svg {
   margin-top: 2.5rem;
   padding: 1.2rem 0;
   font-size: 0.85rem;
-  color: #64748b;
+  color: #94a3b8;
 }
 
 .social-btn {
@@ -713,7 +726,7 @@ img, svg {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #cbd5e1;
+  color: #e2e8f0;
   transition: all 0.15s ease;
 }
 

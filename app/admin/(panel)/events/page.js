@@ -50,7 +50,7 @@ const COLUMNS = [
         <div className="admin-thumb" style={{ aspectRatio: '4 / 5' }}>
           {i.image ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={i.image} alt="" />
+            <img src={i.image} alt={i.title || 'Event'} width={60} height={75} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
             <Icon name="cross" size={18} />
           )}

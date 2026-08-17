@@ -45,13 +45,15 @@ export default function EventActions({ item, large = false, block = false }) {
       );
     }
     return (
-      <span
+      <button
+        type="button"
         className={`btn btn-eluzai-red ${cls}`}
-        style={{ cursor: 'not-allowed', opacity: 0.65 }}
+        disabled
+        aria-disabled="true"
         title="Link foto kegiatan belum tersedia"
       >
         <Icon name="folder" size={15} className="me-1" /> Foto Kegiatan
-      </span>
+      </button>
     );
   }
 
@@ -66,12 +68,14 @@ export default function EventActions({ item, large = false, block = false }) {
   }
 
   return (
-    <span
+    <button
+      type="button"
       className={`btn btn-eluzai-red ${cls}`}
-      style={{ cursor: 'not-allowed', opacity: 0.65 }}
+      disabled
+      aria-disabled="true"
       title="Link foto kegiatan belum tersedia"
     >
       <Icon name="folder" size={15} className="me-1" /> Foto Kegiatan
-    </span>
+    </button>
   );
 }

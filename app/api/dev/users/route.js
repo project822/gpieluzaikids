@@ -47,8 +47,8 @@ export async function POST(request) {
         { status: 400 }
       );
     }
-    if (password.length < 6) {
-      return Response.json({ error: 'Password minimal 6 karakter.' }, { status: 400 });
+    if (password.length < 8) {
+      return Response.json({ error: 'Password minimal 8 karakter.' }, { status: 400 });
     }
 
     if (isDbEnabled() && (await findUserByUsername(username))) {

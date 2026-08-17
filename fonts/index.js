@@ -19,7 +19,6 @@ export const hankenGrotesk = localFont({
   src: [
     { path: './hanken-grotesk-600.woff2', weight: '600', style: 'normal' },
     { path: './hanken-grotesk-700.woff2', weight: '700', style: 'normal' },
-    { path: './hanken-grotesk-800.woff2', weight: '800', style: 'normal' },
   ],
   variable: '--font-hanken',
   display: 'swap',

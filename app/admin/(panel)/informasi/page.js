@@ -26,7 +26,7 @@ const COLUMNS = [
       <div className="d-flex align-items-center gap-3">
         <div className="admin-thumb admin-thumb-wide" style={{ aspectRatio: '16 / 9' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={i.image} alt="" />
+          <img src={i.image} alt={i.title || 'Banner'} width={160} height={90} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
         <div>
           <div className="fw-semibold text-dark">{i.title || '(Tanpa judul)'}</div>

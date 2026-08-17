@@ -17,7 +17,7 @@ export default function manifest() {
         src: `${siteUrl()}/images/logo-placeholder.webp`,
         sizes: 'any',
         type: 'image/webp',
-        purpose: 'any',
+        purpose: 'any maskable',
       },
     ],
   };
