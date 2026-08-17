@@ -1,6 +1,7 @@
 import {
   getAttendance,
   getAttendanceByClassDate,
+  getAttendanceByMonth,
   upsertAttendance,
   logActivity,
 } from '@/lib/repo';
@@ -13,9 +14,12 @@ import {
   normalizeAttendanceEntries,
 } from '@/lib/attendanceValidation';
 
+const MONTH_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
+
 // GET /api/attendance — data HANYA untuk admin (tidak tampil di publik) → wajib login.
-// - tanpa query            → riwayat yang TAMPIL: sesi 1 bulan terakhir (30 hari)
-// - ?all=1                 → semua sesi (tidak dibatasi jendela waktu)
+// - tanpa query            → SEMUA sesi (tidak dibatasi jendela waktu)
+// - ?all=1                 → semua sesi (sama dengan tanpa query, backward compat)
+// - ?month=YYYY-MM         → sesi satu bulan tertentu
 // - ?class=baby&date=...   → lookup satu sesi (preload form absensi)
 export async function GET(request) {
   const auth = await requireAdmin(request);
@@ -24,6 +28,7 @@ export async function GET(request) {
     const sp = request.nextUrl.searchParams;
     const className = sp.get('class') || '';
     const date = sp.get('date') || '';
+    const month = sp.get('month') || '';
 
     if (className && date) {
       if (!isValidClass(className) || !isValidScheduleDate(date)) {
@@ -33,10 +38,23 @@ export async function GET(request) {
       return Response.json({ data: item ? [item] : [] });
     }
 
-    const all = sp.get('all') === '1';
-    // Jendela default 1 bulan (30 hari) — data lama tetap aman di database.
-    const days = Math.min(365, Math.max(1, Number(sp.get('days')) || 30));
-    let list = await getAttendance({ recentDays: days, all });
+    // Filter per bulan tertentu
+    if (month) {
+      if (!MONTH_RE.test(month)) {
+        return Response.json({ error: 'Parameter month harus format YYYY-MM.' }, { status: 400 });
+      }
+      let list = await getAttendanceByMonth(month);
+      if (className) {
+        if (!isValidClass(className)) {
+          return Response.json({ error: 'Kelas tidak dikenal.' }, { status: 400 });
+        }
+        list = list.filter((s) => s.className === className);
+      }
+      return Response.json({ data: list });
+    }
+
+    // Default: semua data (tanpa batasan waktu)
+    let list = await getAttendance({ all: true });
     // Filter per kelas (mis. halaman /admin/baby menampilkan riwayat kelasnya saja).
     if (className) {
       if (!isValidClass(className)) {

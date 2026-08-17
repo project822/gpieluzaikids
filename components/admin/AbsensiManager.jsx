@@ -29,6 +29,7 @@ export default function AbsensiManager() {
   // Export
   const [exportDate, setExportDate] = useState(() => nextSundayDate(localToday()));
   const [exportMonth, setExportMonth] = useState(() => localToday().slice(0, 7));
+  const [exportYear, setExportYear] = useState(() => String(new Date().getFullYear()));
   const [exporting, setExporting] = useState(''); // kunci tombol yang sedang jalan
 
   const showToast = useCallback((msg, isError = false) => {
@@ -103,14 +104,14 @@ export default function AbsensiManager() {
     return [...monthsMap.values()];
   }, [sessions]);
 
-  // ---------- Export Excel / PDF (per tanggal atau per bulan) ----------
-  async function downloadExport(type, { date = '', month = '' }, label) {
-    if (!date && !month) {
-      showToast('Pilih tanggal atau bulan terlebih dahulu.', true);
+  // ---------- Export Excel / PDF / Graphics ----------
+  async function downloadExport(type, { date = '', month = '', year = '' }, label) {
+    if (!date && !month && !year) {
+      showToast('Pilih tanggal, bulan, atau tahun terlebih dahulu.', true);
       return;
     }
-    const query = date ? `date=${date}` : `month=${month}`;
-    const key = `${type}-${date || month}`;
+    const query = date ? `date=${date}` : month ? `month=${month}` : `year=${year}`;
+    const key = `${type}-${date || month || year}`;
     setExporting(key);
     try {
       const res = await csrfFetch(`/api/attendance/export?type=${type}&${query}`, {
@@ -124,12 +125,13 @@ export default function AbsensiManager() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Rekap Kehadiran ${label}.${type === 'excel' ? 'xlsx' : 'pdf'}`;
+      const prefix = type === 'graphics' ? 'Grafik' : 'Rekap';
+      a.download = `${prefix} Kehadiran ${label}.${type === 'pdf' ? 'pdf' : 'xlsx'}`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 5000);
-      showToast('Rekap kehadiran berhasil diunduh.');
+      showToast(`${prefix} kehadiran berhasil diunduh.`);
     } catch (err) {
       showToast(err.message, true);
     } finally {
@@ -177,7 +179,7 @@ export default function AbsensiManager() {
         </div>
       )}
 
-      {/* ---- Toolbar export: per Minggu & per Bulan (tombol sejajar dengan input) ---- */}
+      {/* ---- Toolbar export: per Minggu, per Bulan, per Tahun + Graphics ---- */}
       <div className="admin-card p-3 p-md-4 d-flex flex-column gap-4">
         <div className="d-flex flex-column flex-lg-row gap-3 align-items-lg-end">
           <div className="d-flex flex-column gap-1" style={{ width: 'min(100%, 240px)' }}>
@@ -188,37 +190,40 @@ export default function AbsensiManager() {
             <button
               type="button"
               className="btn btn-eluzai-green"
-              style={{ minWidth: 150 }}
+              style={{ minWidth: 120 }}
               disabled={Boolean(exporting)}
               onClick={() => downloadExport('excel', { date: exportDate }, formatDateLabel(exportDate))}
             >
               {exporting === `excel-${exportDate}` ? (
-                <>
-                  <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden />
-                  Menyiapkan...
-                </>
+                <><span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden />Menyiapkan...</>
               ) : (
-                <>
-                  <Icon name="download" size={16} className="me-1" /> Export Excel
-                </>
+                <><Icon name="download" size={16} className="me-1" /> Excel</>
               )}
             </button>
             <button
               type="button"
               className="btn btn-eluzai"
-              style={{ minWidth: 150 }}
+              style={{ minWidth: 120 }}
               disabled={Boolean(exporting)}
               onClick={() => downloadExport('pdf', { date: exportDate }, formatDateLabel(exportDate))}
             >
               {exporting === `pdf-${exportDate}` ? (
-                <>
-                  <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden />
-                  Menyiapkan...
-                </>
+                <><span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden />Menyiapkan...</>
               ) : (
-                <>
-                  <Icon name="file-text" size={16} className="me-1" /> Export PDF
-                </>
+                <><Icon name="file-text" size={16} className="me-1" /> PDF</>
+              )}
+            </button>
+            <button
+              type="button"
+              className="btn btn-eluzai-outline"
+              style={{ minWidth: 120 }}
+              disabled={Boolean(exporting)}
+              onClick={() => downloadExport('graphics', { date: exportDate }, formatDateLabel(exportDate))}
+            >
+              {exporting === `graphics-${exportDate}` ? (
+                <><span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden />Menyiapkan...</>
+              ) : (
+                <><Icon name="activity" size={16} className="me-1" /> Grafik</>
               )}
             </button>
             <button
@@ -246,37 +251,40 @@ export default function AbsensiManager() {
             <button
               type="button"
               className="btn btn-eluzai-green"
-              style={{ minWidth: 150 }}
+              style={{ minWidth: 120 }}
               disabled={Boolean(exporting)}
               onClick={() => downloadExport('excel', { month: exportMonth }, formatMonthLabel(exportMonth))}
             >
               {exporting === `excel-${exportMonth}` ? (
-                <>
-                  <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden />
-                  Menyiapkan...
-                </>
+                <><span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden />Menyiapkan...</>
               ) : (
-                <>
-                  <Icon name="download" size={16} className="me-1" /> Export Excel
-                </>
+                <><Icon name="download" size={16} className="me-1" /> Excel</>
               )}
             </button>
             <button
               type="button"
               className="btn btn-eluzai"
-              style={{ minWidth: 150 }}
+              style={{ minWidth: 120 }}
               disabled={Boolean(exporting)}
               onClick={() => downloadExport('pdf', { month: exportMonth }, formatMonthLabel(exportMonth))}
             >
               {exporting === `pdf-${exportMonth}` ? (
-                <>
-                  <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden />
-                  Menyiapkan...
-                </>
+                <><span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden />Menyiapkan...</>
               ) : (
-                <>
-                  <Icon name="file-text" size={16} className="me-1" /> Export PDF
-                </>
+                <><Icon name="file-text" size={16} className="me-1" /> PDF</>
+              )}
+            </button>
+            <button
+              type="button"
+              className="btn btn-eluzai-outline"
+              style={{ minWidth: 120 }}
+              disabled={Boolean(exporting)}
+              onClick={() => downloadExport('graphics', { month: exportMonth }, formatMonthLabel(exportMonth))}
+            >
+              {exporting === `graphics-${exportMonth}` ? (
+                <><span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden />Menyiapkan...</>
+              ) : (
+                <><Icon name="activity" size={16} className="me-1" /> Grafik</>
               )}
             </button>
             <button
@@ -286,6 +294,69 @@ export default function AbsensiManager() {
               onClick={() => setExportMonth(localToday().slice(0, 7))}
             >
               <Icon name="calendar" size={15} className="me-1" /> Bulan ini
+            </button>
+          </div>
+        </div>
+
+        <div className="d-flex flex-column flex-lg-row gap-3 align-items-lg-end">
+          <div className="d-flex flex-column gap-1" style={{ width: 'min(100%, 240px)' }}>
+            <label className="form-label mb-0">Export Rekap Tahunan</label>
+            <input
+              type="number"
+              className="form-control"
+              value={exportYear || ''}
+              onChange={(e) => setExportYear(e.target.value)}
+              min="2020"
+              max="2099"
+            />
+          </div>
+          <div className="d-flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="btn btn-eluzai-green"
+              style={{ minWidth: 120 }}
+              disabled={Boolean(exporting)}
+              onClick={() => downloadExport('excel', { year: exportYear }, exportYear)}
+            >
+              {exporting === `excel-${exportYear}` ? (
+                <><span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden />Menyiapkan...</>
+              ) : (
+                <><Icon name="download" size={16} className="me-1" /> Excel</>
+              )}
+            </button>
+            <button
+              type="button"
+              className="btn btn-eluzai"
+              style={{ minWidth: 120 }}
+              disabled={Boolean(exporting)}
+              onClick={() => downloadExport('pdf', { year: exportYear }, exportYear)}
+            >
+              {exporting === `pdf-${exportYear}` ? (
+                <><span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden />Menyiapkan...</>
+              ) : (
+                <><Icon name="file-text" size={16} className="me-1" /> PDF</>
+              )}
+            </button>
+            <button
+              type="button"
+              className="btn btn-eluzai-outline"
+              style={{ minWidth: 120 }}
+              disabled={Boolean(exporting)}
+              onClick={() => downloadExport('graphics', { year: exportYear }, exportYear)}
+            >
+              {exporting === `graphics-${exportYear}` ? (
+                <><span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden />Menyiapkan...</>
+              ) : (
+                <><Icon name="activity" size={16} className="me-1" /> Grafik</>
+              )}
+            </button>
+            <button
+              type="button"
+              className="btn btn-eluzai-outline"
+              title="Kembali ke tahun berjalan"
+              onClick={() => setExportYear(String(new Date().getFullYear()))}
+            >
+              <Icon name="calendar" size={15} className="me-1" /> Tahun ini
             </button>
           </div>
         </div>

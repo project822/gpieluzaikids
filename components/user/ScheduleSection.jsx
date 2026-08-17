@@ -48,6 +48,8 @@ export default function ScheduleSection({ date, schedule }) {
   const ibadahAda = schedule?.ibadahAda === true;
   const latihanAda = schedule?.latihanAda === true;
 
+  const updatedAt = schedule?.updatedAt;
+
   return (
     <section id="schedule" className="section section-alt">
       <div className="container" style={{ maxWidth: 980 }}>
@@ -85,6 +87,12 @@ export default function ScheduleSection({ date, schedule }) {
             />
           </div>
         </div>
+
+        {updatedAt && (
+          <p className="text-center mt-3 mb-0" style={{ fontSize: '0.78rem', fontStyle: 'italic', color: 'var(--eluzai-muted)' }}>
+            Diperbarui {new Date(updatedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+          </p>
+        )}
       </div>
     </section>
   );

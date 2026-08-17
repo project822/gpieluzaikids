@@ -5,7 +5,7 @@ export default function ChurchLogo({ size = 42, className = '', style = {} }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src="/image/logo-placeholder.webp"
+      src="/images/logo-placeholder.webp"
       alt="Logo GPI Eluzai"
       width={size}
       height={size}

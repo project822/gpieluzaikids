@@ -11,23 +11,15 @@ import useSiteTheme from '../ui/useSiteTheme';
 
 const NAV = [
   { href: '/admin', label: 'Dashboard', icon: 'home', exact: true },
-  { href: '/admin/informasi', label: 'Informasi', icon: 'info' },
-  { href: '/admin/jadwal', label: 'Jadwal', icon: 'clock' },
-  {
-    href: '/admin/absensi',
-    label: 'Absensi',
-    icon: 'users',
-    // Tetap aktif di halaman kelas: /admin/absensi/{baby,samuel,yosua,musa}
+  { href: '/admin/absensi', label: 'Absensi', icon: 'users',
     match: (p) => p.startsWith('/admin/absensi'),
   },
-  {
-    href: '/admin/anggota',
-    label: 'Anggota',
-    icon: 'user',
-    // Tetap aktif di halaman kelas: /admin/anggota/{baby,samuel,yosua,musa}
+  { href: '/admin/anggota', label: 'Anggota', icon: 'user',
     match: (p) => p.startsWith('/admin/anggota'),
   },
   { href: '/admin/events', label: 'Event', icon: 'calendar' },
+  { href: '/admin/informasi', label: 'Informasi', icon: 'info' },
+  { href: '/admin/jadwal', label: 'Jadwal', icon: 'clock' },
   { href: '/admin/registrations', label: 'Registration', icon: 'users' },
 ];
 

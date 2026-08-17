@@ -37,6 +37,14 @@ export default function Reveal({ children, delay = 0, duration, once = false, cl
     if (delay) el.style.transitionDelay = `${delay}ms`;
     if (duration) el.style.transitionDuration = `${duration}ms`;
 
+    // Cek apakah elemen sudah terlihat di viewport saat mount (anti-flash
+    // saat navigasi client-side — elemen yang sudah visible langsung tampil).
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight && rect.bottom > 0) {
+      setVisible(true);
+      if (once) return;
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         setVisible(entry.isIntersecting);

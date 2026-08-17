@@ -48,6 +48,7 @@
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 92px; /* offset agar anchor tidak tertutup navbar sticky */
+  overflow-x: clip; /* clip tanpa membuat scroll container baru (fix navigasi) */
 }
 
 /* ---------- Scroll-Triggered Fade (Reveal, dua arah) ---------- */
@@ -115,8 +116,6 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  overflow-x: hidden;
-  scroll-padding-top: 92px;
 }
 
 h1, h2, h3, h4, h5, h6 {

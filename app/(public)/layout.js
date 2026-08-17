@@ -1,3 +1,7 @@
+'use client';
+
+import { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import Navbar from '@/components/user/Navbar';
 import Footer from '@/components/user/Footer';
 import { CHURCH } from '@/lib/data';
@@ -27,6 +31,14 @@ const organizationJsonLd = {
 import { jsonLdHtml } from '@/lib/jsonLd';
 
 export default function PublicLayout({ children }) {
+  const pathname = usePathname();
+
+  // Reset scroll position saat navigasi client-side (Next.js App Router).
+  // Ini memastikan scroll tidak "terbawa" dari halaman sebelumnya.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
   return (
     <>
       {/* Structured data (SEO): Organisasi — berlaku untuk seluruh halaman publik */}

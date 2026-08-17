@@ -12,7 +12,7 @@ export default function BackToTop() {
     let ticking = false;
     const update = () => {
       ticking = false;
-      setShowTop(document.documentElement.scrollTop > 600);
+      setShowTop(window.scrollY > 600);
     };
     const onScroll = () => {
       if (!ticking) {

@@ -18,8 +18,8 @@ export const metadata = {
     canonical: '/',
   },
   icons: {
-    icon: '/image/logo-placeholder.webp',
-    apple: '/image/logo-placeholder.webp',
+    icon: '/images/logo-placeholder.webp',
+    apple: '/images/logo-placeholder.webp',
   },
   openGraph: {
     type: 'website',

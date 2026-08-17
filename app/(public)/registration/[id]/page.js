@@ -156,7 +156,7 @@ export default function RegistrationForm() {
 
   return (
     <>
-      <PageHeader title={eventLoading ? 'Form Pendaftaran' : formTitle} sub={eventData ? `Event: ${eventData.title}` : 'Isi data diri Anda untuk mendaftar'} />
+      <PageHeader title={eventLoading ? 'Form Pendaftaran' : formTitle} sub={eventData ? eventData.title : 'Isi data diri Anda untuk mendaftar'} />
       <section className="section pt-4">
         <div className="container" style={{ maxWidth: 560 }}>
           {success ? (

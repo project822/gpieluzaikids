@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import Icon from '../ui/Icons';
 
 // Pendaftaran ditutup otomatis pada H-2 (2 hari sebelum hari-H).
@@ -21,9 +22,9 @@ export default function EventActions({ item, large = false, block = false }) {
     // Form internal aktif → langsung daftar.
     if (item.formActive) {
       return (
-        <a href={`/registration/${item.id}`} className={`btn btn-eluzai ${cls}`}>
+        <Link href={`/registration/${item.id}`} className={`btn btn-eluzai ${cls}`}>
           Daftar <Icon name="arrow-right" size={15} className="hover-arrow" />
-        </a>
+        </Link>
       );
     }
     // Link Google Form tersedia → arahkan ke Google Form.
